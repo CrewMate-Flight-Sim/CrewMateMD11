@@ -1,0 +1,49 @@
+{
+  "id": "before_takeoff",
+  "name": "Before takeoff checklist",
+  "items": [
+    {
+      "challenge": "ead.ogg",
+      "response": ["checked", "set and checked"],
+      "label": "EAD/ESSENTIAL ITEMS",
+      "copilot_response": "checked.ogg"
+    },
+    {
+      "challenge": "lts.ogg",
+      "response": ["on", "set and checked"],
+      "incorrect": "are_you_sure.ogg",
+      "label": "Lights",
+      "copilot_response": "on.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [
+            { "type": "simvar", "var": "(L:md11_ovhd_lts_ldg_l_sw)", "expected": 2 },
+            { "type": "simvar", "var": "(L:md11_ovhd_lts_ldg_r_sw)", "expected": 2 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_LTS_NOSE_SW)", "expected": 2 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_LTS_HI_INT_BT)", "expected": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "challenge": "hyd_panel.ogg",
+      "label": "Hydraulics Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "air_panel.ogg",
+      "label": "Air Panel",
+      "copilot_response": "auto.ogg",
+      "fo_only_response": true
+    },
+    {
+      "challenge": "wxr_xpndr.ogg",
+      "fo_only_response": true,
+      "label": "WXR and Transponder",
+      "copilot_response": "on_tara.ogg"
+    }
+  ],
+  "completion": "before_takeoff_checklist_completed.ogg"
+}

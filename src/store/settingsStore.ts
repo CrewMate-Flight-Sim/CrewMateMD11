@@ -3,10 +3,6 @@ import { emit, listen } from "@tauri-apps/api/event"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-export type LightsControlMode = "virtual" | "user"
-
-const defaultLightsControlMode: LightsControlMode = "user"
-
 interface SettingsStore {
   voiceEnabled: boolean
   voiceMode: "continuous" | "ptt"
@@ -16,7 +12,7 @@ interface SettingsStore {
   soundVolume: number
   outputDevice?: string | null
   inputDevice?: string | null
-  lightsControlMode: LightsControlMode
+  holdOnIncorrect: boolean
   confidenceThreshold: number
   postLandingShutdownEnabled: boolean
   setVoiceEnabled: (enabled: boolean) => void
@@ -27,7 +23,7 @@ interface SettingsStore {
   setSoundVolume: (volume: number) => void
   setOutputDevice: (device: string | null) => void
   setInputDevice: (device: string | null) => void
-  setLightsControlMode: (mode: LightsControlMode) => void
+  setHoldOnIncorrect: (hold: boolean) => void
   setConfidenceThreshold: (threshold: number) => void
   setPostLandingShutdownEnabled: (enabled: boolean) => void
 }
@@ -52,7 +48,7 @@ export const useSettingsStore = create<SettingsStore>()(
       soundVolume: 100,
       outputDevice: null,
       inputDevice: null,
-      lightsControlMode: defaultLightsControlMode,
+      holdOnIncorrect: false,
       confidenceThreshold: 85,
       postLandingShutdownEnabled: true,
 
@@ -105,10 +101,10 @@ export const useSettingsStore = create<SettingsStore>()(
           emit("settings-changed", { inputDevice: device })
         }
       },
-      setLightsControlMode: (mode) => {
-        set({ lightsControlMode: mode })
+      setHoldOnIncorrect: (hold) => {
+        set({ holdOnIncorrect: hold })
         if (!isUpdatingFromEvent) {
-          emit("settings-changed", { lightsControlMode: mode })
+          emit("settings-changed", { holdOnIncorrect: hold })
         }
       },
       setConfidenceThreshold: (threshold) => {
@@ -186,8 +182,8 @@ listen<
   if (event.payload.soundVolume !== undefined) {
     useSettingsStore.setState({ soundVolume: event.payload.soundVolume })
   }
-  if (event.payload.lightsControlMode !== undefined) {
-    useSettingsStore.setState({ lightsControlMode: event.payload.lightsControlMode })
+  if (event.payload.holdOnIncorrect !== undefined) {
+    useSettingsStore.setState({ holdOnIncorrect: event.payload.holdOnIncorrect })
   }
   if (event.payload.confidenceThreshold !== undefined) {
     useSettingsStore.setState({ confidenceThreshold: event.payload.confidenceThreshold })

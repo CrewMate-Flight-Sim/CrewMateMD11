@@ -1,0 +1,93 @@
+{
+  "id": "before_start",
+  "name": "Before Start checklist",
+  "items": [
+    {
+      "challenge": "windows.ogg",
+      "response": ["closed", "set and checked"],
+      "label": "Windows and doors",
+      "copilot_response": "locked.ogg"
+    },
+
+    {
+      "challenge": "parking_brake.ogg",
+      "response": ["set", "set and checked"],
+      "label": "Parking Brake",
+      "validations": [
+        {
+          "when": { "responses": ["set", "set and checked"] },
+          "incorrect": "are_you_sure.ogg",
+          "checks": [
+            {
+              "type": "simvar",
+              "var": "(L:MD11_THR_PARK_LVR)",
+              "expected": 1
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "challenge": "beacon.ogg",
+      "label": "Beacon",
+      "fo_only_response": true,
+      "copilot_response": "on.ogg"
+    },
+
+    {
+      "challenge": "ign.ogg",
+      "response": ["a", "b", "alpha", "bravo", "set and checked"],
+      "label": "Ignition",
+      "incorrect": "are_you_sure.ogg",
+      "validations": [
+        {
+          "when": { "responses": ["a", "alpha"] },
+          "checks": [
+            { "type": "simvar", "var": "(L:MD11_OVHD_ENG_A_LT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_ENG_B_LT)", "expected": 0 }
+          ]
+        },
+        {
+          "when": { "responses": ["b", "bravo"] },
+          "checks": [
+            { "type": "simvar", "var": "(L:MD11_OVHD_ENG_A_LT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_ENG_B_LT)", "expected": 1 }
+          ]
+        },
+        {
+          "when": { "responses": ["set and checked"] },
+          "checks": [
+            {
+              "type": "any",
+              "groups": [
+                [
+                  { "type": "simvar", "var": "(L:MD11_OVHD_ENG_A_LT)", "expected": 1 },
+                  { "type": "simvar", "var": "(L:MD11_OVHD_ENG_B_LT)", "expected": 0 }
+                ],
+                [
+                  { "type": "simvar", "var": "(L:MD11_OVHD_ENG_A_LT)", "expected": 0 },
+                  { "type": "simvar", "var": "(L:MD11_OVHD_ENG_B_LT)", "expected": 1 }
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "challenge": "fuel_panel.ogg",
+      "label": "Fuel Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "air_panel.ogg",
+      "label": "Air Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    }
+  ],
+  "completion": "before_start_checklist_completed.ogg"
+}

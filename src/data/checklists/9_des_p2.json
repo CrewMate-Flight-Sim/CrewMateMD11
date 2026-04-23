@@ -1,0 +1,25 @@
+{
+  "id": "des_P2",
+  "name": "Descent/Approach Checklist",
+  "items": [
+    {
+      "challenge": "altimeters.ogg",
+      "response": ["#3 set", "#4 set", "set and checked"],
+      "copilot_response": "xchk.ogg",
+      "label": "Altimeters"
+    },
+    {
+      "challenge": "hyd_panel.ogg",
+      "label": "Hydraulics Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "ext_lights.ogg",
+      "label": "Exterior lights",
+      "fo_only_response": true,
+      "copilot_response": "set.ogg"
+    }
+  ],
+  "completion": "desappr_checklist_completed.ogg"
+}

@@ -1,0 +1,102 @@
+{
+  "id": "after_takeoff_to_the_line",
+  "name": "After Takeoff Checklist to the line",
+  "mode": "silent",
+  "items": [
+    {
+      "label": "Gear and lights",
+      "incorrect": "are_you_sure.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_MIP_GEAR_SW)", "expected": 0 }]
+        }
+      ]
+    },
+    {
+      "label": "Air Panel",
+      "delay_ms": 1500,
+      "validations": [
+        {
+          "when": { "always": true }
+        }
+      ]
+    },
+    {
+      "label": "Spoilers",
+      "incorrect": "are_you_sure.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_SPDBRK_HANDLE)", "expected": 0 }]
+        }
+      ]
+    },
+    {
+      "label": "Autobrake",
+      "incorrect": "are_you_sure.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_CTR_AUTOBRAKE_SW)", "expected": 1 }]
+        }
+      ]
+    },
+    {
+      "label": "Flaps and slats",
+      "incorrect": "are_you_sure.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_FLAP_RNG)", "expected": 0 }]
+        }
+      ]
+    },
+    {
+      "label": "Hydraulics Panel",
+      "delay_ms": 1500,
+      "validations": [
+        {
+          "when": { "always": true }
+        }
+      ]
+    },
+    {
+      "label": "Fuel Panel",
+      "delay_ms": 1500,
+      "validations": [
+        {
+          "when": { "always": true }
+        }
+      ]
+    },
+    {
+      "label": "EAD",
+      "delay_ms": 1500,
+      "validations": [
+        {
+          "when": { "always": true }
+        }
+      ]
+    },
+    {
+      "label": "Seat Belts",
+      "delay_ms": 1500,
+      "validations": [
+        {
+          "when": { "always": true }
+        }
+      ]
+    },
+    {
+      "label": "Exterior lights",
+      "delay_ms": 1500,
+      "validations": [
+        {
+          "when": { "always": true }
+        }
+      ]
+    }
+  ],
+  "completion": "after_takeoff_completed_to_the_line.ogg"
+}

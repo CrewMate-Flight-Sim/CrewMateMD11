@@ -1,0 +1,26 @@
+{
+  "id": "des",
+  "name": "Descent",
+  "steps": [
+    {
+      "label": "Windshield anti ice on",
+      "read": "(L:MD11_OVHD_WNDSHLD_AICE_L_BT)",
+      "on": "90424 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Windshield anti ice on",
+      "read": "(L:MD11_OVHD_WNDSHLD_AICE_R_BT)",
+      "on": "90428 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Set signs",
+      "read": "(L:md11_ovhd_lts_seat_belts_sw)",
+      "on": "90249 (>L:CEVENT)",
+      "expect": 2,
+      "repeat_on": true
+    }
+  ]
+}

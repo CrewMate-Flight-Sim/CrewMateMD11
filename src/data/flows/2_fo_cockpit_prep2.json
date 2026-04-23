@@ -1,0 +1,191 @@
+{
+  "id": "fo_cockpit_prep2",
+  "name": "FO Cockpit Preparation part 2",
+  "steps": [
+    {
+      "label": "WX brt",
+      "read": "(L:md11_recp_wxbrt_kb)",
+      "on": "86138 (>L:CEVENT)",
+      "expect": 72,
+      "repeat_on": true
+    },
+    {
+      "label": "GPWS",
+      "read": "(L:md11_aovhd_gpws_sw)",
+      "on": "73769 (>L:CEVENT)",
+      "expect": 0,
+      "wait_ms": 5000
+    },
+    {
+      "label": "GPWS",
+      "read": "(L:md11_aovhd_gpws_sw)",
+      "on": "73770 (>L:CEVENT)",
+      "expect": 1,
+      "wait_ms": 30000
+    },
+    {
+      "label": "Fuel used reset",
+      "read": "(L:md11_ovhd_fuelusedreset_bt)",
+      "on": "90410 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Fuel used reset",
+      "read": "(L:md11_ovhd_fuelusedreset_bt)",
+      "on": "90411 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_trfc_bt)",
+      "on": "86140 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_trfc_bt)",
+      "on": "86141 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_data_bt)",
+      "on": "86142 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_data_bt)",
+      "on": "86143 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_vor1_bt)",
+      "on": "86162 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_vor1_bt)",
+      "on": "86163 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_vor2_bt)",
+      "on": "86166 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Set up EFIS",
+      "read": "(L:md11_recp_vor2_bt)",
+      "on": "86167 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Oxy test",
+      "read": "(L:md11_rside_oxy_flow_sw)",
+      "on": "95514 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Oxy test",
+      "read": "(L:md11_rside_oxy_test_bt)",
+      "on": "95515 (>L:CEVENT)",
+      "expect": 1,
+      "wait_ms": 2000
+    },
+    {
+      "label": "Oxy test",
+      "read": "(L:md11_rside_oxy_test_bt)",
+      "on": "95516 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Open CONFIG synoptic",
+      "read": "(L:md11_ped_sd_config_bt)",
+      "on": "69844 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Open CONFIG synoptic",
+      "read": "(L:md11_ped_sd_config_bt)",
+      "on": "69845 (>L:CEVENT)",
+      "expect": 0,
+      "wait_ms": 1000
+    },
+    {
+      "label": "Gear lights test",
+      "read": "(L:md11_mip_gear_sw)",
+      "on": "1 (>K:GEAR_UP)",
+      "expect": 20,
+      "wait_ms": 1000
+    },
+    {
+      "label": "Gear lights test",
+      "read": "(L:md11_mip_gear_sw)",
+      "on": "1 (>K:GEAR_DOWN)",
+      "expect": 25
+    },
+    {
+      "label": "TO CFG test",
+      "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:1, Percent)",
+      "on": "16383 (>K:THROTTLE1_SET)",
+      "expect": 100,
+      "wait_ms": 4000
+    },
+    {
+      "label": "TO CFG test",
+      "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:1, Percent)",
+      "on": "1 (>K:THROTTLE1_CUT)",
+      "expect": 100
+    },
+    {
+      "label": "TO CFG test",
+      "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:2, Percent)",
+      "on": "16383 (>K:THROTTLE2_SET)",
+      "expect": 100,
+      "skip_delay": true
+    },
+    {
+      "label": "TO CFG test",
+      "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:3, Percent)",
+      "on": "16383 (>K:THROTTLE3_SET)",
+      "expect": 100,
+      "wait_ms": 4000
+    },
+    {
+      "label": "TO CFG test",
+      "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:2, Percent)",
+      "on": "1 (>K:THROTTLE2_CUT)",
+      "expect": 100,
+      "skip_delay": true
+    },
+    {
+      "label": "TO CFG test",
+      "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:3, Percent)",
+      "on": "1 (>K:THROTTLE3_CUT)",
+      "expect": 100
+    },
+    {
+      "label": "Open STATUS synoptic",
+      "read": "(L:md11_ped_sd_status_bt)",
+      "on": "69834 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Open STATUS synoptic",
+      "read": "(L:md11_ped_sd_status_bt)",
+      "on": "69835 (>L:CEVENT)",
+      "expect": 0
+    }
+  ]
+}

@@ -22,7 +22,7 @@ pub async fn get_log_file_path(app_handle: AppHandle) -> Result<String, String> 
         .map_err(|e| e.to_string())?
         .join("logs");
 
-    let log_file_path = logs_dir.join("crewmateinia310.log");
+    let log_file_path = logs_dir.join("crewmateinimd11.log");
     Ok(log_file_path.to_string_lossy().to_string())
 }
 

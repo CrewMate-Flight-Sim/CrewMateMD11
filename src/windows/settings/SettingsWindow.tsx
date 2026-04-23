@@ -9,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { useChecklistStore } from "@/store/checklistStore"
 import { useSettingsStore } from "@/store/settingsStore"
 
 export function SettingsWindow() {
@@ -39,11 +38,8 @@ export function SettingsWindow() {
   const postLandingShutdownEnabled = useSettingsStore((s) => s.postLandingShutdownEnabled)
   const setPostLandingShutdownEnabled = useSettingsStore((s) => s.setPostLandingShutdownEnabled)
 
-  const holdOnIncorrect = useChecklistStore((s) => s.holdOnIncorrect)
-  const setHoldOnIncorrect = useChecklistStore((s) => s.setHoldOnIncorrect)
-
-  const lightsControlMode = useSettingsStore((s) => s.lightsControlMode)
-  const setLightsControlMode = useSettingsStore((s) => s.setLightsControlMode)
+  const holdOnIncorrect = useSettingsStore((s) => s.holdOnIncorrect)
+  const setHoldOnIncorrect = useSettingsStore((s) => s.setHoldOnIncorrect)
 
   useEffect(() => {
     const fetchSoundPacks = async () => {
@@ -226,19 +222,8 @@ export function SettingsWindow() {
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-          <Label htmlFor="lightsControlMode" className="text-sm text-slate-300 cursor-pointer">
-            Auto Ground lights control
-          </Label>
-          <Checkbox
-            id="lightsControlMode"
-            checked={lightsControlMode === "virtual"}
-            onCheckedChange={(checked) => setLightsControlMode(checked ? "virtual" : "user")}
-          />
-        </div>
-
-        <div className="grid grid-cols-[1fr_auto] items-center gap-3">
           <Label htmlFor="postLandingShutdownEnabled" className="text-sm text-slate-300 cursor-pointer">
-            5 minutes to allow shutting down engines
+            3 minutes to allow shutting down engines
           </Label>
           <Checkbox
             id="postLandingShutdownEnabled"

@@ -1,0 +1,38 @@
+{
+  "id": "taxi_vector",
+  "name": "Taxi (Vectored)",
+  "steps": [
+    {
+      "label": "Set stab trim",
+      "read": "(L:MD11_EXT_STAB_TRIM)",
+      "trim_on": true,
+      "expect": "{trim}"
+    },
+    {
+      "label": "Arm PROF",
+      "read": "(L:md11_cgs_prof_bt)",
+      "on": "86096 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Arm PROF",
+      "read": "(L:md11_cgs_prof_bt)",
+      "on": "86097 (>L:CEVENT)",
+      "expect": 0,
+      "sound_after_execute": "prof_armed.ogg"
+    },
+    {
+      "label": "TCAS",
+      "read": "(L:md11_ped_xpndr_mode_kb)",
+      "on": "69877 (>L:CEVENT)",
+      "expect": 3,
+      "repeat_on": true
+    },
+    {
+      "label": "TCAS",
+      "read": "(L:md11_ped_xpndr_alt_rptg_kb)",
+      "on": "69854 (>L:CEVENT)",
+      "expect": 1
+    }
+  ]
+}

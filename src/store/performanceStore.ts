@@ -5,19 +5,15 @@ import { persist } from "zustand/middleware"
 interface TakeoffData {
   transitionAltitude: number
   trim: number
-  flaps: string
-  thrustSetting?: string
-  packs?: string
   antiIce?: string
+  armNav: boolean
 }
 
 interface LandingData {
   transitionLevel: number
   missedAltitude: number
   antiIce?: string
-  apuStart?: string
-  autoBrake?: string
-  landingElevation: number
+  flaps?: string
 }
 
 interface PerformanceStore {
@@ -30,21 +26,17 @@ interface PerformanceStore {
 }
 
 const defaultTakeoffData: TakeoffData = {
-  transitionAltitude: 0,
-  trim: 0,
-  thrustSetting: "toga",
-  flaps: "1",
-  packs: "on",
-  antiIce: "off"
+  transitionAltitude: 5000,
+  trim: 3.0,
+  antiIce: "off",
+  armNav: true
 }
 
 const defaultLandingData: LandingData = {
-  transitionLevel: 0,
-  missedAltitude: 4000,
-  antiIce: "off",
-  apuStart: "auto",
-  autoBrake: "med",
-  landingElevation: 0
+  transitionLevel: 7000,
+  missedAltitude: 3000,
+  flaps: "35",
+  antiIce: "off"
 }
 
 export const usePerformanceStore = create<PerformanceStore>()(

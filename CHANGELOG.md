@@ -1,5 +1,5 @@
 # Changelog
 
-## [0.3.0] - 2026-04-23
+## [0.3.0] - 2026-05-XX
 
-- Initial release of A310 version – @alexlenh @marxio09dio
+- Initial release of MD11 version – @alexlenh @marxio09dio

@@ -1,0 +1,30 @@
+{
+  "id": "final_cockpit_prep",
+  "name": "Final Cockpit Preparation",
+  "steps": [
+    {
+      "label": "Set Dial a Flap",
+      "read": "(L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "on": "{flaps} (>L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "expect": "{flaps}"
+    },
+    {
+      "label": "Set Autobrake",
+      "read": "(L:MD11_CTR_AUTOBRAKE_SW)",
+      "on": "82211 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Display FPLN MCDU",
+      "read": "(L:MD11_RMCDU_FPLN_BT)",
+      "on": "82103 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Display FPLN MCDU",
+      "read": "(L:MD11_RMCDU_FPLN_BT)",
+      "on": "82104 (>L:CEVENT)",
+      "expect": 0
+    }
+  ]
+}

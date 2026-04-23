@@ -1,0 +1,47 @@
+{
+  "id": "climb_ten_thousand_flow",
+  "name": "Above 10k/FL100",
+  "steps": [
+    {
+      "label": "Lights off",
+      "read": "(L:md11_ovhd_lts_ldg_l_sw)",
+      "on": "90257 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:md11_ovhd_lts_ldg_r_sw)",
+      "on": "90259 (>L:CEVENT)",
+      "expect": 0,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:MD11_OVHD_LTS_NOSE_SW)",
+      "on": "90261 (>L:CEVENT)",
+      "expect": 0,
+      "repeat_on": true
+    },
+    {
+      "label": "RWY Turnoff light off",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)",
+      "on": "90263 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true
+    },
+    {
+      "label": "RWY Turnoff light off",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)",
+      "on": "90265 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "LOGO LT off",
+      "read": "(L:MD11_OVHD_LTS_LOGO_BT)",
+      "on": "90269 (>L:CEVENT)",
+      "expect": 0
+    }
+  ]
+}

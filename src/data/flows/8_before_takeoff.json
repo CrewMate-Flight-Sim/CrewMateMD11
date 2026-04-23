@@ -1,0 +1,54 @@
+{
+  "id": "before_takeoff",
+  "name": "Before Takeoff",
+  "sound_start": "cabin_takeoff.ogg",
+  "sound_end": "ready.ogg",
+  "steps": [
+    {
+      "label": "Lights on",
+      "read": "(L:md11_ovhd_lts_ldg_l_sw)",
+      "on": "90258 (>L:CEVENT)",
+      "expect": 2,
+      "skip_delay": true,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights on",
+      "read": "(L:md11_ovhd_lts_ldg_r_sw)",
+      "on": "90260 (>L:CEVENT)",
+      "expect": 2,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights on",
+      "read": "(L:MD11_OVHD_LTS_NOSE_SW)",
+      "on": "90262 (>L:CEVENT)",
+      "expect": 2
+    },
+    {
+      "label": "RWY Turnoff light on",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)",
+      "on": "90263 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "RWY Turnoff light on",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)",
+      "on": "90265 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Lights on",
+      "read": "(L:MD11_OVHD_LTS_HI_INT_BT)",
+      "on": "90273 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "WXR ON",
+      "read": "(L:md11_ped_wxr_wxt_bt)",
+      "on": "69887 (>L:CEVENT)",
+      "expect": 1
+    }
+  ]
+}

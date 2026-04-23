@@ -1,4 +1,4 @@
-# CrewMate A310 — SAPI voice training phrases
+# CrewMate MD11 — SAPI voice training phrases
 # Lines starting with # are ignored. Edit freely.
 # Each line is read aloud once during training.
 
