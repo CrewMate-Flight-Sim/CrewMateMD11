@@ -6,7 +6,7 @@ import { useEffect } from "react"
 export function useCloseConfirm() {
   useEffect(() => {
     const unlisten = listen("close-requested", async () => {
-      const shouldClose = await ask("Are you sure you want to exit Crewmate for iniBuilds/Microsoft A310?", {
+      const shouldClose = await ask("Are you sure you want to exit Crewmate for TFDI Design MD11?", {
         title: "Confirm Exit",
         kind: "warning"
       })

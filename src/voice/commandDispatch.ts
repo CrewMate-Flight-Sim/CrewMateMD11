@@ -1,3 +1,4 @@
+import { simvarGet } from "@/API/simvarApi"
 import { buildPassingAltitudeSequence } from "@/hooks/useCallouts"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
@@ -9,36 +10,63 @@ import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 
-import { setEngAntiIce, setWingAntiIce } from "./commands/anti_ice"
-import { setStartAPU } from "./commands/apu"
+import { setEngAntiIce, setAirfoilAntiIce } from "./commands/anti_ice"
+import { StartAPU } from "./commands/apu"
+import { setAutobrakeDial } from "./commands/autobrake"
 import {
   setAirspeedDial,
   setAltitudeDial,
   setAPPR,
   setAutoPilot,
-  setFlightDirector,
+  setAltHld,
+  setFOFlightDirector,
   setHeadingDial,
-  setLOC,
-  setLevelOff,
   setSelSpeed,
   setSelAlt,
-  syncHeading,
+  setHdgHold,
   setHdgSel,
-  setNav
+  setNav,
+  setProf,
+  setSpdHold
 } from "./commands/autoPilot"
 import { setStdBaro } from "./commands/baro"
-import { startEngine1, startEngine2, setIgnKnob } from "./commands/engine"
 import { setFlaps } from "./commands/flaps"
-import { flightControlsCheck, opencloseFCTLECAM } from "./commands/flight_controls_check"
+import { flightControlsCheck } from "./commands/flight_controls_check"
 import { setGearHandle } from "./commands/gear"
 import { executeGoAround } from "./commands/goAround"
 import { disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
-import { setLandingLights, setStrobeLights, setTaxiLights } from "./commands/lights"
+import { setStrobeLights, setNoseLights, setRwyTOFF } from "./commands/lights"
 import { setSeatBelts } from "./commands/seat_belts"
 import { setWipers } from "./commands/wipers"
 
-const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+export const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 const randomDelay = (min: number, max: number) => delay(min + Math.random() * (max - min))
+
+const getNumericPayload = (payload: Record<string, unknown>, ...keys: string[]): number | null => {
+  for (const key of keys) {
+    const raw = payload[key]
+    if (raw == null) continue
+    if (typeof raw === "number") return raw
+    if (typeof raw === "string") {
+      const value = Number(raw.trim())
+      if (!Number.isNaN(value)) return value
+    }
+  }
+  return null
+}
+
+const getStringPayload = (payload: Record<string, unknown>, ...keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const raw = payload[key]
+    if (typeof raw === "string") return raw
+  }
+  return undefined
+}
+
+const isAutoMode = (payload: Record<string, unknown>) => {
+  const mode = getStringPayload(payload, "mode", "value", "cval")
+  return mode?.toLowerCase() === "auto"
+}
 
 const gePack = () => useSettingsStore.getState().geSoundPack
 
@@ -53,95 +81,107 @@ export const discreteCommandMap: Record<string, () => void | Promise<void>> = {
   gear_down: () => setGearHandle(1),
 
   // ── Flaps ─────────────────────────────────────────────────────────────────
-  slats_ret: () => setFlaps(0),
-  slats_ext_zero: () => setFlaps(1),
-  flaps_15: () => setFlaps(2),
-  flaps_20: () => setFlaps(3),
-  flaps_40: () => setFlaps(4),
+  slats_ret: () => setFlaps(0), // Lever to UP/RET (0)
+  slats_ext_zero: () => setFlaps(1), // Lever to 0/EXT (20)
+  flaps_15: () => setFlaps(2), // Lever to DAF-15 (46.91)
+  flaps_28: () => setFlaps(3), // Lever to 28 (70)
+  flaps_35: () => setFlaps(4), // Lever to 35 (85)
+  flaps_50: () => setFlaps(5), // Lever to 50 (100)
   go_around_flaps: () => executeGoAround(),
 
+  // Abrk
+  autobrake_off: () => {
+    playSound("check.ogg")
+    setAutobrakeDial(1)
+  },
+  autobrake_min: () => {
+    playSound("check.ogg")
+    setAutobrakeDial(2)
+  },
+  autobrake_med: () => {
+    playSound("check.ogg")
+    setAutobrakeDial(3)
+  },
+  autobrake_max: () => {
+    playSound("check.ogg")
+    setAutobrakeDial(4)
+  },
+
   // ── Lights ────────────────────────────────────────────────────────────────
-  landing_lights_on: () => {
-    playSound("check.ogg")
-    setLandingLights(0)
-  },
-  landing_lights_off: () => {
-    playSound("check.ogg")
-    setLandingLights(2)
-  },
-  takeoff_lights_on: () => {
-    playSound("check.ogg")
-    setTaxiLights(0)
-  },
   taxi_lights_on: () => {
     playSound("check.ogg")
-    setTaxiLights(1)
+    setNoseLights(1)
   },
   taxi_lights_off: () => {
     playSound("check.ogg")
-    setTaxiLights(2)
+    setNoseLights(0)
   },
   strobe_lights_on: () => {
-    playSound("check.ogg")
-    setStrobeLights(0)
-  },
-  strobe_lights_auto: () => {
     playSound("check.ogg")
     setStrobeLights(1)
   },
   strobe_lights_off: () => {
     playSound("check.ogg")
-    setStrobeLights(2)
+    setStrobeLights(0)
+  },
+  turning_into_stand: async () => {
+    playSound("check.ogg")
+    setNoseLights(0)
+    await delay(100)
+    setRwyTOFF(0)
   },
 
-  // ── Flight director & bird ────────────────────────────────────────────────
+  // ── Flight director ────────────────────────────────────────────────
   flight_director_on: () => {
     playSound("check.ogg")
-    setFlightDirector(1)
+    setFOFlightDirector()
   },
   flight_director_off: () => {
     playSound("check.ogg")
-    setFlightDirector(0)
+    setFOFlightDirector()
   },
   // ── Autopilot  ──────────────────────────────────────────────
   autopilot_engage: () => {
-    playSound("check.ogg")
-    setAutoPilot(1)
+    playSound("afs.ogg")
+    setAutoPilot()
   },
-  autopilot_disconnect: () => setAutoPilot(0),
 
-  // ── FCU knob commands ──────────────────────────────
+  // ── FCP knob commands ──────────────────────────────
   pull_heading: () => {
     playSound("check.ogg")
-    setHdgSel(1)
+    setHdgSel()
   },
   push_heading: () => {
     playSound("check.ogg")
-    syncHeading(1)
+    setHdgHold()
   },
   manage_nav: () => {
     playSound("check.ogg")
-    setNav(1)
+    setNav()
   },
   pull_altitude: () => {
     playSound("check.ogg")
-    setSelAlt(1)
+    setSelAlt()
   },
   pull_speed: () => {
     playSound("check.ogg")
-    setSelSpeed(1)
+    setSelSpeed()
   },
   push_to_level_off: () => {
     playSound("check.ogg")
-    setLevelOff(1)
+    setAltHld()
   },
   arm_approach: () => {
     playSound("check.ogg")
-    setAPPR(1)
+    setAPPR()
   },
-  arm_localizer: () => {
+  engage_prof: () => {
     playSound("check.ogg")
-    setLOC(1)
+    setProf()
+  },
+  push_speed: () => {
+    playSound("check.ogg")
+    setSpdHold()
   },
 
   // ── Baro ──────────────────────────────────────────────────────────────────
@@ -170,7 +210,11 @@ export const discreteCommandMap: Record<string, () => void | Promise<void>> = {
   // ── APU ───────────────────────────────────────────────────────────────────
   apu_start: () => {
     playSound("check.ogg")
-    setStartAPU(1)
+    StartAPU()
+  },
+
+  shutdown_e2: () => {
+    playSound("check.ogg")
   },
 
   // ── Anti-ice ──────────────────────────────────────────────────────────────
@@ -182,17 +226,21 @@ export const discreteCommandMap: Record<string, () => void | Promise<void>> = {
     playSound("check.ogg")
     setEngAntiIce(0)
   },
-  wing_anti_ice_on: () => {
+  foil_anti_ice_on: () => {
     playSound("check.ogg")
-    setWingAntiIce(1)
+    setAirfoilAntiIce(1)
   },
-  wing_anti_ice_off: () => {
+  foil_anti_ice_off: () => {
     playSound("check.ogg")
-    setWingAntiIce(0)
+    setAirfoilAntiIce(0)
   },
 
   // ── Seat belts ────────────────────────────────────────────────────────────
   seat_belts_on: () => {
+    playSound("check.ogg")
+    setSeatBelts(2)
+  },
+  seat_belts_auto: () => {
     playSound("check.ogg")
     setSeatBelts(1)
   },
@@ -203,55 +251,47 @@ export const discreteCommandMap: Record<string, () => void | Promise<void>> = {
 
   // ── Wipers ────────────────────────────────────────────────────────────────
   wipers_off: () => setWipers(0),
-  wipers_slow: () => setWipers(1),
-  wipers_fast: () => setWipers(2),
-
-  // ── Brake check ───────────────────────────────────────────────────────────
-  brake_check: () => playSound("pressure_zero.ogg"),
+  wipers_int: () => setWipers(1),
+  wipers_slow: () => setWipers(2),
+  wipers_fast: () => setWipers(3),
 
   // ── Flight controls ───────────────────────────────────────────────────────
   flight_controls_check: async () => {
-    await opencloseFCTLECAM(1)
-    await delay(1000)
-    await playSound("ready.ogg")
     await flightControlsCheck()
-    await opencloseFCTLECAM(1)
   },
 
   // ── Preflight timer ───────────────────────────────────────────────────────
   prepare_aircraft: () => usePreflightTimerStore.getState().start(),
 
   // ── Engine start ──────────────────────────────────────────────────────────
-  engine_start_2: async () => {
+  engine_start_3: async () => {
     await playSound("check.ogg")
-    const startAB = Math.random() < 0.5 ? 0 : 1
-    await setIgnKnob(startAB)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    await startEngine2(1)
   },
   engine_start_1: async () => {
     await playSound("check.ogg")
-    await startEngine1(1)
+  },
+  engine_start_2: async () => {
+    await playSound("check.ogg")
   },
 
   // ── Flows ─────────────────────────────────────────────────────────────────
   clear_left: () => executeFlow("clear_left"),
   runway_entry_procedure: () => executeFlow("before_takeoff"),
-  clear_for_takeoff: () => executeFlow("takeoff"),
   before_start_procedure: () => executeFlow("before_start"),
-  des_prep: () => executeFlow("des_prep"),
+  clean_up: () => executeFlow("after_landing"),
 
   // ── Checklists ────────────────────────────────────────────────────────────
-  checklist_before_startP1: () => executeChecklist("before_start_to_the_line"),
-  checklist_before_startP2: () => executeChecklist("before_start_below_the_line"),
+  checklist_cockpit_prep: () => executeChecklist("cockpit_prep"),
+  checklist_before_start: () => executeChecklist("before_start"),
   checklist_after_start: () => executeChecklist("after_start"),
-  checklist_before_takeoffP1: () => executeChecklist("before_takeoff_to_the_line"),
-  checklist_before_takeoffP2: () => executeChecklist("before_takeoff_below_the_line"),
-  checklist_after_takeoffP1: () => executeChecklist("climb_to_the_line"),
-  checklist_after_takeoffP2: () => executeChecklist("climb_below_the_line"),
+  checklist_taxi: () => executeChecklist("taxi"),
+  checklist_before_takeoff: () => executeChecklist("before_takeoff"),
+  checklist_after_takeoffP1: () => executeChecklist("after_takeoff_to_the_line"),
+  checklist_after_takeoffP2: () => executeChecklist("after_takeoff_below_the_line"),
+  checklist_desapprP1: () => executeChecklist("des_P1"),
+  checklist_desapprP2: () => executeChecklist("des_P2"),
+  checklist_before_landing: () => executeChecklist("before_landing"),
   checklist_after_landing: () => executeChecklist("after_landing"),
-  checklist_approach: () => executeChecklist("approach"),
-  checklist_landing: () => executeChecklist("landing"),
   checklist_parking: () => executeChecklist("parking"),
   checklist_cancel: () => abortChecklist(),
 
@@ -305,9 +345,6 @@ export const discreteCommandMap: Record<string, () => void | Promise<void>> = {
 // ─── FO command dispatcher (heading, altitude, speed, fma) ────────
 
 export async function dispatchFoCommand(commandType: string, payload: Record<string, unknown>): Promise<boolean> {
-  const verb = (payload.verb as string | undefined) ?? "set"
-  const isPull = verb === "pull"
-
   switch (commandType) {
     case "discrete": {
       const cmd = payload.command as string | undefined
@@ -318,33 +355,62 @@ export async function dispatchFoCommand(commandType: string, payload: Record<str
     }
 
     case "heading": {
-      const value = payload.value as number
-      if (isPull) {
-        setHdgSel(1)
-        await delay(500)
-      }
+      const value = getNumericPayload(payload, "value", "cval")
+      if (value == null) return false
+
       setHeadingDial(value)
+
+      await new Promise<void>((resolve) => {
+        const check = setInterval(async () => {
+          const current = await simvarGet("(L:md11_afs_hdg)")
+          if (current === value) {
+            clearInterval(check)
+            resolve()
+          }
+        }, 50)
+      })
+
+      setHdgSel()
       return true
     }
 
     case "altitude": {
-      playSound("check.ogg")
-      const feet = payload.flightLevel != null ? (payload.flightLevel as number) * 100 : (payload.value as number)
-      if (isPull) {
-        setSelAlt(1)
-        await delay(500)
+      const flightLevel = getNumericPayload(payload, "flightLevel")
+      const value = getNumericPayload(payload, "value", "cval")
+      const feet = flightLevel != null ? flightLevel * 100 : value
+      if (feet == null) return false
+
+      const isAbove10k = feet > 10000
+      const isInvalid = isAbove10k ? feet % 500 !== 0 : feet % 100 !== 0
+
+      if (isInvalid) {
+        console.warn(`MD11: ${feet}ft is not a valid increment.`)
+        playSound("are_you_sure.ogg")
+        return false
       }
+
+      playSound("check.ogg")
       setAltitudeDial(feet)
       return true
     }
 
     case "speed": {
-      const value = payload.value as number
-      if (isPull) {
-        setSelSpeed(1)
-        await delay(500)
-      }
+      const value = getNumericPayload(payload, "value", "cval")
+      if (value == null) return false
+
       setAirspeedDial(value)
+
+      await new Promise<void>((resolve) => {
+        const check = setInterval(async () => {
+          const current = await simvarGet("(L:md11_afs_spd)")
+          if (current === value) {
+            clearInterval(check)
+            resolve()
+          }
+        }, 50)
+      })
+
+      setSelSpeed()
       return true
     }
 
@@ -354,17 +420,39 @@ export async function dispatchFoCommand(commandType: string, payload: Record<str
     }
 
     case "missed_approach_altitude": {
-      if ((payload.mode as string) === "auto") {
+      if (isAutoMode(payload)) {
         const alt = usePerformanceStore.getState().landing?.["missedAltitude"]
         if (alt != null) {
+          const isAbove10k = alt > 10000
+          const isInvalid = isAbove10k ? alt % 500 !== 0 : alt % 100 !== 0
+
+          if (isInvalid) {
+            console.warn(`MD11: ${alt}ft is not a valid increment.`)
+            playSound("are_you_sure.ogg")
+            return false
+          }
+
           setAltitudeDial(alt)
-          playSound("go_around_alt_set.ogg")
+          playSound("missed_approach_set.ogg")
         }
-      } else if (payload.value != null) {
-        const altValue = payload.value as number
-        const leadingNumber = Math.floor(altValue / 1000).toString()
-        setAltitudeDial(altValue)
-        playSoundSequence(["go_around_alt.ogg", `${leadingNumber}.ogg`, "thousand.ogg", "feet_set.ogg"])
+      } else {
+        const flightLevel = getNumericPayload(payload, "flightLevel")
+        const altValue = flightLevel != null ? flightLevel * 100 : getNumericPayload(payload, "value", "cval")
+
+        if (altValue != null) {
+          const isAbove10k = altValue > 10000
+          const isInvalid = isAbove10k ? altValue % 500 !== 0 : altValue % 100 !== 0
+
+          if (isInvalid) {
+            console.warn(`MD11: ${altValue}ft is not a valid increment.`)
+            playSound("are_you_sure.ogg")
+            return false
+          }
+
+          const leadingNumber = Math.floor(altValue / 1000).toString()
+          setAltitudeDial(altValue)
+          playSoundSequence(["missed_approach.ogg", `${leadingNumber}.ogg`, "thousand.ogg", "feet_set.ogg"])
+        }
       }
       return true
     }

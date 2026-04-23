@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "crewmatea310",
+  "productName": "CrewMateMD11",
   "version": "0.3.0",
-  "identifier": "crewmatea310",
+  "identifier": "crewmatemd11",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "Crewmate INI A310",
+        "title": "Crewmate TFDI MD11",
         "width": 360,
         "height": 280,
         "minWidth": 360,

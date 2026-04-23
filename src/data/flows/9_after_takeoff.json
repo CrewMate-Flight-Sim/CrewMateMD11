@@ -1,0 +1,24 @@
+{
+  "id": "after_takeoff",
+  "name": "After Takeoff",
+  "steps": [
+    {
+      "label": "Spoilers",
+      "read": "(L:MD11_SPDBRK_HANDLE)",
+      "on": "77829 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set Autobrake",
+      "read": "(L:MD11_CTR_AUTOBRAKE_SW)",
+      "on": "82212 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Set Dial a Flap",
+      "read": "(L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "on": "33 (>L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "expect": 33
+    }
+  ]
+}

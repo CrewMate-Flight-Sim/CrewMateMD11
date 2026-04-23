@@ -1,53 +1,46 @@
 import { listen } from "@tauri-apps/api/event"
 
 import { simvarGet } from "@/API/simvarApi"
+import { getMd11Variant } from "@/hooks/useMD11variant"
 import { getChecklistById } from "@/services/checklistLoader"
 import { isSoundPlaying, playSound, playSoundSequence } from "@/services/playSounds"
 import { useCabinReadyTimerStore } from "@/store/cabinReadyTimerStore"
 import { useChecklistStore } from "@/store/checklistStore"
 import { usePerformanceStore } from "@/store/performanceStore"
-import { useTelemetryStore } from "@/store/telemetryStore"
+import { useSettingsStore } from "@/store/settingsStore"
 import { useVoiceHintProgressStore } from "@/store/voiceHintProgressStore"
-import type { ChecklistItem } from "@/types/checklist"
+import type { Check, ChecklistItem, ValidationRule } from "@/types/checklist"
+
+import { vars, getTemplateVars } from "./flowLoader"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
-async function waitForSoundFinished() {
-  while (await isSoundPlaying()) {
-    await sleep(100)
-  }
+/** Block until no sound is playing */
+const wsf = async () => {
+  while (await isSoundPlaying()) await sleep(100)
+}
+/** Throw if the checklist was aborted */
+const checkAbort = (s: AbortSignal) => {
+  if (s.aborted) throw new Error("Checklist aborted")
 }
 
-function checkAbort(signal: AbortSignal) {
-  if (signal.aborted) throw new Error("Checklist aborted")
-}
-
-/**
- * Blocks until a speech_recognized event arrives or the abort signal fires.
- * Returns the lowercased spoken text, or null if aborted.
- */
+/** Resolves with the next recognised speech string, or null on abort */
 async function waitForSpeechResponse(signal: AbortSignal): Promise<string | null> {
   if (signal.aborted) return null
-
   return new Promise<string | null>((resolve) => {
     let unlistenFn: (() => void) | null = null
     let resolved = false
-
-    const done = (value: string | null) => {
+    const done = (v: string | null) => {
       if (resolved) return
       resolved = true
       unlistenFn?.()
-      resolve(value)
+      resolve(v)
     }
-
     signal.addEventListener("abort", () => done(null), { once: true })
-
-    listen<{ text?: string; type?: string }>("speech_recognized", (event) => {
-      // Ignore utterances that the sidecar flagged as unrecognized grammar
-      if (event.payload?.type === "speech_unrecognized") return
-      const text = event.payload?.text?.trim().toLowerCase()
+    listen<{ text?: string; type?: string }>("speech_recognized", (e) => {
+      if (e.payload?.type === "speech_unrecognized") return
+      const text = e.payload?.text?.trim().toLowerCase()
       if (text) done(text)
     }).then((fn) => {
       unlistenFn = fn
@@ -56,63 +49,47 @@ async function waitForSpeechResponse(signal: AbortSignal): Promise<string | null
   })
 }
 
-// Pre-compiled regex for spelled-out number words used in baro/feet confirmation.
-// Built once at module level — matched against the pilot's spoken response.
-const NUMBER_WORD = `(?:zero|one|two|three|four|five|six|seven|eight|nine|niner|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)`
-const NUMBER_WORDS_RE = new RegExp(`\\b${NUMBER_WORD}(?:[\\s-]+${NUMBER_WORD}){0,3}\\b`, "i")
+// ─── Response matching ────────────────────────────────────────────────────────
+
+const NUM_WORD = `(?:zero|one|two|three|four|five|six|seven|eight|nine|niner|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)`
+const NUM_RE = new RegExp(`\\b${NUM_WORD}(?:[\\s-]+${NUM_WORD}){0,3}\\b`, "i")
 
 /**
- * Match spoken text against a response token:
- *   "*"  → wildcard
- *   "#2" → any 2-digit number present in the text
- *   "#3" → any 3-digit number
- *   "#4" → any 4-digit number
- *   else → substring match
+ * Returns true if `spoken` satisfies the response token pattern.
+ * Special tokens: `*` = any, `#2/#3/#4` = 2/3/4-digit number or spoken equivalent.
  */
-function matchesResponse(spoken: string, token: string): boolean {
-  if (token === "*") return true
-  if (token === "#2") return /\b\d{2}\b/.test(spoken)
-  if (token === "#3") return /\b\d{3}\b/.test(spoken)
-  if (token === "#4") return /\b\d{4}\b/.test(spoken)
-  return spoken.includes(token.toLowerCase())
+function matchesResponse(spoken: string, response: string): boolean {
+  if (response === "*") return true
+  const input = spoken.toLowerCase()
+  for (const token of response.toLowerCase().split(/\s+/)) {
+    if (token === "#2" && !/\b\d{2}\b/.test(spoken) && !NUM_RE.test(input)) return false
+    else if (token === "#3" && !/\b\d{3}\b/.test(spoken)) return false
+    else if (token === "#4" && !/\b\d{4}\b/.test(spoken)) return false
+    else if (!["#2", "#3", "#4"].includes(token) && !input.includes(token)) return false
+  }
+  return true
 }
 
-function matchesAnyResponse(spoken: string, responses: string[]): boolean {
-  return responses.some((r) => matchesResponse(spoken, r))
-}
+/** Returns true if `spoken` matches any token in `responses` */
+const matchesAny = (spoken: string, responses: string[]) => responses.some((r) => matchesResponse(spoken, r))
 
-/** Read a dot-path from the performance store (e.g. "takeoff.flaps") */
+// ─── Store / SimVar helpers ───────────────────────────────────────────────────
+
+/** Read a dotted path from the performance store, e.g. "takeoff.v1" */
 function getStoreValue(storePath: string): string | undefined {
   const state = usePerformanceStore.getState() as unknown as Record<string, Record<string, string>>
   const [section, key] = storePath.split(".")
   return state[section]?.[key]
 }
 
-/**
- * Resolve an `expected` field that may be a static boolean/number or a
- * dot-path reference into the performance store ({ store: "takeoff.trim" }).
- * Returns null when the store path cannot be resolved.
- */
-function resolveExpected(expected: boolean | number | { store: string }): number | null {
-  if (typeof expected === "boolean") return expected ? 1 : 0
-  if (typeof expected === "number") return expected
-  const raw = getStoreValue(expected.store)
-  if (raw === undefined) return null
-  const n = parseFloat(String(raw))
-  return isNaN(n) ? null : n
-}
-
+/** Read a SimConnect expression with up to 5 retries, returns null on failure */
 async function readSimVar(expression: string): Promise<number | null> {
-  // On first registration the SimConnect cache may not be populated yet.
-  // Retry a few times with a short delay before giving up.
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let i = 0; i < 5; i++) {
     try {
-      const value = await simvarGet(expression)
-      if (value !== null) {
-        console.log(
-          `[ChecklistRunner] readSimVar("${expression}") → ${value}${attempt > 0 ? ` (attempt ${attempt + 1})` : ""}`
-        )
-        return value
+      const v = await simvarGet(expression)
+      if (v !== null) {
+        console.log(`[ChecklistRunner] readSimVar("${expression}") → ${v}${i > 0 ? ` (attempt ${i + 1})` : ""}`)
+        return v
       }
     } catch (err) {
       console.warn(`[ChecklistRunner] Failed to read simvar "${expression}":`, err)
@@ -124,335 +101,246 @@ async function readSimVar(expression: string): Promise<number | null> {
   return null
 }
 
-// ─── Abort controller ─────────────────────────────────────────────────────────
+// ─── Core check runner ────────────────────────────────────────────────────────
 
-let abortController: AbortController | null = null
+/**
+ * Evaluates a list of checks sequentially.
+ * Supports `any` (OR group), `simvar` (SimConnect comparison), and `store` (perf store equality).
+ * Returns false as soon as any check fails.
+ */
+async function runChecks(checks: Check[], signal: AbortSignal): Promise<boolean> {
+  for (const check of checks) {
+    let pass = false
 
-// ─── Silent-mode execution (landing checklist) ────────────────────────────────
-
-async function executeSilentItem(item: ChecklistItem, index: number, signal: AbortSignal): Promise<boolean> {
-  const { setStepStatus } = useChecklistStore.getState()
-  setStepStatus(index, "active")
-  checkAbort(signal)
-
-  // var/expected: direct SimVar boolean/numeric check
-  if (item.var !== undefined && item.expected !== undefined) {
-    const raw = await readSimVar(item.var)
-    checkAbort(signal)
-
-    const expected = resolveExpected(item.expected)
-    const ok = raw !== null && expected !== null && Math.abs(raw - expected) < 0.5
-
-    if (!ok) {
-      if (item.incorrect) {
-        await playSound(item.incorrect)
-        await waitForSoundFinished()
+    if (check.type === "any") {
+      for (const group of check.groups ?? []) {
+        if (await runChecks(group, signal)) {
+          pass = true
+          break
+        }
       }
-      setStepStatus(index, "failed")
-      return false
     }
 
-    setStepStatus(index, "complete")
-    return true
+    if (check.type === "simvar") {
+      const raw = await readSimVar(check.var!)
+      checkAbort(signal)
+      let expected: number | null = null
+      if (typeof check.expected === "boolean") expected = check.expected ? 1 : 0
+      else if (typeof check.expected === "number") expected = check.expected
+      else if (typeof check.expected === "string") {
+        // Resolve template vars like {flaps}, {flapsefb}
+        const n = parseFloat(check.expected.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? ""))
+        expected = isNaN(n) ? null : n
+      } else if (typeof check.expected === "object" && check.expected !== null) {
+        const s = getStoreValue(check.expected.store)
+        if (s !== undefined) {
+          const n = parseFloat(s)
+          expected = isNaN(n) ? null : n
+        }
+      }
+      if (typeof check.expected === "boolean") {
+        const b = raw !== null ? (raw > 0.5 ? 1 : 0) : null
+        pass = b !== null && expected !== null && b === expected
+      } else {
+        pass = raw !== null && expected !== null && Math.abs(raw - expected) < 0.5
+      }
+    }
+
+    if (check.type === "store") pass = getStoreValue(check.store!) === check.equals
+    if (!pass) return false
   }
-
-  // store_check with simvar_name/expected_simvar: derive expected SimVar value from store
-  if (item.store_check) {
-    const storeVal = getStoreValue(item.store_check.store)
-    const mapEntry = item.store_check.validation_map.find((e) => e.store_value === storeVal)
-
-    if (!mapEntry || mapEntry.simvar_name === undefined || mapEntry.expected_simvar === undefined) {
-      // No matching store entry — skip silently
-      setStepStatus(index, "complete")
-      return true
-    }
-
-    const raw = await readSimVar(mapEntry.simvar_name)
-    checkAbort(signal)
-
-    const ok = raw !== null && Math.abs(raw - mapEntry.expected_simvar) < 0.5
-    if (!ok) {
-      await playSound(item.store_check.incorrect)
-      await waitForSoundFinished()
-      setStepStatus(index, "failed")
-      return false
-    }
-
-    setStepStatus(index, "complete")
-    return true
-  }
-
-  // No checks defined — pass silently
-  setStepStatus(index, "complete")
   return true
 }
 
-// ─── Normal-mode execution (challenge/response) ───────────────────────────────
+/**
+ * Finds the first validation rule whose `when` condition and checks all pass.
+ * Prefers the longest response token match; falls back to `always`/`store` rules for silent mode.
+ */
+async function findPassingRule(
+  validations: ValidationRule[],
+  spoken: string,
+  signal: AbortSignal
+): Promise<ValidationRule | null> {
+  let bestMatch: ValidationRule | undefined
+  let bestLen = -1
+  for (const rule of validations) {
+    for (const token of rule.when.responses ?? []) {
+      if (matchesResponse(spoken, token) && token.length > bestLen) {
+        bestLen = token.length
+        bestMatch = rule
+      }
+    }
+  }
+  if (bestMatch) return (await runChecks(bestMatch.checks ?? [], signal)) ? bestMatch : null
 
+  // No speech match — try always/store-conditional rules (silent mode fallback)
+  for (const rule of validations) {
+    const { when: w } = rule
+    const met = (w.store && getStoreValue(w.store.path) === w.store.equals) || w.always === true
+    if (met && (await runChecks(rule.checks ?? [], signal))) return rule
+  }
+  return null
+}
+
+// ─── Item execution ───────────────────────────────────────────────────────────
+
+let abortController: AbortController | null = null
+
+/**
+ * Executes a single checklist item. Handles four cases:
+ * 1. No challenge — auto-check only (waits for SimVar/store condition)
+ * 2. Cargo skip — item is irrelevant for the freighter variant
+ * 3. FO-only — challenge plays, no speech expected from pilot
+ * 4. Normal — challenge + pilot speech + optional validation/confirmation sounds
+ */
 async function executeNormalItem(item: ChecklistItem, index: number, signal: AbortSignal): Promise<void> {
   const { setStepStatus } = useChecklistStore.getState()
   setStepStatus(index, "active")
+  let responsePlayed = false
 
+  // 1. Auto-check (no audible challenge)
   if (!item.challenge) {
+    if (item.validations?.length) {
+      while (true) {
+        checkAbort(signal)
+        if (await findPassingRule(item.validations, "", signal)) break
+        if (item.incorrect) {
+          await wsf()
+          await playSound(item.incorrect)
+          await wsf()
+        }
+        await sleep(2000)
+      }
+    }
+    if (item.delay_ms) await sleep(item.delay_ms) // ← add this
     setStepStatus(index, "complete")
     return
   }
 
-  const responseList = item.response ?? []
-  const hold = () => useChecklistStore.getState().holdOnIncorrect
+  // 2. Cargo skip
+  if (getMd11Variant() === "cargo" && item.cargo_skip) {
+    setStepStatus(index, "complete")
+    return
+  }
 
-  // Repeat challenge until we get a valid, confirmed response
+  // 3. FO-only (challenge plays, FO responds autonomously)
+  if (item.fo_only_response) {
+    await wsf()
+    await playSound(item.challenge)
+    await wsf()
+    if (item.validations?.length) {
+      while (true) {
+        checkAbort(signal)
+        const rule = await findPassingRule(item.validations, "", signal)
+        if (rule) {
+          if (rule.copilot_response) {
+            await playSound(rule.copilot_response)
+            await wsf()
+            responsePlayed = true
+          }
+          break
+        }
+        await playSound(item.incorrect ?? "are_you_sure.ogg")
+        await wsf()
+        await sleep(2000)
+      }
+    }
+    if (!responsePlayed && item.copilot_response) {
+      await playSound(item.copilot_response)
+      await wsf()
+    }
+    setStepStatus(index, "complete")
+    return
+  }
+
+  // 4. Normal flow — challenge, wait for pilot speech, validate
+  const responseList = item.response ?? []
+  const hold = () => useSettingsStore.getState().holdOnIncorrect
+
   while (true) {
     checkAbort(signal)
-
-    await waitForSoundFinished()
+    await wsf()
     await playSound(item.challenge)
-    await waitForSoundFinished()
-    checkAbort(signal)
+    await wsf()
 
-    // Wait for spoken text that matches the general response list
+    // Wait for a speech response that matches the expected token list
     let spoken: string | null = null
     while (true) {
       spoken = await waitForSpeechResponse(signal)
-      if (spoken === null) return // aborted
-
-      if (responseList.length === 0 || matchesAnyResponse(spoken, responseList)) {
-        const s = spoken.toLowerCase().trim()
-
-        // Baro/feet confirmation: require a numeric value (digits or word form).
-        const expectsFeet = responseList.some((r) => r.toLowerCase().includes("feet"))
-        if ((item.baro_confirmation || expectsFeet) && !s.includes("set and checked")) {
-          if (!(/\b\d{2,4}\b/.test(s) || NUMBER_WORDS_RE.test(s))) continue
-        }
-
-        break
-      }
-      // Unrecognised input — keep waiting, don't re-challenge
+      if (spoken === null) return
+      if (!responseList.length || matchesAny(spoken, responseList)) break
     }
-    // spoken is guaranteed non-null here — the inner loop returns on null
-    const s = spoken!
 
+    const s = spoken!
     checkAbort(signal)
 
-    // ── simvar_check: validate response against live SimVar position ──────
-    if (item.simvar_check) {
-      // If the spoken text doesn't match any config-specific expected_response
-      // (e.g. pilot said "set and checked"), treat it as a universal bypass.
-      const isConfigSpecific = item.simvar_check.validation_map.some((e) =>
-        s.includes(e.expected_response.toLowerCase())
-      )
-
-      if (!isConfigSpecific) {
-        break // universal bypass — accept as-is
-      }
-
-      const simVal = await readSimVar(item.simvar_check.var_name)
-      checkAbort(signal)
-
-      const mapEntry = item.simvar_check.validation_map.find(
-        (e) => simVal !== null && Math.abs(e.sim_value - simVal) < 0.5
-      )
-
-      const expectedResp = mapEntry?.expected_response ?? null
-      if (!expectedResp || !s.includes(expectedResp.toLowerCase())) {
-        await playSound(item.simvar_check.incorrect ?? item.incorrect ?? "are_you_sure.ogg")
-        await waitForSoundFinished()
-        if (hold()) continue
-        else break
-      }
-
-      // ── Also run store_check if present (e.g. flap position vs plan) ───
-      if (item.store_check) {
-        const storeVal = getStoreValue(item.store_check.store)
-        const storeExpected =
-          item.store_check.validation_map.find((e) => e.store_value === storeVal)?.expected_response ?? null
-        if (!storeExpected || !s.includes(storeExpected.toLowerCase())) {
-          await playSound(item.store_check.incorrect)
-          await waitForSoundFinished()
-          if (hold()) continue
-          else break
-        }
-      }
-
-      // ── Also run lvar_plan_check if present (e.g. flap LVAR vs plan) ────
-      if (item.lvar_plan_check) {
-        const lvarVal = await readSimVar(item.lvar_plan_check.var_name)
-        checkAbort(signal)
-        const lvarExpected =
-          item.lvar_plan_check.validation_map.find((e) => lvarVal !== null && Math.abs(e.lvar_value - lvarVal) < 0.5)
-            ?.expected_response ?? null
-        if (lvarExpected && !s.includes(lvarExpected.toLowerCase())) {
-          await playSound(item.lvar_plan_check.incorrect)
-          await waitForSoundFinished()
-          if (hold()) continue
-          else break
-        }
-      }
-
-      // All checks passed — play confirmation if present, then advance
-      if (mapEntry?.copilot_confirmation) {
-        await playSound(mapEntry.copilot_confirmation)
-        await waitForSoundFinished()
-      }
-      break
-    }
-
-    // ── lvar_plan_check: validate response against live LVAR plan value ───
-    if (item.lvar_plan_check) {
-      const lvarVal = await readSimVar(item.lvar_plan_check.var_name)
-      checkAbort(signal)
-
-      const lvarExpected =
-        item.lvar_plan_check.validation_map.find((e) => lvarVal !== null && Math.abs(e.lvar_value - lvarVal) < 0.5)
-          ?.expected_response ?? null
-
-      // If LVAR is unreadable (sim not connected) skip the cross-check and accept
-      if (lvarExpected !== null && !s.includes(lvarExpected.toLowerCase())) {
-        await playSound(item.lvar_plan_check.incorrect)
-        await waitForSoundFinished()
-        if (hold()) continue
-        else break
-      }
-
-      break
-    }
-
-    // ── store_check: validate response against performance store value ────
-    if (item.store_check) {
-      const storeVal = getStoreValue(item.store_check.store)
-      const mapEntry = item.store_check.validation_map.find((e) => e.store_value === storeVal)
-      const expectedResp = mapEntry?.expected_response ?? null
-
-      console.log(
-        `[ChecklistRunner] store_check: store="${item.store_check.store}" storeVal="${storeVal}" expectedResp="${expectedResp}" spoken="${s}" responseMatches=${expectedResp !== null && s.includes(expectedResp.toLowerCase())}`
-      )
-
-      if (!expectedResp || !s.includes(expectedResp.toLowerCase())) {
-        await playSound(item.store_check.incorrect)
-        await waitForSoundFinished()
-        if (hold()) continue
-        else break
-      }
-
-      // ── Verify actual aircraft SimVar state matches what the store expects ─
-      if (mapEntry?.simvar_checks?.length) {
-        console.log(
-          `[ChecklistRunner] Running ${mapEntry.simvar_checks.length} simvar_check(s) for store="${storeVal}"`
-        )
-        let simvarOk = true
-        for (const check of mapEntry.simvar_checks) {
-          const raw = await readSimVar(check.var)
-          checkAbort(signal)
-          // Bool LVARs can return non-1 values (e.g. 43.14) when ON — compare truthy/falsy
-          const rawBool = raw !== null ? (raw > 0.5 ? 1 : 0) : null
-          const pass = rawBool !== null && rawBool === check.expected
-          console.log(
-            `[ChecklistRunner]   check: var="${check.var}" expected=${check.expected} raw=${raw} rawBool=${rawBool} → ${pass ? "PASS" : "FAIL"}`
-          )
-          if (!pass) {
-            simvarOk = false
-            break
-          }
-        }
-        console.log(`[ChecklistRunner] simvar_checks result: ${simvarOk ? "ALL PASS" : "FAILED"}`)
-        if (!simvarOk) {
-          await playSound(item.store_check.incorrect)
-          await waitForSoundFinished()
-          if (hold()) continue
-          else break
-        }
-      }
-
-      break
-    }
-
-    // ── var/expected: verify SimVar state after pilot's verbal response ───
-    if (item.var !== undefined && item.expected !== undefined) {
-      const raw = await readSimVar(item.var)
-      checkAbort(signal)
-
-      const expected = resolveExpected(item.expected)
-      if (raw === null || expected === null || Math.abs(raw - expected) >= 0.5) {
+    // Run validation rules if present
+    if (item.validations?.length) {
+      const rule = await findPassingRule(item.validations, s, signal)
+      if (!rule) {
         await playSound(item.incorrect ?? "are_you_sure.ogg")
-        await waitForSoundFinished()
+        await wsf()
         if (hold()) continue
         else break
       }
-
+      if (rule.copilot_response) {
+        await playSound(rule.copilot_response)
+        await wsf()
+        responsePlayed = true
+      }
       break
     }
 
-    // ── simvar_checks: validate a list of SimVar states after verbal response ─
-    if (item.simvar_checks?.length) {
-      let simvarOk = true
-      for (const check of item.simvar_checks) {
-        const raw = await readSimVar(check.var)
-        checkAbort(signal)
-        const rawBool = raw !== null ? (raw > 0.5 ? 1 : 0) : null
-        const pass = rawBool !== null && rawBool === check.expected
-        console.log(
-          `[ChecklistRunner] simvar_checks: var="${check.var}" expected=${check.expected} raw=${raw} rawBool=${rawBool} → ${pass ? "PASS" : "FAIL"}`
-        )
-        if (!pass) {
-          simvarOk = false
-          break
-        }
-      }
-      if (!simvarOk) {
-        await playSound(item.incorrect ?? "are_you_sure.ogg")
-        await waitForSoundFinished()
-        if (hold()) continue
-        else break
+    // Flaps readback
+    if (item.flaps_confirmation) {
+      const flapValue = vars["flapsefb"]
+      if (flapValue) {
+        await playSound(`flaps_${flapValue}.ogg`)
+        await wsf()
+        responsePlayed = true
       }
     }
 
-    // ── baro_confirmation: copilot reads back the live baro value ────────
-    if (item.baro_confirmation) {
-      const t = useTelemetryStore.getState().telemetry
-      if (t !== null) {
-        // Detect unit from the spoken number: 920-1060 → hPa, 2700-3200 → inHg.
-        const spokenMatch = s.match(/\b(\d{3,4})\b/)
-        const spokenNum = spokenMatch ? parseInt(spokenMatch[1], 10) : null
-        const isHpa = spokenNum !== null ? spokenNum >= 920 && spokenNum <= 1060 : t.cptBaro === 1
-        const value = isHpa
-          ? Math.round(t.captAltimeterSettingMB ?? 0)
-          : Math.round((t.captAltimeterSettingHG ?? 0) * 100)
-        const filenames = [
-          ...String(value)
-            .split("")
-            .map((d) => `${d}.ogg`),
-          "set.ogg"
-        ]
-        await playSoundSequence(filenames)
+    // Trim readback — converts raw LVAR to units and spells out digits
+    if (item.trim_confirmation) {
+      const rawTrim = (await readSimVar("(L:MD11_EXT_STAB_TRIM)")) ?? 0
+      const units = Math.max(0, Number(rawTrim) * 0.165 - 1.0).toFixed(1)
+      await playSoundSequence([...units.split("").map((d) => (d === "." ? "point.ogg" : `${d}.ogg`)), "units_set.ogg"])
+      await wsf()
+    }
+
+    // Autobrake readback
+    if (item.abrk_confirmation) {
+      const raw = (await simvarGet("(L:MD11_CTR_AUTOBRAKE_SW)")) ?? 0
+      const file = ({ 2: "min.ogg", 3: "med.ogg", 4: "max.ogg" } as Record<number, string>)[Math.round(Number(raw))]
+      if (file) {
+        await playSoundSequence(["set.ogg", file])
+        await wsf()
       }
     }
 
-    // No extra validation — accept the matched response
     break
   }
 
-  if (item.copilot_confirmation) {
-    await waitForSoundFinished()
-    await playSound(item.copilot_confirmation)
-    await waitForSoundFinished()
+  // Fallback copilot response if nothing else played one
+  if (!responsePlayed && item.copilot_response) {
+    await wsf()
+    await playSound(item.copilot_response)
+    await wsf()
   }
-
   setStepStatus(index, "complete")
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-// Blocked checklists while cabin ready timer is running
-const BLOCKED_CHECKLISTS = new Set(["before_takeoff_to_the_line", "before_takeoff_below_the_line"])
+/** Checklists blocked while the cabin ready timer is running */
+const BLOCKED_CHECKLISTS = new Set(["taxi", "before_takeoff"])
 
+/** Load and run a checklist by ID. Aborts any currently running checklist first. */
 export async function executeChecklist(checklistId: string): Promise<void> {
   const store = useChecklistStore.getState()
-
-  // Abort any in-progress checklist
-  if (abortController) {
-    abortController.abort()
-    abortController = null
-  }
+  abortController?.abort()
+  abortController = null
 
   const checklist = getChecklistById(checklistId)
   if (!checklist) {
@@ -460,80 +348,48 @@ export async function executeChecklist(checklistId: string): Promise<void> {
     return
   }
 
-  // Block before takeoff checklists if cabin ready timer is running
+  await getTemplateVars()
   const cabinTimer = useCabinReadyTimerStore.getState()
   if (cabinTimer.isRunning && BLOCKED_CHECKLISTS.has(checklistId)) {
     playSound("cabin_not_secure.ogg")
-    store.setError("Cannot start before takeoff checklist - cabin ready timer is running")
+    store.setError("Cannot start taxi checklist - cabin ready timer is running")
     return
   }
 
   store.setChecklist(checklist)
-
   abortController = new AbortController()
   const { signal } = abortController
 
-  const silent = checklist.mode === "silent"
-
   try {
-    if (silent) {
-      // ── Silent mode: auto-check all items, collect results ─────────────
-      let allPassed = true
+    for (let i = 0; i < checklist.items.length; i++) {
+      checkAbort(signal)
+      useChecklistStore.getState().setStepIndex(i)
+      await executeNormalItem(checklist.items[i], i, signal)
+    }
+    await wsf()
+    await playSound(checklist.completion)
+    await wsf()
+    useChecklistStore.getState().setExecutionState("completed")
+    useVoiceHintProgressStore.getState().recordChecklistCompleted(checklist.id)
 
-      for (let i = 0; i < checklist.items.length; i++) {
-        checkAbort(signal)
-        useChecklistStore.getState().setStepIndex(i)
-        const passed = await executeSilentItem(checklist.items[i], i, signal)
-        if (!passed) allPassed = false
-      }
-
-      if (allPassed) {
-        await waitForSoundFinished()
-        await playSound(checklist.completion)
-        await waitForSoundFinished()
-        useChecklistStore.getState().setExecutionState("completed")
-        useVoiceHintProgressStore.getState().recordChecklistCompleted(checklist.id)
-      } else {
-        // Leave execution state as "running" with failed items visible so
-        // the pilot can correct and re-run
-        useChecklistStore.getState().setExecutionState("error")
-      }
-    } else {
-      // ── Normal mode: challenge/response for each item ──────────────────
-      for (let i = 0; i < checklist.items.length; i++) {
-        checkAbort(signal)
-        useChecklistStore.getState().setStepIndex(i)
-        await executeNormalItem(checklist.items[i], i, signal)
-      }
-
-      await waitForSoundFinished()
-      await playSound(checklist.completion)
-      await waitForSoundFinished()
-      useChecklistStore.getState().setExecutionState("completed")
-      useVoiceHintProgressStore.getState().recordChecklistCompleted(checklist.id)
-
-      // Start cabin ready timer after before_start_below_the_line is completed
-      if (checklistId === "before_start_below_the_line") {
-        const duration = 5 + Math.random() * 4 // Random duration between 5 and 9 minutes
-        cabinTimer.startTimer(duration)
-        console.log(`[CabinReadyTimer] Started with ${duration.toFixed(1)} minutes duration`)
-      }
+    // Start cabin ready timer after before_start checklist
+    if (checklistId === "after_start" && getMd11Variant() === "passenger") {
+      // Shorten the timer slightly because they've been working during engine start
+      const duration = 1 + Math.random() * 3
+      cabinTimer.startTimer(duration)
+      console.log(`[CabinReadyTimer] Final walk-through in progress...`)
     }
   } catch (err) {
-    const message = String(err)
-    if (message.includes("aborted")) {
-      useChecklistStore.getState().setExecutionState("aborted")
-    } else {
-      useChecklistStore.getState().setError(message)
-    }
+    const msg = String(err)
+    if (msg.includes("aborted")) useChecklistStore.getState().setExecutionState("aborted")
+    else useChecklistStore.getState().setError(msg)
   } finally {
     abortController = null
   }
 }
 
+/** Abort the currently running checklist, if any */
 export function abortChecklist(): void {
-  if (abortController) {
-    abortController.abort()
-    abortController = null
-  }
+  abortController?.abort()
+  abortController = null
 }

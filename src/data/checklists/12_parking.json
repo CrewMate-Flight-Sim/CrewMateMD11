@@ -1,0 +1,67 @@
+{
+  "id": "parking",
+  "name": "Parking Checklist",
+  "items": [
+    {
+      "label": "Anti Ice",
+      "response": ["off", "set and checked"],
+      "challenge": "anti_ice.ogg",
+      "copilot_response": "off.ogg"
+    },
+    {
+      "challenge": "hyd_panel.ogg",
+      "label": "Hydraulics Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "fuel_sw.ogg",
+      "response": ["off", "set and checked"],
+      "label": "Fuel Switches",
+      "copilot_response": "off.ogg"
+    },
+    {
+      "challenge": "seat_belts.ogg",
+      "label": "Seat belts",
+      "copilot_response": "off.ogg",
+      "fo_only_response": true
+    },
+    {
+      "challenge": "fuel_panel.ogg",
+      "label": "Fuel Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "emer_pwr.ogg",
+      "label": "Emergency power",
+      "fo_only_response": true,
+      "copilot_response": "off.ogg"
+    },
+    {
+      "challenge": "ext_lights.ogg",
+      "label": "Exterior lights",
+      "fo_only_response": true,
+      "copilot_response": "off.ogg"
+    },
+    {
+      "challenge": "parking_brake.ogg",
+      "response": ["released", "set", "set and checked"],
+      "label": "Parking Brake",
+      "copilot_response": "set.ogg"
+    },
+    {
+      "challenge": "irs.ogg",
+      "response": ["set", "set and checked"],
+      "label": "IRS",
+      "copilot_response": "set.ogg"
+    },
+    {
+      "challenge": "sd_status.ogg",
+      "response": ["reviewed", "set and checked"],
+      "label": "SD Status",
+      "copilot_response": "reviewed.ogg"
+    }
+  ],
+  "completion": "parking_checklist_completed.ogg"
+}

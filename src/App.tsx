@@ -14,6 +14,7 @@ import { useAutoFlows } from "@/hooks/useAutoFlows"
 import { useBaroSync } from "@/hooks/useBaroSync"
 import { useCallouts } from "@/hooks/useCallouts"
 import { useCloseConfirm } from "@/hooks/useCloseConfirm"
+import { useMd11Variant } from "@/hooks/useMD11variant"
 import { usePreflightTimer } from "@/hooks/usePreflightTimer"
 import { useSimConnection } from "@/hooks/useSimConnection"
 import { useSpeechCommands } from "@/hooks/useSpeechCommands"
@@ -21,7 +22,6 @@ import { useVoiceHints } from "@/hooks/useVoiceHints"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
-
 import "./App.css"
 
 function App() {
@@ -34,6 +34,7 @@ function App() {
   const voiceEnabled = useSettingsStore((state) => state.voiceEnabled)
   const setVoiceEnabled = useSettingsStore((state) => state.setVoiceEnabled)
 
+  useMd11Variant()
   useCallouts()
   useAutoFlows()
   usePreflightTimer()

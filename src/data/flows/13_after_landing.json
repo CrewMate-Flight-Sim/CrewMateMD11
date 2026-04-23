@@ -1,0 +1,130 @@
+{
+  "id": "after_landing",
+  "name": "After Landing",
+  "sound_end": "apu_reminder.ogg",
+  "steps": [
+    {
+      "label": "Spoilers",
+      "read": "(L:MD11_SPDBRK_HANDLE)",
+      "on": "77829 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Flaps",
+      "read": "(L:MD11_FLAP_RNG)",
+      "on": "77830 (>L:CEVENT)",
+      "expect": "{flaps_cleanup}",
+      "repeat_on": true
+    },
+    {
+      "label": "WXR off",
+      "read": "(L:MD11_PED_WXR_OFF_BT)",
+      "on": "69883 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Set Autobrake",
+      "read": "(L:MD11_CTR_AUTOBRAKE_SW)",
+      "on": "82211 (>L:CEVENT)",
+      "expect": 1,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights on",
+      "read": "(L:MD11_OVHD_LTS_NOSE_SW)",
+      "on": "90261 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:md11_ovhd_lts_ldg_l_sw)",
+      "on": "90257 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:md11_ovhd_lts_ldg_r_sw)",
+      "on": "90259 (>L:CEVENT)",
+      "expect": 0,
+      "repeat_on": true
+    },
+    {
+      "label": "RWY Turnoff light off",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)",
+      "on": "90263 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [1]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "RWY Turnoff light off",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)",
+      "on": "90265 (>L:CEVENT)",
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [1]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:MD11_OVHD_LTS_HI_INT_BT)",
+      "on": "90273 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Engine anti ice",
+      "read": "(L:MD11_OVHD_AICE_ENG1_BT)",
+      "on": "{anti_ice_eng1_cmd}",
+      "expect": "{anti_ice_eng1_expect}",
+      "skip_delay": true
+    },
+    {
+      "label": "Engine anti ice",
+      "read": "(L:MD11_OVHD_AICE_ENG2_BT)",
+      "on": "{anti_ice_eng2_cmd}",
+      "expect": "{anti_ice_eng2_expect}",
+      "skip_delay": true
+    },
+    {
+      "label": "Engine anti ice",
+      "read": "(L:MD11_OVHD_AICE_ENG3_BT)",
+      "on": "{anti_ice_eng3_cmd}",
+      "expect": "{anti_ice_eng3_expect}"
+    },
+    {
+      "label": "Wing anti ice",
+      "read": "(L:MD11_OVHD_AICE_WING_BT)",
+      "on": "{anti_ice_wing_cmd}",
+      "expect": "{anti_ice_wing_expect}",
+      "skip_delay": true
+    },
+    {
+      "label": "Tail anti ice",
+      "read": "(L:MD11_OVHD_AICE_TAIL_BT)",
+      "on": "{anti_ice_tail_cmd}",
+      "expect": "{anti_ice_tail_expect}"
+    },
+    {
+      "label": "Set stab trim",
+      "read": "(L:MD11_EXT_STAB_TRIM)",
+      "trim_on": true,
+      "expect": 24.1
+    }
+  ]
+}

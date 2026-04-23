@@ -1,0 +1,43 @@
+{
+  "id": "taxi",
+  "name": "Taxi checklist",
+  "items": [
+    {
+      "challenge": "flaps.ogg",
+      "response": ["flaps #2", "set and checked"],
+      "label": "Flaps",
+      "flaps_confirmation": true
+    },
+    {
+      "challenge": "spoilers.ogg",
+      "response": ["armed", "set and checked"],
+      "label": "Spoilers",
+      "copilot_response": "armed.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_SPDBRK_HANDLE)", "expected": 1 }]
+        }
+      ]
+    },
+    {
+      "challenge": "flight_controls.ogg",
+      "response": ["checked", "set and checked"],
+      "label": "Flight controls",
+      "copilot_response": "checked.ogg"
+    },
+    {
+      "challenge": "stab_trim.ogg",
+      "response": ["set", "set and checked"],
+      "label": "Stabilizer trim",
+      "trim_confirmation": true
+    },
+    {
+      "challenge": "to_data.ogg",
+      "response": ["confirm", "set and checked"],
+      "label": "Takeoff Data",
+      "copilot_response": "set.ogg"
+    }
+  ],
+  "completion": "taxi_completed.ogg"
+}

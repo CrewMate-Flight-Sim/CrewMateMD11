@@ -1,0 +1,288 @@
+{
+  "id": "fo_cockpit_prep1",
+  "name": "FO Cockpit Preparation part 1",
+  "steps": [
+    {
+      "label": "Battery on",
+      "read": "(L:md11_ovhd_elec_batt_bt)",
+      "on": "1 (>L:md11_ovhd_elec_batt_grd)",
+      "expect": 1
+    },
+    {
+      "label": "Battery on",
+      "read": "(L:md11_ovhd_elec_batt_bt)",
+      "on": "90150 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "External power on",
+      "read": "(L:md11_ovhd_elec_ext_pwr_bt)",
+      "on": "90142 (>L:CEVENT)",
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_elec_ext_pwr_on_lt)",
+            "one_of": [0]
+          }
+        ]
+      },
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "External power on",
+      "read": "(L:md11_ovhd_elec_ext_pwr_bt)",
+      "on": "90143 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Galley external power on",
+      "read": "(L:md11_ovhd_elec_gly_ext_pwr_bt)",
+      "on": "90138 (>L:CEVENT)",
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_elec_gly_ext_pwr_on_lt)",
+            "one_of": [0]
+          }
+        ]
+      },
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Galley external power on",
+      "read": "(L:md11_ovhd_elec_gly_ext_pwr_bt)",
+      "on": "90139 (>L:CEVENT)",
+      "expect": 0,
+      "wait_ms": 18000
+    },
+    {
+      "label": "Fire test",
+      "read": "(L:md11_aovhd_firetest_bt)",
+      "on": "73748 (>L:CEVENT)",
+      "sound_on_execute": "fire_test.ogg",
+      "expect": 1,
+      "wait_ms": 11000
+    },
+    {
+      "label": "Fire test",
+      "read": "(L:md11_aovhd_firetest_bt)",
+      "on": "73749 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Ann lights and air test",
+      "read": "(L:md11_ovhd_annunlt_test_bt)",
+      "on": "90408 (>L:CEVENT)",
+      "expect": 1,
+      "wait_ms": 12000
+    },
+    {
+      "label": "Ann lights and air test",
+      "read": "(L:md11_ovhd_annunlt_test_bt)",
+      "on": "90409 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_1_kb)",
+      "on": "90112 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_2_kb)",
+      "on": "90114 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_3_kb)",
+      "on": "90116 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_init_bt)",
+      "on": "82099 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          }
+        ]
+      },
+      "skip_delay": true
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_init_bt)",
+      "on": "82100 (>L:CEVENT)",
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          }
+        ]
+      },
+      "expect": 0
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_lsk_4r_bt)",
+      "on": "82085 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          }
+        ]
+      },
+      "skip_delay": true
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_lsk_4r_bt)",
+      "on": "82086 (>L:CEVENT)",
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          }
+        ]
+      },
+      "expect": 0
+    },
+    {
+      "label": "CVR test",
+      "read": "(L:md11_ovhd_cvr_test_bt)",
+      "on": "90358 (>L:CEVENT)",
+      "expect": 1,
+      "wait_ms": 5000
+    },
+    {
+      "label": "CVR test",
+      "read": "(L:md11_ovhd_cvr_test_bt)",
+      "on": "90359 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "HYD test",
+      "read": "(L:MD11_PED_SD_HYD_BT)",
+      "on": "69836 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "HYD test",
+      "read": "(L:MD11_PED_SD_HYD_BT)",
+      "on": "69837 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "HYD test",
+      "read": "(L:md11_ovhd_hyd_hyd_test_grd)",
+      "on": "1 (>L:md11_ovhd_hyd_hyd_test_grd)",
+      "expect": 1,
+      "hyd_test": true
+    },
+    {
+      "label": "HYD test",
+      "read": "(L:md11_ovhd_hyd_hyd_test_bt)",
+      "on": "90191 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "HYD test",
+      "read": "(L:md11_ovhd_hyd_hyd_test_bt)",
+      "on": "90192 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "HYD test",
+      "read": "(L:md11_ovhd_hyd_hyd_test_grd)",
+      "on": "0 (>L:md11_ovhd_hyd_hyd_test_grd)",
+      "expect": 0
+    },
+    {
+      "label": "Cargo",
+      "read": "(L:md11_ovhd_pneu_aft_cargo_temp)",
+      "on": "90278 (>L:CEVENT)",
+      "expect": 3,
+      "repeat_on": true
+    },
+    {
+      "label": "EMER PWR arm",
+      "read": "(L:md11_ovhd_elec_emer_pwr_kb)",
+      "on": "90160 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "EMER LT arm",
+      "read": "(L:md11_ovhd_lts_emer_sw)",
+      "on": "90243 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "EMER LT test",
+      "read": "(L:md11_ovhd_lts_emer_test_bt)",
+      "on": "90244 (>L:CEVENT)",
+      "expect": 1,
+      "wait_ms": 8000
+    },
+    {
+      "label": "EMER LT test",
+      "read": "(L:md11_ovhd_lts_emer_test_bt)",
+      "on": "90245 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set signs",
+      "read": "(L:md11_ovhd_lts_no_smoke_sw)",
+      "on": "90247 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Set signs",
+      "read": "(L:md11_ovhd_lts_seat_belts_sw)",
+      "on": "90249 (>L:CEVENT)",
+      "expect": 2,
+      "repeat_on": true
+    },
+    {
+      "label": "NAV LT on",
+      "read": "(L:md11_ovhd_lts_nav_lt)",
+      "on": "90267 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "LOGO LT on",
+      "read": "(L:MD11_OVHD_LTS_LOGO_BT)",
+      "on": "90269 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [0, 2, 3]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "EVAC arm",
+      "read": "(L:md11_aovhd_evac_sw)",
+      "on": "73774 (>L:CEVENT)",
+      "expect": 1
+    }
+  ]
+}
