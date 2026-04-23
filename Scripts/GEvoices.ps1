@@ -18,6 +18,7 @@ $phrases = @{
     "gpu_off"  = "GPU is disconnected"
     "asu_on"   = "ASU is connected"
     "asu_off"  = "ASU is disconnected"
+    "roger"    = "Roger"
 }
 
 # Derive folder name from voice: "en-US-JennyNeural" -> "Jenny"

@@ -1,4 +1,4 @@
-# CrewMate A310
+# CrewMate MD11
 
 [![Latest Release](https://img.shields.io/github/v/release/CrewMate-Flight-Sim/CrewMateA310?label=Latest%20Release)](https://github.com/CrewMate-Flight-Sim/CrewMateA310/releases)
 ![GitHub all releases](https://img.shields.io/github/downloads/CrewMate-Flight-Sim/CrewMateA310/total?style=plastic&label=Downloads)
@@ -9,7 +9,7 @@
 
 ![CrewMate Logo](./src-tauri/icons/icon.png)
 
-> **CrewMate A310** is a free and open-source alternative to Copilot-style apps for aircraft workflows.
+> **CrewMate MD11** is a free and open-source alternative to Copilot-style apps for aircraft workflows.
 > All data from the voice recognition is processed locally on your machine.
 
 ---

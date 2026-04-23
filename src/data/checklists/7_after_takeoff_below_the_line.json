@@ -1,0 +1,50 @@
+{
+  "id": "after_takeoff_below_the_line",
+  "name": "After Takeoff Checklist below the line",
+  "items": [
+    {
+      "challenge": "altimeters.ogg",
+      "response": ["1013 set", "2992 set", "set and checked"],
+      "validations": [
+        {
+          "when": { "responses": ["1013 set"] },
+          "checks": [
+            { "type": "simvar", "var": "(L:md11_cap_altimeter)", "expected": 1013.205 },
+            { "type": "simvar", "var": "(L:md11_fo_altimeter)", "expected": 1013.205 }
+          ],
+          "copilot_response": "1013_set.ogg"
+        },
+        {
+          "when": { "responses": ["2992 set"] },
+          "checks": [
+            { "type": "simvar", "var": "(L:md11_cap_altimeter)", "expected": 29.92 },
+            { "type": "simvar", "var": "(L:md11_fo_altimeter)", "expected": 29.92 }
+          ],
+          "copilot_response": "2992_set.ogg"
+        },
+        {
+          "when": { "responses": ["set and checked"] },
+          "checks": [
+            {
+              "type": "any",
+              "groups": [
+                [
+                  { "type": "simvar", "var": "(L:md11_cap_altimeter)", "expected": 1013.205 },
+                  { "type": "simvar", "var": "(L:md11_fo_altimeter)", "expected": 1013.205 }
+                ],
+                [
+                  { "type": "simvar", "var": "(L:md11_cap_altimeter)", "expected": 29.92 },
+                  { "type": "simvar", "var": "(L:md11_fo_altimeter)", "expected": 29.92 }
+                ]
+              ]
+            }
+          ],
+          "copilot_response": "standard_set.ogg"
+        }
+      ],
+      "incorrect": "are_you_sure.ogg",
+      "label": "Altimeters"
+    }
+  ],
+  "completion": "after_takeoff_completed.ogg"
+}

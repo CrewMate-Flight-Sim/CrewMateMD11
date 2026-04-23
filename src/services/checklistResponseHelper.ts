@@ -22,21 +22,6 @@ export function getDisplayResponses(item: ChecklistItem): string[] {
 
   const extras: string[] = []
 
-  // Baro confirmation: show clear examples the pilot can say
-  if (item.baro_confirmation) {
-    extras.push("qnh #4 set", "altimeter #4 set", "#4 set")
-  }
-
-  // Takeoff confirmation: show only the currently-configured thrust variant + safeword
-
-  // If an item expects feet (minimums), show BARO/RADIO examples
-  if ((item.response ?? []).some((r) => r.toLowerCase().includes("feet"))) {
-    extras.push("mda #3 feet", "dh #3 feet")
-  }
-
-  if (item.label?.toLowerCase().includes("pitch trim")) {
-    extras.push("#.# up set", "#.# down set")
-  }
   // Merge, preserve order, remove duplicates
   const combined = [...extras, ...base]
   const seen = new Set<string>()
@@ -48,25 +33,7 @@ export function getDisplayResponses(item: ChecklistItem): string[] {
       out.push(v)
     }
   }
-  // If explicit BARO/RADIO examples were added, hide the generic "feet"
-  const hasBaroRadio = out.some((s) => s.toLowerCase().includes("baro") || s.toLowerCase().includes("radio"))
-  let filtered = out
-  if (hasBaroRadio) {
-    filtered = filtered.filter((s) => s.toLowerCase() !== "feet")
-  }
-
-  // If the item is a baro confirmation (or we added baro-style set examples),
-  // hide the plain "set" token so pilots see only numeric-set variants like
-  // "#### set" / "qnh #### set" / "altimeter #### set". Keep "set and checked".
-  const hasBaroSetExample =
-    filtered.some(
-      (s) =>
-        s.toLowerCase().includes("#### set") || s.toLowerCase().includes("qnh") || s.toLowerCase().includes("altimeter")
-    ) || item.baro_confirmation === true
-
-  if (hasBaroSetExample) {
-    filtered = filtered.filter((s) => s.toLowerCase() !== "set")
-  }
+  const filtered = out
 
   // Apply final display formatting (weight units, feet) so all consumers get ready-to-display strings
   return filtered.map(renderResponseToken)

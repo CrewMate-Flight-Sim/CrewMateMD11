@@ -210,56 +210,26 @@ Thread.Sleep(Timeout.Infinite);
 
 static void EmitSpeech(VoiceCommand command, float confidence)
 {
-    // Detect pull vs set from the raw spoken text
-    var isPull = command.Raw.Contains("pull", StringComparison.OrdinalIgnoreCase);
-    var verb = isPull ? "pull" : "set";
-
-    // Reconstruct normalized text with correct verb so checklistRunner.ts still works
     var text = command.Type switch
     {
-        "heading" when command.Payload.TryGetValue("value", out var v) => $"{verb} heading {v}",
-
-        "altitude" when command.Payload.TryGetValue("flightLevel", out var fl) => isPull
-            ? $"flight level {fl} pull"
-            : $"set flight level {fl}",
-
-        "altitude" when command.Payload.TryGetValue("value", out var v) => isPull
-            ? $"altitude {v} pull"
-            : $"set altitude {v}",
-
-        "speed" when command.Payload.TryGetValue("value", out var v) => $"{verb} speed {v}",
-
-        // Normalize altimeter so checklistRunner sees digits ("1016 set" / "2992 set")
+        "heading" when command.Payload.TryGetValue("value", out var v) => $"set heading {v}",
+        "altitude" when command.Payload.TryGetValue("flightLevel", out var fl) => $"set flight level {fl}",
+        "altitude" when command.Payload.TryGetValue("value", out var v) => $"set altitude {v}",
+        "speed" when command.Payload.TryGetValue("value", out var v) => $"set speed {v}",
         "altimeter" when command.Payload.TryGetValue("raw", out var raw) => $"{raw} set",
-
         _ => command.Raw,
     };
 
-    // Build enriched payload: original payload + verb for parametric commands
     Dictionary<string, object>? outPayload =
         command.Type is "heading" or "altitude" or "speed"
-            ? new Dictionary<string, object>(command.Payload) { ["verb"] = verb }
+            ? new Dictionary<string, object>(command.Payload)
         : command.Payload.Count > 0 ? command.Payload
         : null;
 
     WriteLine(
         outPayload is not null
-            ? (object)
-                new
-                {
-                    type = "speech",
-                    commandType = command.Type,
-                    payload = outPayload,
-                    text,
-                    confidence = Math.Round(confidence, 3),
-                }
-            : new
-            {
-                type = "speech",
-                commandType = command.Type,
-                text,
-                confidence = Math.Round(confidence, 3),
-            }
+            ? (object)new { type = "speech", commandType = command.Type, payload = outPayload, text, confidence = Math.Round(confidence, 3) }
+            : new { type = "speech", commandType = command.Type, text, confidence = Math.Round(confidence, 3) }
     );
 }
 

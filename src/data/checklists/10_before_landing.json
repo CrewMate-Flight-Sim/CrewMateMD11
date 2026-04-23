@@ -1,0 +1,84 @@
+{
+  "id": "before_landing",
+  "name": "Before Landing Checklist",
+  "items": [
+    {
+      "challenge": "gear_lts.ogg",
+      "response": ["down", "set and checked"],
+      "label": "Gear and lights",
+      "copilot_response": "4_green.ogg",
+      "validation": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_MIP_GEAR_SW)", "expected": 25 }]
+        }
+      ]
+    },
+    {
+      "challenge": "spoilers.ogg",
+      "response": ["armed", "set and checked"],
+      "label": "Spoilers",
+      "copilot_response": "armed.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "checks": [{ "type": "simvar", "var": "(L:MD11_SPDBRK_HANDLE)", "expected": 1 }]
+        }
+      ]
+    },
+    {
+      "challenge": "auto_brake.ogg",
+      "response": ["checked", "set and checked"],
+      "label": "Autobrake",
+      "abrk_confirmation": true
+    },
+    {
+      "challenge": "flaps.ogg",
+      "response": ["flaps thirty five", "flaps fifty", "set and checked"],
+      "label": "Flaps",
+      "validations": [
+        {
+          "when": {
+            "responses": ["flaps thirty five", "set and checked"]
+          },
+          "checks": [
+            { "type": "store", "store": "landing.flaps", "equals": "35" },
+            {
+              "type": "simvar",
+              "var": "(L:md11_flap_rng)",
+              "expected": 82
+            }
+          ],
+          "copilot_response": "flaps_35.ogg"
+        },
+        {
+          "when": {
+            "responses": ["flaps fifty", "set and checked"]
+          },
+          "checks": [
+            { "type": "store", "store": "landing.flaps", "equals": "50" },
+            {
+              "type": "simvar",
+              "var": "(L:md11_flap_rng)",
+              "expected": 100
+            }
+          ],
+          "copilot_response": "flaps_50.ogg"
+        }
+      ]
+    },
+    {
+      "challenge": "altimeters.ogg",
+      "response": ["#4 set", "set and checked"],
+      "copilot_response": "xchk.ogg",
+      "label": "Altimeters"
+    },
+    {
+      "challenge": "ead.ogg",
+      "response": ["checked", "set and checked"],
+      "label": "EAD/ESSENTIAL ITEMS",
+      "copilot_response": "checked.ogg"
+    }
+  ],
+  "completion": "before_landing_checklist_completed.ogg"
+}

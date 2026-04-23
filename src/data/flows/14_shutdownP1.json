@@ -1,0 +1,53 @@
+{
+  "id": "shutdownP1",
+  "name": "Shutdown part 1",
+  "sound_end": "engines_off.ogg",
+  "steps": [
+    {
+      "label": "Engine anti ice",
+      "read": "(L:MD11_OVHD_AICE_ENG1_BT)",
+      "on": "90414 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true
+    },
+    {
+      "label": "Engine anti ice",
+      "read": "(L:MD11_OVHD_AICE_ENG2_BT)",
+      "on": "90416 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true
+    },
+    {
+      "label": "Engine anti ice",
+      "read": "(L:MD11_OVHD_AICE_ENG3_BT)",
+      "on": "90418 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Wing anti ice",
+      "read": "(L:MD11_OVHD_AICE_WING_BT)",
+      "on": "90420 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true
+    },
+    {
+      "label": "Tail anti ice",
+      "read": "(L:MD11_OVHD_AICE_TAIL_BT)",
+      "on": "90422 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Windshield anti ice off",
+      "read": "(L:MD11_OVHD_WNDSHLD_AICE_L_BT)",
+      "on": "90424 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true
+    },
+    {
+      "label": "Windshield anti ice off",
+      "read": "(L:MD11_OVHD_WNDSHLD_AICE_R_BT)",
+      "on": "90428 (>L:CEVENT)",
+      "expect": 0
+    }
+  ]
+}

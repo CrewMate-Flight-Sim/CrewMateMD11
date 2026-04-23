@@ -1,0 +1,31 @@
+{
+  "id": "before_start",
+  "name": "Before Start",
+  "sound_start": "check.ogg",
+  "steps": [
+    {
+      "label": "Beacon",
+      "read": "(L:MD11_OVHD_LTS_BCN_BT)",
+      "on": "90271 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Set Dial a Flap",
+      "read": "(L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "on": "{flaps} (>L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "expect": "{flaps}"
+    },
+    {
+      "label": "TCAS",
+      "read": "(L:md11_ped_xpndr_mode_kb)",
+      "on": "69877 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Clear chocks",
+      "read": "(L:md11_ext_chocks)",
+      "on": "0 (>L:md11_ext_chocks)",
+      "expect": 0
+    }
+  ]
+}

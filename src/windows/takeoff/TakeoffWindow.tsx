@@ -43,62 +43,6 @@ export function TakeoffWindow() {
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
           <div className={labelRow}>
-            <Label htmlFor="trim" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Trim
-            </Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-[200px] bg-slate-800 border-slate-700">
-                  For UP trim value it's positive without a negative sign, for DN trim value it's negative with the
-                  negative sign.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            type="number"
-            id="trim"
-            name="trim"
-            min={-2}
-            max={3}
-            step={0.1}
-            value={takeoff.trim ?? ""}
-            onChange={handleNumberInput}
-            className="h-8 bg-slate-900/50 border-slate-600 text-white text-xs font-mono text-center px-1 focus-visible:ring-cyan-500"
-            placeholder="—"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="flaps" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Flaps
-            </Label>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-[200px] bg-slate-800 border-slate-700">
-                  A300/A310 flaps are formatted as (Slats/Flaps)
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          <select id="flaps" name="flaps" value={takeoff.flaps} onChange={handleSelectChange} className={selectCls}>
-            <option value="1">15/0</option>
-            <option value="2">15/15</option>
-            <option value="3">20/20</option>
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <div className={labelRow}>
             <Label
               htmlFor="transitionAltitude"
               className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest"
@@ -129,42 +73,29 @@ export function TakeoffWindow() {
             placeholder="—"
           />
         </div>
+        <div className="space-y-1">
+          <div className={labelRow}>
+            <Label htmlFor="trim" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
+              Trim
+            </Label>
+          </div>
+          <Input
+            type="number"
+            id="trim"
+            name="trim"
+            value={takeoff.trim ?? ""}
+            onChange={handleNumberInput}
+            min={-1.0}
+            max={15.5}
+            step={0.1}
+            className="h-8 bg-slate-900/50 border-slate-600 text-white text-xs font-mono text-center px-1 focus-visible:ring-cyan-500"
+            placeholder="—"
+          />
+        </div>
       </div>
 
       {/* Thrust + Packs + Anti Ice */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="thrustSetting" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Thrust
-            </Label>
-          </div>
-
-          <select
-            id="thrustSetting"
-            name="thrustSetting"
-            value={takeoff.thrustSetting}
-            onChange={handleSelectChange}
-            className={selectCls}
-          >
-            <option value="toga">TOGA</option>
-            <option value="flex">FLEX</option>
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="packs" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Packs
-            </Label>
-          </div>
-
-          <select id="packs" name="packs" value={takeoff.packs} onChange={handleSelectChange} className={selectCls}>
-            <option value="on">ON</option>
-            <option value="off">OFF</option>
-          </select>
-        </div>
-
         <div className="space-y-1">
           <div className={labelRow}>
             <Label htmlFor="antiIce" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
@@ -192,7 +123,7 @@ export function TakeoffWindow() {
           >
             <option value="off">OFF</option>
             <option value="oneng">ENG</option>
-            <option value="onengwing">ENG+WING</option>
+            <option value="onengfoil">ENG+AIRFOIL</option>
           </select>
         </div>
       </div>

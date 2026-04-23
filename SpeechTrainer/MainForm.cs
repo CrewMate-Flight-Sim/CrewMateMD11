@@ -41,7 +41,7 @@ namespace SpeechTrainer
                 if (string.IsNullOrWhiteSpace(dir))
                     dir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-                dir = Path.Combine(dir, "crewmatea310");
+                dir = Path.Combine(dir, "crewmatemd11");
                 Directory.CreateDirectory(dir);
                 return Path.Combine(dir, LogFileName);
             }
@@ -74,7 +74,7 @@ namespace SpeechTrainer
 
         private void BuildUi()
         {
-            Text = "CrewMate A310 — Speech Training";
+            Text = "CrewMate MD11 — Speech Training";
             ClientSize = new Size(420, 130);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
@@ -194,7 +194,7 @@ namespace SpeechTrainer
         private void OnStartClick(object sender, EventArgs e)
         {
             _btnStart.Enabled = false;
-            const string title = "CrewMate A310 — Voice Training";
+            const string title = "CrewMate MD11 — Voice Training";
 
             try
             {

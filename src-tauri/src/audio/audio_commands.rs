@@ -5,6 +5,12 @@ use tauri::{AppHandle, Manager};
 
 pub struct AudioPlayerState(pub Mutex<AudioPlayer>);
 
+#[derive(serde::Deserialize)]
+pub struct SoundSequenceEntry {
+    pub filename: String,
+    pub pack: String,
+}
+
 fn sounds_dir_candidates(app_handle: &AppHandle) -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     if let Ok(cwd) = std::env::current_dir() {
@@ -85,26 +91,22 @@ pub fn is_audio_playing(audio_player: tauri::State<'_, AudioPlayerState>) -> boo
 pub async fn play_sound_sequence(
     app_handle: AppHandle,
     audio_player: tauri::State<'_, AudioPlayerState>,
-    pack: Option<String>,
-    filenames: Vec<String>,
+    files: Vec<SoundSequenceEntry>,
     volume: Option<f32>,
 ) -> Result<(), String> {
-    let pack = pack.unwrap_or_else(|| "Jenny".to_string());
     let volume = volume.unwrap_or(1.0);
 
-    let paths: Result<Vec<_>, _> = filenames
+    let paths: Result<Vec<_>, _> = files
         .iter()
-        .map(|f| resolve_sound_path(&app_handle, &pack, f))
+        .map(|f| resolve_sound_path(&app_handle, &f.pack, &f.filename))
         .collect();
     let paths = paths?;
 
-    // Move only the two Arc fields so we don't need AudioPlayer: Clone.
     let (stream_handle, is_playing) = {
         let guard = audio_player.0.lock().map_err(|e| e.to_string())?;
         (guard.stream_handle.clone(), guard.is_playing.clone())
     };
 
-    // play_sequence_trimmed blocks — run on a thread-pool thread.
     tokio::task::spawn_blocking(move || {
         play_sequence_trimmed(&stream_handle, &is_playing, paths, volume)
     })
