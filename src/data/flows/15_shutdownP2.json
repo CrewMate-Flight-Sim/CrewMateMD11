@@ -1,0 +1,44 @@
+{
+  "id": "shutdownP2",
+  "name": "Shutdown part 2",
+  "steps": [
+    {
+      "label": "Set signs",
+      "read": "(L:md11_ovhd_lts_seat_belts_sw)",
+      "on": "90248 (>L:CEVENT)",
+      "expect": 0,
+      "repeat_on": true
+    },
+    {
+      "label": "Beacon",
+      "read": "(L:MD11_OVHD_LTS_BCN_BT)",
+      "on": "90271 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "EMER PWR off",
+      "read": "(L:md11_ovhd_elec_emer_pwr_kb)",
+      "on": "90159 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Open STATUS synoptic",
+      "read": "(L:md11_ped_sd_status_bt)",
+      "on": "69834 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Open STATUS synoptic",
+      "read": "(L:md11_ped_sd_status_bt)",
+      "on": "69835 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set chocks",
+      "read": "(L:md11_ext_chocks)",
+      "on": "1 (>L:md11_ext_chocks)",
+      "expect": 1
+    }
+  ]
+}

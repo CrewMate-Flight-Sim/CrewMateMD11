@@ -1,0 +1,118 @@
+{
+  "id": "cockpit_prep",
+  "name": "Cockpit preparation checklist",
+  "items": [
+    {
+      "challenge": "sd_status.ogg",
+      "response": ["checked", "set and checked"],
+      "label": "SD Status",
+      "copilot_response": "checked.ogg"
+    },
+    {
+      "challenge": "hyd_panel.ogg",
+      "label": "Hydraulics Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "fuel_panel.ogg",
+      "label": "Fuel Panel",
+      "fo_only_response": true,
+      "copilot_response": "auto.ogg"
+    },
+    {
+      "challenge": "ext_lights.ogg",
+      "label": "Exterior lights",
+      "fo_only_response": true,
+      "copilot_response": "set.ogg"
+    },
+    {
+      "challenge": "evac_cmd.ogg",
+      "fo_only_response": true,
+      "label": "EVAC Command",
+      "copilot_response": "armed.ogg",
+      "cargo_skip": true
+    },
+    {
+      "challenge": "oxy_system.ogg",
+      "response": ["checked", "set and checked"],
+      "copilot_response": "set_100.ogg",
+      "label": "Oxygen System"
+    },
+    {
+      "challenge": "to_wrng.ogg",
+      "fo_only_response": true,
+      "copilot_response": "checked.ogg",
+      "label": "Takeoff Warning"
+    },
+    {
+      "challenge": "fuel_sw.ogg",
+      "response": ["off", "set and checked"],
+      "label": "Fuel Switches"
+    },
+    {
+      "challenge": "rud_ail.ogg",
+      "response": ["checked", "set and checked"],
+      "label": "Rudder and aileron trim"
+    },
+    {
+      "challenge": "fms.ogg",
+      "response": ["set", "set and checked"],
+      "copilot_response": "checked.ogg",
+      "label": "FMS"
+    },
+    {
+      "challenge": "flap_to.ogg",
+      "response": ["set", "set and checked"],
+      "label": "Flaps TO Selector",
+      "copilot_response": "set.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "incorrect": "are_you_sure.ogg",
+          "checks": [
+            {
+              "type": "flaps_to",
+              "target_var": "(L:md11_efb_flaps)",
+              "dial_var": "(L:MD11_DIALAFLAP_WHEEL_RNG)",
+              "tolerance": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "challenge": "fcp.ogg",
+      "response": ["set", "set and checked"],
+      "copilot_response": "set.ogg",
+      "label": "FCP"
+    },
+    {
+      "challenge": "irs.ogg",
+      "response": ["zero taxi", "set and checked"],
+      "copilot_response": "0_taxi.ogg",
+      "label": "IRS"
+    },
+
+    {
+      "challenge": "auto_brake.ogg",
+      "response": ["takeoff", "set and checked"],
+      "label": "Autobrake",
+      "copilot_response": "to.ogg",
+      "validations": [
+        {
+          "when": { "always": true },
+          "incorrect": "are_you_sure.ogg",
+          "checks": [
+            {
+              "type": "simvar",
+              "var": "(L:MD11_CTR_AUTOBRAKE_SW)",
+              "expected": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "completion": "cockpit_preparation_checklist_complete.ogg"
+}

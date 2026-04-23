@@ -31,65 +31,51 @@
   <!-- ═══════════════════════════════════════════════════════════════════════════
        FO_COMMANDS  (parameterized — cval carries the numeric value)
   ════════════════════════════════════════════════════════════════════════════ -->
-  <rule id="FO_COMMANDS">
+<rule id="FO_COMMANDS">
     <one-of>
       <!-- Heading -->
       <item>
-        <item repeat="0-1">
-          <ruleref uri="#VERB" />
-        </item>
-        <one-of>
-          <item>heading</item>
-        </one-of>
+        <item>set</item>
+        <item>heading</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
+        <item repeat="0-1">select</item>
         <tag>out.pid="1"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
       </item>
 
-      <!-- Flight level -->
+<!-- Flight level — digit-by-digit: "flight level two seven zero" → "270" -->
       <item>
-        <item repeat="0-1">set</item>
+        <item>set</item>
         <item>flight level</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
-        <item repeat="0-1">pull</item>
+        <item repeat="0-1">select</item>
         <tag>out.pid="2"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
+      </item>
+
+      <!-- Flight level — round hundreds: "flight level one hundred" → "100" -->
+      <item>
+        <item>set</item>
+        <item>flight level</item>
+        <ruleref uri="#FL_HUNDREDS_VALUE" />
+        <item repeat="0-1">select</item>
+        <tag>out.pid="2"; out.cval=rules.FL_HUNDREDS_VALUE;</tag>
       </item>
 
       <!-- Altitude feet -->
       <item>
-        <item repeat="0-1">set</item>
+        <item>set</item>
         <item>altitude</item>
         <ruleref uri="#ALTITUDE_VALUE" />
-        <item repeat="0-1">pull</item>
+        <item repeat="0-1">select</item>
         <tag>out.pid="3"; out.cval=rules.ALTITUDE_VALUE;</tag>
       </item>
 
       <!-- Speed -->
       <item>
-        <item repeat="0-1">
-          <ruleref uri="#VERB" />
-        </item>
+        <item>set</item>
         <item>speed</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
-        <item repeat="0-1">knots</item>
+        <item repeat="0-1">select</item>
         <tag>out.pid="4"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
-      </item>
-
-      <item>
-        <item repeat="0-1">
-          <ruleref uri="#VERB" />
-        </item>
-        <item>qnh</item>
-        <ruleref uri="#ALTIMETER_VALUE" />
-        <item repeat="0-1">set</item>
-        <tag>out.pid="7"; out.cval=rules.ALTIMETER_VALUE;</tag>
-      </item>
-
-      <!-- Altimeter — prefixed "altimeter XXXX [set]" -->
-      <item>
-        <item>altimeter</item>
-        <ruleref uri="#ALTIMETER_VALUE" />
-        <item repeat="0-1">set</item>
-        <tag>out.pid="7"; out.cval=rules.ALTIMETER_VALUE;</tag>
       </item>
 
       <!-- Altimeter — bare "XXX[X] set" -->
@@ -99,76 +85,24 @@
         <tag>out.pid="7"; out.cval=rules.ALTIMETER_VALUE;</tag>
       </item>
 
-      <!-- Fuel kilograms [balanced] -->
+      <!-- Missed approach altitude — auto -->
       <item>
-        <item repeat="0-1">
-          <one-of>
-            <item>fuel quantity</item>
-            <item>fuel</item>
-          </one-of>
-        </item>
-        <ruleref uri="#FUEL_VALUE" />
-        <tag>out.fv=rules.FUEL_VALUE;</tag>
         <one-of>
-          <item>kilograms</item>
-          <item>kilos</item>
+          <item>set missed approach altitude</item>
+          <item>set missed approach</item>
+          <item>missed approach altitude</item>
+          <item>missed approach</item>
         </one-of>
-        <one-of>
-          <item>balanced<tag>out.pid="9"; out.cval=out.fv;</tag></item>
-          <item>
-            <tag>out.pid="8"; out.cval=out.fv;</tag>
-          </item>
-        </one-of>
-      </item>
-
-      <!-- Fuel pounds [balanced] -->
-      <item>
-        <item repeat="0-1">
-          <one-of>
-            <item>fuel quantity</item>
-            <item>fuel</item>
-          </one-of>
-        </item>
-        <ruleref uri="#FUEL_VALUE" />
-        <tag>out.fv=rules.FUEL_VALUE;</tag>
-        <item>pounds</item>
-        <one-of>
-          <item>balanced<tag>out.pid="11"; out.cval=out.fv;</tag></item>
-          <item>
-            <tag>out.pid="10"; out.cval=out.fv;</tag>
-          </item>
-        </one-of>
-      </item>
-
-      <!-- Fuel tons [balanced] -->
-      <item>
-        <item repeat="0-1">
-          <one-of>
-            <item>fuel quantity</item>
-            <item>fuel</item>
-          </one-of>
-        </item>
-        <ruleref uri="#FUEL_TONS_VALUE" />
-        <tag>out.fv=rules.FUEL_TONS_VALUE;</tag>
-        <one-of>
-          <item>tons</item>
-          <item>metric tons</item>
-        </one-of>
-        <one-of>
-          <item>balanced<tag>out.pid="13"; out.cval=out.fv;</tag></item>
-          <item>
-            <tag>out.pid="12"; out.cval=out.fv;</tag>
-          </item>
-        </one-of>
+        <tag>out.pid="15"; out.cval="AUTO";</tag>
       </item>
 
       <!-- Missed approach altitude — explicit feet -->
       <item>
         <one-of>
-          <item>set go around altitude</item>
-          <item>set go around</item>
-          <item>go around altitude</item>
-          <item>go around</item>
+          <item>set missed approach altitude</item>
+          <item>set missed approach</item>
+          <item>missed approach altitude</item>
+          <item>missed approach</item>
         </one-of>
         <ruleref uri="#ALTITUDE_VALUE" />
         <item repeat="0-1">feet</item>
@@ -178,202 +112,265 @@
       <!-- Missed approach altitude — explicit flight level -->
       <item>
         <one-of>
-          <item>set go around altitude</item>
-          <item>set go around</item>
-          <item>go around altitude</item>
-          <item>go around</item>
+          <item>set missed approach altitude</item>
+          <item>set missed approach</item>
+          <item>missed approach altitude</item>
+          <item>missed approach</item>
         </one-of>
         <item>flight level</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
         <tag>out.pid="17"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
       </item>
 
-      <!-- BARO minimums — "baro four hundred fifty [feet]" → "450" -->
+      <!-- minimums — "four hundred fifty [feet]" → "450" -->
       <item>
-        <item>mda</item>
         <ruleref uri="#MINIMUMS_VALUE" />
         <item repeat="0-1">feet</item>
         <item>set</item>
         <tag>out.pid="18"; out.cval=rules.MINIMUMS_VALUE;</tag>
       </item>
-
-      <!-- RADIO minimums — "radio one hundred sixty [feet]" → "160" -->
-      <item>
-        <item>dh</item>
-        <ruleref uri="#MINIMUMS_VALUE" />
-        <item repeat="0-1">feet</item>
-        <item>set</item>
-        <tag>out.pid="19"; out.cval=rules.MINIMUMS_VALUE;</tag>
-      </item>
-
-      <!-- PITCH TRIM -->
-      <item>
-        <ruleref uri="#NUMBERS" />
-        <tag>var n1=rules.NUMBERS;</tag>
-        <item>point</item>
-        <ruleref uri="#NUMBERS" />
-        <tag>var n2=rules.NUMBERS;</tag>
-        <one-of>
-          <item>up<tag>out.cval = n1 + "." + n2;</tag></item>
-          <item>down<tag>out.cval = "-" + n1 + "." + n2;</tag></item>
-        </one-of>
-        <item>set</item>
-        <tag>out.pid="20";</tag>
-      </item>
-
-      <item>
-        <one-of>
-          <!-- Path 1: Thousand, Hundred, and Fifty increments -->
-          <item>
-            <item repeat="0-1">
-              <ruleref uri="#ALTV_THOUSANDS" /> thousand
-            </item
-            >
-            <item repeat="0-1">
-              <ruleref uri="#ALTV_HUNDREDS" />
-            </item>
-            <item repeat="0-1">
-              fifty <tag>var hasFifty = 50;</tag>
-            </item>
-          </item>
-
-          <!-- Path 2: Just "zero" -->
-          <item>zero <tag>var isZero = true;</tag></item>
-        </one-of>
-        <item>feet set</item>
-        <tag>
-          out.pid = "21";
-          if (typeof isZero !== 'undefined') {
-              out.cval = "0";
-          } else {
-              var k = rules.ALTV_THOUSANDS ? (parseInt(rules.ALTV_THOUSANDS) * 1000) : 0;
-              var h = rules.ALTV_HUNDREDS ? parseInt(rules.ALTV_HUNDREDS) : 0;
-              var f = typeof hasFifty !== 'undefined' ? 50 : 0;
-              out.cval = (k + h + f).toString();
-          }
-        </tag>
-      </item>
     </one-of>
   </rule>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════════
-       FMA_CALLOUTS
-       pid always "1". cval = "thrust|vertical|lateral|combined|cat|armed|urgent"
-  ════════════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════
+      FMA CALLOUT GRAMMAR  –  MD-11 / 717 VIA Avionics
+      Pipe: th | thc | lt | ltc | la | vt | vtc | va | ls | pid
+      ═══════════════════════════════════════════════════════════ -->
+
   <rule id="FMA_CALLOUTS">
     <one-of>
-      <!-- urgent standalones -->
-      <!-- compound: optional thrust + vertical/combined/lateral + optional cat + optional armed -->
+
+      <!-- ── Config A: [ATS] [Lateral] [Pitch] ── -->
       <item>
-        <tag>out.th=""; out.vt=""; out.lt=""; out.cb=""; out.ct=""; out.ar="";</tag>
-        <item repeat="0-1">check</item>
+        <tag>out.th=""; out.thc=""; out.lt=""; out.ltc=""; out.la="";
+            out.vt=""; out.vtc=""; out.va=""; out.ls="";</tag>
+
         <item repeat="0-1">
-          <ruleref uri="#FMA_THRUST_MODE" />
-          <tag>out.th=rules.FMA_THRUST_MODE;</tag>
+          <ruleref uri="#FMA_ATS_COLORED" />
+          <tag>out.th=rules.FMA_ATS_COLORED.mode;
+              out.thc=rules.FMA_ATS_COLORED.color;</tag>
         </item>
-        <one-of>
-          <item>
-            <ruleref uri="#FMA_COMBINED_MODE" />
-            <tag>out.cb=rules.FMA_COMBINED_MODE;</tag>
-          </item>
-          <item>
-            <ruleref uri="#FMA_VERTICAL_MODE" />
-            <tag>out.vt=rules.FMA_VERTICAL_MODE;</tag>
-            <item repeat="0-1">
-              <ruleref uri="#FMA_LATERAL_MODE" />
-              <tag>out.lt=rules.FMA_LATERAL_MODE;</tag>
-            </item>
-          </item>
-          <item>
-            <ruleref uri="#FMA_LATERAL_MODE" />
-            <tag>out.lt=rules.FMA_LATERAL_MODE;</tag>
-          </item>
-        </one-of>
+
         <item repeat="0-1">
-          <ruleref uri="#FMA_APPROACH_CAT" />
-          <tag>out.ct=rules.FMA_APPROACH_CAT;</tag>
+          <ruleref uri="#FMA_LATERAL_COLORED" />
+          <tag>out.lt=rules.FMA_LATERAL_COLORED.mode;
+              out.ltc=rules.FMA_LATERAL_COLORED.color;</tag>
         </item>
-        <tag>out.pid="1"; out.cval=out.th+"|"+out.vt+"|"+out.lt+"|"+out.cb+"|"+out.ct+"|";</tag>
+        <item repeat="0-1">
+          <ruleref uri="#FMA_LATERAL_ARMED" />
+          <tag>out.la=rules.FMA_LATERAL_ARMED;</tag>
+        </item>
+
+        <item repeat="0-1">
+          <ruleref uri="#FMA_VERTICAL_COLORED" />
+          <tag>out.vt=rules.FMA_VERTICAL_COLORED.mode;
+              out.vtc=rules.FMA_VERTICAL_COLORED.color;</tag>
+        </item>
+        <item repeat="0-1">
+          <ruleref uri="#FMA_VERTICAL_ARMED" />
+          <tag>out.va=rules.FMA_VERTICAL_ARMED;</tag>
+        </item>
+
+        <item repeat="0-1">
+          <ruleref uri="#FMA_LAND_STATUS" />
+          <tag>out.ls=rules.FMA_LAND_STATUS;</tag>
+        </item>
+
+        <tag>out.pid="1";
+            out.cval=out.th+"|"+out.thc+"|"+out.lt+"|"+out.ltc+"|"+out.la+"|"
+                    +out.vt+"|"+out.vtc+"|"+out.va+"|"+out.ls+"|"+out.pid;</tag>
       </item>
 
-      <!-- thrust only -->
+      <!-- ── Config B: [Pitch] [Lateral] [ATS] ── -->
       <item>
-        <tag>out.ar="";</tag>
-        <ruleref uri="#FMA_THRUST_MODE" />
-        <tag>out.th=rules.FMA_THRUST_MODE;</tag>
-        <tag>out.pid="1"; out.cval=out.th+"|||||";</tag>
+        <tag>out.th=""; out.thc=""; out.lt=""; out.ltc=""; out.la="";
+            out.vt=""; out.vtc=""; out.va=""; out.ls="";</tag>
+
+        <item repeat="0-1">
+          <ruleref uri="#FMA_VERTICAL_COLORED" />
+          <tag>out.vt=rules.FMA_VERTICAL_COLORED.mode;
+              out.vtc=rules.FMA_VERTICAL_COLORED.color;</tag>
+        </item>
+        <item repeat="0-1">
+          <ruleref uri="#FMA_VERTICAL_ARMED" />
+          <tag>out.va=rules.FMA_VERTICAL_ARMED;</tag>
+        </item>
+
+        <item repeat="0-1">
+          <ruleref uri="#FMA_LATERAL_COLORED" />
+          <tag>out.lt=rules.FMA_LATERAL_COLORED.mode;
+              out.ltc=rules.FMA_LATERAL_COLORED.color;</tag>
+        </item>
+        <item repeat="0-1">
+          <ruleref uri="#FMA_LATERAL_ARMED" />
+          <tag>out.la=rules.FMA_LATERAL_ARMED;</tag>
+        </item>
+
+        <item repeat="0-1">
+          <ruleref uri="#FMA_ATS_COLORED" />
+          <tag>out.th=rules.FMA_ATS_COLORED.mode;
+              out.thc=rules.FMA_ATS_COLORED.color;</tag>
+        </item>
+
+        <item repeat="0-1">
+          <ruleref uri="#FMA_LAND_STATUS" />
+          <tag>out.ls=rules.FMA_LAND_STATUS;</tag>
+        </item>
+
+        <tag>out.pid="2";
+            out.cval=out.th+"|"+out.thc+"|"+out.lt+"|"+out.ltc+"|"+out.la+"|"
+                    +out.vt+"|"+out.vtc+"|"+out.va+"|"+out.ls+"|"+out.pid;</tag>
       </item>
+
     </one-of>
   </rule>
 
-  <!-- FMA column 1: thrust modes -->
-  <rule id="FMA_THRUST_MODE">
+
+  <!-- ───────────────────────────────────────────────────────────
+      LAND STATUS  (MD-11 autoland capability annunciation)
+      Separate from pitch modes — these reflect what the
+      autoland system has certified, not what the AP is doing.
+      ─────────────────────────────────────────────────────────── -->
+  <rule id="FMA_LAND_STATUS">
     <one-of>
-      <item>thrust<tag>out="THR";</tag></item>
-      <item>profile thrust<tag>out="P. THR";</tag></item>
-      <item>speed<tag>out="SPEED";</tag></item>
-      <item>mach<tag>out="MACH";</tag></item>
-      <item>profile speed<tag>out="P. SPEED";</tag></item>
-      <item>profile mach<tag>out="P. MACH";</tag></item>
-      <item>retard<tag>out="RTAR";</tag></item>
-      <item>thrust latch<tag>out="THR L";</tag></item>
+      <item>dual land<tag>out="DUAL LAND";</tag></item>
+      <item>single land<tag>out="SINGLE LAND";</tag></item>
+      <item>approach only<tag>out="APPR ONLY";</tag></item>
     </one-of>
   </rule>
 
-  <!-- FMA column 2: vertical modes -->
-  <rule id="FMA_VERTICAL_MODE">
+
+  <!-- ───────────────────────────────────────────────────────────
+      COLOR
+      ─────────────────────────────────────────────────────────── -->
+  <rule id="FMA_COLOR">
     <one-of>
-      <item>srs<tag>out="SRS";</tag></item>
-      <item>alt hold<tag>out="ALT";</tag></item>
-      <item>alt star<tag>out="ALT*";</tag></item>
-      <item>profile descent<tag>out="P. DES";</tag></item>
-      <item>glideslope<tag>out="G/S";</tag></item>
-      <item>glideslope star<tag>out="G/S*";</tag></item>
-      <item>glideslope capture<tag>out="G/S*";</tag></item>
-      <item>profile climb<tag>out="P. CLB";</tag></item>
-      <item>profile alt hold<tag>out="P. ALT";</tag></item>
-      <item>mach<tag>out="MACH";</tag></item>
-      <item>vertical speed<tag>out="V/S";</tag></item>
-      <item>speed<tag>out="SPD";</tag></item>
+      <item>green<tag>out="GREEN";</tag></item>
+      <item>white<tag>out="WHITE";</tag></item>
+      <item>magenta<tag>out="MAGENTA";</tag></item>
     </one-of>
   </rule>
 
-  <!-- FMA column 3: lateral modes -->
+
+  <!-- ───────────────────────────────────────────────────────────
+      COLOR WRAPPERS
+      ─────────────────────────────────────────────────────────── -->
+<rule id="FMA_ATS_COLORED">
+  <item>
+    <tag>out.mode=""; out.color="";</tag>
+    <ruleref uri="#FMA_ATS_MODE" />
+    <tag>out.mode=rules.FMA_ATS_MODE;</tag>
+    <item repeat="0-1">
+      <ruleref uri="#FMA_COLOR" />
+      <tag>out.color=rules.FMA_COLOR;</tag>
+    </item>
+  </item>
+</rule>
+
+<rule id="FMA_LATERAL_COLORED">
+  <item>
+    <tag>out.mode=""; out.color="";</tag>
+    <ruleref uri="#FMA_LATERAL_MODE" />
+    <tag>out.mode=rules.FMA_LATERAL_MODE;</tag>
+    <item repeat="0-1">
+      <ruleref uri="#FMA_COLOR" />
+      <tag>out.color=rules.FMA_COLOR;</tag>
+    </item>
+  </item>
+</rule>
+
+<rule id="FMA_VERTICAL_COLORED">
+  <item>
+    <tag>out.mode=""; out.color="";</tag>
+    <ruleref uri="#FMA_VERTICAL_MODE" />
+    <tag>out.mode=rules.FMA_VERTICAL_MODE;</tag>
+    <item repeat="0-1">
+      <ruleref uri="#FMA_COLOR" />
+      <tag>out.color=rules.FMA_COLOR;</tag>
+    </item>
+  </item>
+</rule>
+
+
+
+  <!-- ───────────────────────────────────────────────────────────
+      ATS Modes
+      ─────────────────────────────────────────────────────────── -->
+  <rule id="FMA_ATS_MODE">
+    <one-of>
+      <item>takeoff thrust<tag>out="T/O THRUST";</tag></item>
+      <item>takeoff clamp<tag>out="T/O CLAMP";</tag></item>
+      <item>climb thrust<tag>out="CLB THRUST";</tag></item>
+      <item>max continuous thrust<tag>out="MCT THRUST";</tag></item>
+      <item>cruise thrust<tag>out="CRZ THRUST";</tag></item>
+      <item>thrust<tag>out="THRUST";</tag></item>
+      <item>idle clamp<tag>out="IDLE CLAMP";</tag></item>
+      <item>idle<tag>out="IDLE";</tag></item>
+      <item>retard<tag>out="RETARD";</tag></item>
+      <item>go around thrust<tag>out="GA THRUST";</tag></item>
+      <item>windshear<tag>out="WINDSHEAR";</tag></item>
+      <item>low speed protection<tag>out="LO SPD PROT";</tag></item>
+      <item>high speed protection<tag>out="HI SPD PROT";</tag></item>
+    </one-of>
+  </rule>
+
+
+  <!-- ───────────────────────────────────────────────────────────
+      Lateral Active Modes
+      ─────────────────────────────────────────────────────────── -->
   <rule id="FMA_LATERAL_MODE">
     <one-of>
-      <item>runway<tag>out="RWY";</tag></item>
-      <item>heading<tag>out="HDG";</tag></item>
-      <item>heading select<tag>out="HDG/S";</tag></item>
       <item>nav<tag>out="NAV";</tag></item>
-      <item>loc<tag>out="LOC";</tag></item>
-      <item>loc star<tag>out="LOC*";</tag></item>
-      <item>loc capture<tag>out="LOC*";</tag></item>
+      <item>heading<tag>out="HDG";</tag></item>
+      <item>track<tag>out="TRK";</tag></item>
+      <item>vor<tag>out="VOR";</tag></item>
+      <item>vor course<tag>out="VOR CRS";</tag></item>
       <item>localizer<tag>out="LOC";</tag></item>
-      <item>localizer star<tag>out="LOC*";</tag></item>
-      <item>localizer capture<tag>out="LOC*";</tag></item>
-      <item>v o r<tag>out="VOR";</tag></item>
-      <item>v o r capture<tag>out="VOR*";</tag></item>
-      <item>v o r star<tag>out="VOR*";</tag></item>
+      <item>align<tag>out="ALIGN";</tag></item>
+      <item>rollout<tag>out="ROLLOUT";</tag></item>
+      <item>takeoff<tag>out="TAKEOFF";</tag></item>
     </one-of>
   </rule>
 
-  <!-- FMA cols 2+3: combined modes -->
-  <rule id="FMA_COMBINED_MODE">
+
+  <!-- ───────────────────────────────────────────────────────────
+      Lateral Armed Modes
+      ─────────────────────────────────────────────────────────── -->
+  <rule id="FMA_LATERAL_ARMED">
     <one-of>
-      <item>land<tag>out="LAND";</tag></item>
+      <item>nav armed<tag>out="NAV ARMED";</tag></item>
+      <item>loc armed<tag>out="LOC ARMED";</tag></item>
+      <item>v o r armed<tag>out="VOR ARMED";</tag></item>
+    </one-of>
+  </rule>
+
+
+  <!-- ───────────────────────────────────────────────────────────
+      Vertical Active Modes  (land status removed)
+      ─────────────────────────────────────────────────────────── -->
+  <rule id="FMA_VERTICAL_MODE">
+    <one-of>
+      <item>altitude hold<tag>out="HOLD";</tag></item>
+      <item>vertical speed<tag>out="V/S";</tag></item>
+      <item>flight path angle<tag>out="FPA";</tag></item>
+      <item>pitch<tag>out="PITCH";</tag></item>
+      <item>profile<tag>out="PROF";</tag></item>
+      <item>glideslope<tag>out="G/S";</tag></item>
       <item>flare<tag>out="FLARE";</tag></item>
-      <item>roll out<tag>out="ROLL OUT";</tag></item>
       <item>go around<tag>out="GO AROUND";</tag></item>
+      <item>windshear<tag>out="WINDSHEAR";</tag></item>
     </one-of>
   </rule>
 
-  <!-- FMA column 4: approach category -->
-  <rule id="FMA_APPROACH_CAT">
+
+  <!-- ───────────────────────────────────────────────────────────
+      Vertical Armed Modes
+      ─────────────────────────────────────────────────────────── -->
+  <rule id="FMA_VERTICAL_ARMED">
     <one-of>
-      <item>cat one<tag>out="CAT 1";</tag></item>
-      <item>cat two<tag>out="CAT 2";</tag></item>
-      <item>cat three single<tag>out="CAT 3 SINGLE";</tag></item>
-      <item>cat three dual<tag>out="CAT 3 DUAL";</tag></item>
+      <item>profile armed<tag>out="PROF ARMED";</tag></item>
+      <item>land armed<tag>out="LAND ARMED";</tag></item>
+      <item>vertical alert<tag>out="VERT ALERT";</tag></item>
     </one-of>
   </rule>
 
@@ -382,58 +379,59 @@
   ════════════════════════════════════════════════════════════════════════════ -->
   <rule id="DISCRETE_COMMANDS">
     <one-of>
-      <!-- 1-9: Primary Flight Controls -->
       <item>gear up<tag>out.pid="1";</tag></item>
       <item>gear down<tag>out.pid="2";</tag></item>
-      <item>Slats retract<tag>out.pid="3";</tag></item>
-      <item>flaps zero<tag>out.pid="4";</tag></item>
-      <item>Slats extend<tag>out.pid="4";</tag></item>
+      <item>slats retract<tag>out.pid="3";</tag></item>
+      <item>flaps up<tag>out.pid="4";</tag></item>
+      <item>slats extend<tag>out.pid="4";</tag></item>
       <item>flaps fifteen<tag>out.pid="5";</tag></item>
-      <item>flaps twenty<tag>out.pid="6";</tag></item>
-      <item>flaps fourty<tag>out.pid="7";</tag></item>
-      <item>go around flaps<tag>out.pid="8";</tag></item>
-
-      <item>landing light on<tag>out.pid="10";</tag></item>
-      <item>landing light off<tag>out.pid="11";</tag></item>
-      <item>takeoff light on<tag>out.pid="12";</tag></item>
-      <item>strobe light on<tag>out.pid="13";</tag></item>
-      <item>strobe light auto<tag>out.pid="14";</tag></item>
-      <item>strobe light off<tag>out.pid="15";</tag></item>
+      <item>flaps twenty eight<tag>out.pid="6";</tag></item>
+      <item>flaps thirty five<tag>out.pid="7";</tag></item>
+      <item>flaps fifty<tag>out.pid="8";</tag></item>
+      <item>go around<tag>out.pid="9";</tag></item>
+      <item>turning into stand<tag>out.pid="10";</tag></item>
+      <item>autobrake off<tag>out.pid="11";</tag></item>
+      <item>autobrake min<tag>out.pid="12";</tag></item>
+      <item>high intensity light on<tag>out.pid="13";</tag></item>
+      <item>autobrake med<tag>out.pid="14";</tag></item>
+      <item>high intensity light off<tag>out.pid="15";</tag></item>
       <item>taxi light on<tag>out.pid="16";</tag></item>
       <item>taxi light off<tag>out.pid="17";</tag></item>
       <item>flight director on<tag>out.pid="18";</tag></item>
       <item>flight director off<tag>out.pid="19";</tag></item>
-
       <item>parking checklist<tag>out.pid="20";</tag></item>
-      <item>before start checklist to the line<tag>out.pid="21";</tag></item>
-      <item>before start checklist below the line<tag>out.pid="22";</tag></item>
+      <item>cockpit preparation checklist<tag>out.pid="21";</tag></item>
+      <item>before start checklist<tag>out.pid="22";</tag></item>
       <item>after start checklist<tag>out.pid="23";</tag></item>
-      <item>before takeoff checklist to the line<tag>out.pid="24";</tag></item>
-      <item>before takeoff checklist below the line<tag>out.pid="25";</tag></item>
-      <item>after takeoff climb checklist to the line<tag>out.pid="26";</tag></item>
-      <item>after takeoff climb checklist below the line<tag>out.pid="27";</tag></item>
-      <item>approach checklist<tag>out.pid="28";</tag></item>
-      <item>landing checklist<tag>out.pid="29";</tag></item>
+      <item>taxi checklist<tag>out.pid="24";</tag></item>
+      <item>before takeoff checklist<tag>out.pid="25";</tag></item>
+      <item>after takeoff checklist to the line<tag>out.pid="26";</tag></item>
+      <item>after takeoff checklist below the line<tag>out.pid="27";</tag></item>
+      <item>descent approach checklist through seat belts<tag>out.pid="28";</tag></item>
+      <item>before landing checklist<tag>out.pid="29";</tag></item>
       <item>after landing checklist<tag>out.pid="30";</tag></item>
       <item>cancel checklist<tag>out.pid="31";</tag></item>
-
       <item>set and checked<tag>out.pid="32";</tag></item>
       <item>lets prepare the aircraft<tag>out.pid="33";</tag></item>
-      <item>start engine one<tag>out.pid="34";</tag></item>
-      <item>start engine two<tag>out.pid="35";</tag></item>
+      <item>starting engine one<tag>out.pid="34";</tag></item>
+      <item>starting engine two<tag>out.pid="35";</tag></item>
       <item>start apu<tag>out.pid="36";</tag></item>
       <item>start the apu<tag>out.pid="36";</tag></item>
       <item>clear left<tag>out.pid="37";</tag></item>
       <item>runway entry procedure<tag>out.pid="38";</tag></item>
+      <item>clear to line up<tag>out.pid="38";</tag></item>
       <item>before start procedure<tag>out.pid="39";</tag></item>
-      <item>takeoff<tag>out.pid="40";</tag></item>
       <item>abort takeoff<tag>out.pid="41";</tag></item>
       <item>continue<tag>out.pid="42";</tag></item>
-      <item>shutdown procedure<tag>out.pid="43";</tag></item>
+      <item>takeoff<tag>out.pid="43";</tag></item>
       <item>flight controls check<tag>out.pid="44";</tag></item>
-      <item>let's prepare for descent<tag>out.pid="45"</tag></item>
-      <item>wing anti ice on<tag>out.pid="50";</tag></item>
-      <item>wing anti ice off<tag>out.pid="51";</tag></item>
+      <item>engage profile<tag>out.pid="45";</tag></item>
+      <item>wipers interval<tag>out.pid="46";</tag></item>
+      <item>seat belts auto<tag>out.pid="47";</tag></item>
+      <item>okay to clean up<tag>out.pid="48";</tag></item>
+      <item>autobrake max<tag>out.pid="49";</tag></item>
+      <item>airfoil anti ice on<tag>out.pid="50";</tag></item>
+      <item>airfoil anti ice off<tag>out.pid="51";</tag></item>
       <item>engine anti ice on<tag>out.pid="52";</tag></item>
       <item>engine anti ice off<tag>out.pid="53";</tag></item>
       <item>wipers off<tag>out.pid="54";</tag></item>
@@ -441,17 +439,10 @@
       <item>wipers fast<tag>out.pid="56";</tag></item>
       <item>seat belts on<tag>out.pid="57";</tag></item>
       <item>seat belts off<tag>out.pid="58";</tag></item>
-      <item>chocks in place<tag>out.pid="59";</tag></item>
-      <item>parking brake on<tag>out.pid="60";</tag></item>
-      <item>arm slides<tag>out.pid="61";</tag></item>
-      <item>disarm slides<tag>out.pid="62";</tag></item>
-      <item>brake check<tag>out.pid="63";</tag></item>
+      <item>reviewed<tag>out.pid="59";</tag></item>
+      <item>shutdown engine two<tag>out.pid="60";</tag></item>
+      <item>anti ice auto<tag>out.pid="61";</tag></item>
       <item>set standard<tag>out.pid="64";</tag></item>
-      <item>engine anti ice is on<tag>out.pid="65";</tag></item>
-      <item>normal and on<tag>out.pid="66";</tag></item>
-      <item>fifteen zero<tag>out.pid="67";</tag></item>
-      <item>fifteen<tag>out.pid="68";</tag></item>
-      <item>twenty<tag>out.pid="69";</tag></item>
       <item>completed<tag>out.pid="70";</tag></item>
       <item>confirm<tag>out.pid="71";</tag></item>
       <item>negative<tag>out.pid="72";</tag></item>
@@ -469,42 +460,44 @@
       <item>low<tag>out.pid="84";</tag></item>
       <item>mid<tag>out.pid="85";</tag></item>
       <item>max<tag>out.pid="86";</tag></item>
-      <item>check zero<tag>out.pid="87";</tag></item>
+      <item>zero taxi<tag>out.pid="87";</tag></item>
       <item>retracted<tag>out.pid="88";</tag></item>
       <item>down<tag>out.pid="89";</tag></item>
       <item>removed<tag>out.pid="90";</tag></item>
       <item>released<tag>out.pid="91";</tag></item>
       <item>received<tag>out.pid="92";</tag></item>
-      <item>started<tag>out.pid="93";</tag></item>
-      <item>running<tag>out.pid="94";</tag></item>
+      <item>a<tag>out.pid="93";</tag></item>
+      <item>alpha<tag>out.pid="93";</tag></item>
+      <item>b<tag>out.pid="94";</tag></item>
+      <item>bravo<tag>out.pid="94";</tag></item>
       <item>advised<tag>out.pid="95";</tag></item>
       <item>closed<tag>out.pid="96";</tag></item>
       <item>check and read<tag>out.pid="97";</tag></item>
-      <item>fourty<tag>out.pid="98";</tag></item>
-      <item>twenty<tag>out.pid="99";</tag></item>
+      <item>complete descent approach checklist<tag>out.pid="98";</tag></item>
 
       <item>autopilot on<tag>out.pid="100";</tag></item>
-      <item>autopilot off<tag>out.pid="101";</tag></item>
-      <item>altitude pull<tag>out.pid="102";</tag></item>
-      <item>heading push<tag>out.pid="103";</tag></item>
-      <item>pull speed<tag>out.pid="104";</tag></item>
-      <item>engage heading<tag>out.pid="105";</tag></item>
+      <item>autoflight<tag>out.pid="100";</tag></item>
+      <item>engage autoflight<tag>out.pid="100";</tag></item>
+      <item>engage level change<tag>out.pid="102";</tag></item>
+      <item>engage heading hold<tag>out.pid="103";</tag></item>
+      <item>engage speed select<tag>out.pid="104";</tag></item>
+      <item>engage heading select<tag>out.pid="105";</tag></item>
       <item>engage nav<tag>out.pid="106";</tag></item>
       <item>engage altitude hold<tag>out.pid="107";</tag></item>
-      <item>arm land<tag>out.pid="108";</tag></item>
-      <item>arm localizer<tag>out.pid="109";</tag></item>
+      <item>engage land<tag>out.pid="108";</tag></item>
+      <item>engage approach<tag>out.pid="108";</tag></item>
 
       <item>ground from cockpit<tag>out.pid="113";</tag></item>
       <item>cockpit to ground<tag>out.pid="113";</tag></item>
       <item>ground from flight deck<tag>out.pid="113";</tag></item>
       <item>flight deck to ground<tag>out.pid="113";</tag></item>
       <item>connect ground power<tag>out.pid="114";</tag></item>
-      <item>disconnect ground power<tag>out.pid="115";</tag></item>
       <item>connect G P U<tag>out.pid="114";</tag></item>
+      <item>disconnect ground power<tag>out.pid="115";</tag></item>
       <item>disconnect G P U<tag>out.pid="115";</tag></item>
       <item>connect air starter<tag>out.pid="116";</tag></item>
-      <item>disconnect air starter<tag>out.pid="117";</tag></item>
       <item>connect A S U<tag>out.pid="116";</tag></item>
+      <item>disconnect air starter<tag>out.pid="117";</tag></item>
       <item>disconnect A S U<tag>out.pid="117";</tag></item>
       <item>disconnect all<tag>out.pid="120";</tag></item>
       <item>confirmed<tag>out.pid="121";</tag></item>
@@ -514,16 +507,24 @@
       <item>on supplied by apu<tag>out.pid="125";</tag></item>
       <item>to be started<tag>out.pid="126";</tag></item>
       <item>chocks in and brakes on<tag>out.pid="127";</tag></item>
-    </one-of>
-  </rule>
+      <item>starting engine three<tag>out.pid="128";</tag></item>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════════
-       SHARED VERB
-  ════════════════════════════════════════════════════════════════════════════ -->
-  <rule id="VERB">
-    <one-of>
-      <item>set</item>
-      <item>pull</item>
+      <item>flaps ten<tag>out.pid="150";</tag></item>
+      <item>flaps eleven<tag>out.pid="151";</tag></item>
+      <item>flaps twelve<tag>out.pid="152";</tag></item>
+      <item>flaps thirteen<tag>out.pid="153";</tag></item>
+      <item>flaps fourteen<tag>out.pid="154";</tag></item>
+      <item>flaps sixteen<tag>out.pid="156";</tag></item>
+      <item>flaps seventeen<tag>out.pid="157";</tag></item>
+      <item>flaps eighteen<tag>out.pid="158";</tag></item>
+      <item>flaps nineteen<tag>out.pid="159";</tag></item>
+      <item>flaps twenty<tag>out.pid="160";</tag></item>
+      <item>flaps twenty one<tag>out.pid="161";</tag></item>
+      <item>flaps twenty two<tag>out.pid="162";</tag></item>
+      <item>flaps twenty three<tag>out.pid="163";</tag></item>
+      <item>flaps twenty four<tag>out.pid="164";</tag></item>
+      <item>flaps twenty five<tag>out.pid="165";</tag></item>
+
     </one-of>
   </rule>
 
@@ -700,63 +701,14 @@
     <tag>out=out.t+out.h;</tag>
   </rule>
 
-  <!-- Thousands component for fuel 1-99 -->
-  <rule id="FUEL_THOUSANDS">
+  <!-- Flight level round-hundreds: "one hundred" → "100" … "four hundred" → "400" -->
+  <rule id="FL_HUNDREDS_VALUE">
     <one-of>
-      <item>
-        <ruleref uri="#ONES_WORD" />
-        <tag>out=rules.ONES_WORD;</tag>
-      </item>
-      <item>
-        <ruleref uri="#TEEN_WORD" />
-        <tag>out=rules.TEEN_WORD;</tag>
-      </item>
-      <item>
-        <ruleref uri="#TENS_WORD" />
-        <tag>out.t=rules.TENS_WORD;</tag>
-        <ruleref uri="#ONES_WORD" />
-        <tag>out=out.t+rules.ONES_WORD;</tag>
-      </item>
-      <item>twenty<tag>out="20";</tag></item>
-      <item>thirty<tag>out="30";</tag></item>
-      <item>forty<tag>out="40";</tag></item>
-      <item>fifty<tag>out="50";</tag></item>
-      <item>sixty<tag>out="60";</tag></item>
-      <item>seventy<tag>out="70";</tag></item>
-      <item>eighty<tag>out="80";</tag></item>
-      <item>ninety<tag>out="90";</tag></item>
+      <item>one hundred<tag>out="100";</tag></item>
+      <item>two hundred<tag>out="200";</tag></item>
+      <item>three hundred<tag>out="300";</tag></item>
+      <item>four hundred<tag>out="400";</tag></item>
     </one-of>
-  </rule>
-
-  <!-- Fuel kg/lbs value: "sixty thousand six hundred" → "60|600" -->
-  <rule id="FUEL_VALUE">
-    <one-of>
-      <item>
-        <ruleref uri="#FUEL_THOUSANDS" />
-        <tag>out.t=rules.FUEL_THOUSANDS;</tag>
-        <item>thousand</item>
-        <ruleref uri="#ALTV_HUNDREDS" />
-        <tag>out=out.t+"|"+rules.ALTV_HUNDREDS;</tag>
-      </item>
-      <item>
-        <ruleref uri="#FUEL_THOUSANDS" />
-        <item>thousand</item>
-        <tag>out=rules.FUEL_THOUSANDS+"|000";</tag>
-      </item>
-      <item>
-        <ruleref uri="#ALTV_HUNDREDS" />
-        <tag>out="0|"+rules.ALTV_HUNDREDS;</tag>
-      </item>
-    </one-of>
-  </rule>
-
-  <!-- Fuel tons: "eighteen point five" → "18.5" -->
-  <rule id="FUEL_TONS_VALUE">
-    <ruleref uri="#FUEL_THOUSANDS" />
-    <tag>out.w=rules.FUEL_THOUSANDS;</tag>
-    <item>point</item>
-    <ruleref uri="#NUMBERS" />
-    <tag>out=out.w+"."+rules.NUMBERS;</tag>
   </rule>
 
   <!-- ─── Minimums value ───────────────────────────────────────────────────────
@@ -854,44 +806,6 @@
       <item>seventy<tag>out="70";</tag></item>
       <item>eighty<tag>out="80";</tag></item>
       <item>ninety<tag>out="90";</tag></item>
-    </one-of>
-  </rule>
-
-  <!-- Flex temperature: "sixty five" or "six five" → "65" -->
-  <rule id="FLEX_TEMP_VALUE">
-    <one-of>
-      <!-- "sixty five" — natural spoken -->
-      <item>
-        <ruleref uri="#FLEX_TENS" />
-        <tag>out.t=rules.FLEX_TENS;</tag>
-        <ruleref uri="#ONES_WORD" />
-        <tag>out=out.t+rules.ONES_WORD;</tag>
-      </item>
-      <!-- "six five" — digit by digit -->
-      <item>
-        <ruleref uri="#NUMBERS" />
-        <tag>out.a=rules.NUMBERS;</tag>
-        <ruleref uri="#NUMBERS" />
-        <tag>out=out.a+rules.NUMBERS;</tag>
-      </item>
-      <!-- "sixty" — pure tens -->
-      <item>
-        <ruleref uri="#FLEX_TENS" />
-        <tag>out=rules.FLEX_TENS+"0";</tag>
-      </item>
-    </one-of>
-  </rule>
-
-  <!-- Tens as leading flex digit (realistic range 30-99) -->
-  <rule id="FLEX_TENS">
-    <one-of>
-      <item>thirty<tag>out="3";</tag></item>
-      <item>forty<tag>out="4";</tag></item>
-      <item>fifty<tag>out="5";</tag></item>
-      <item>sixty<tag>out="6";</tag></item>
-      <item>seventy<tag>out="7";</tag></item>
-      <item>eighty<tag>out="8";</tag></item>
-      <item>ninety<tag>out="9";</tag></item>
     </one-of>
   </rule>
 </grammar>

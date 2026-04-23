@@ -1,0 +1,38 @@
+{
+  "id": "before_start",
+  "name": "Before Start",
+  "sound_start": "check.ogg",
+  "steps": [
+    {
+      "label": "Beacon",
+      "read": "(L:MD11_OVHD_LTS_BCN_BT)",
+      "on": "90271 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "TCAS",
+      "read": "(L:md11_ped_xpndr_mode_kb)",
+      "on": "69877 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Open ENGINE synoptic",
+      "read": "(L:md11_ped_sd_eng_bt)",
+      "on": "69828 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Open ENGINE synoptic",
+      "read": "(L:md11_ped_sd_eng_bt)",
+      "on": "69829 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Clear chocks",
+      "read": "(L:md11_ext_chocks)",
+      "on": "0 (>L:md11_ext_chocks)",
+      "expect": 0
+    }
+  ]
+}

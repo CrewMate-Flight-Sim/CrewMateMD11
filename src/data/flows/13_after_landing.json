@@ -1,0 +1,122 @@
+{
+  "id": "after_landing",
+  "name": "After Landing",
+  "steps": [
+    {
+      "label": "Spoilers",
+      "read": "(L:MD11_SPDBRK_HANDLE)",
+      "on": "77829 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Flaps",
+      "read": "(L:MD11_FLAP_RNG)",
+      "on": "77830 (>L:CEVENT)",
+      "expect": "{flaps_cleanup}",
+      "repeat_on": true
+    },
+    {
+      "label": "WXR off",
+      "read": "(L:MD11_PED_WXR_OFF_BT)",
+      "on": "69883 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Set Autobrake",
+      "read": "(L:MD11_CTR_AUTOBRAKE_SW)",
+      "on": "82211 (>L:CEVENT)",
+      "expect": 1,
+      "repeat_on": true
+    },
+    {
+      "label": "Open ENGINE synoptic",
+      "read": "(L:md11_ped_sd_eng_bt)",
+      "on": "69828 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Open ENGINE synoptic",
+      "read": "(L:md11_ped_sd_eng_bt)",
+      "on": "69829 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Set stab trim",
+      "read": "(L:MD11_EXT_STAB_TRIM)",
+      "trim_on": true,
+      "expect": 24.35
+    },
+    {
+      "label": "Lights on",
+      "read": "(L:MD11_OVHD_LTS_NOSE_SW)",
+      "on": "90261 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:md11_ovhd_lts_ldg_l_sw)",
+      "on": "90257 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true,
+      "repeat_on": true
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:md11_ovhd_lts_ldg_r_sw)",
+      "on": "90259 (>L:CEVENT)",
+      "expect": 0,
+      "repeat_on": true
+    },
+    {
+      "label": "RWY Turnoff light off",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)",
+      "on": "90263 (>L:CEVENT)",
+      "expect": 0,
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [1]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "RWY Turnoff light off",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)",
+      "on": "90265 (>L:CEVENT)",
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [1]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "Lights off",
+      "read": "(L:MD11_OVHD_LTS_HI_INT_BT)",
+      "on": "90273 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "Starting APU",
+      "read": "(L:MD11_OVHD_ELEC_APU_PWR_BT)",
+      "on": "90144 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true
+    },
+    {
+      "label": "Starting APU",
+      "read": "(L:MD11_OVHD_ELEC_APU_PWR_BT)",
+      "on": "90145 (>L:CEVENT)",
+      "expect": 0
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "clear_left",
+  "name": "Clear left",
+  "sound_start": "clear_right.ogg",
+  "steps": [
+    {
+      "label": "Taxi light on",
+      "read": "(L:MD11_OVHD_LTS_NOSE_SW)",
+      "on": "90262 (>L:CEVENT)",
+      "expect": 1
+    },
+    {
+      "label": "RWY Turnoff light on",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)",
+      "on": "90263 (>L:CEVENT)",
+      "expect": 1,
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [0, 2, 3]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "RWY Turnoff light on",
+      "read": "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)",
+      "on": "90265 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(E:TIME OF DAY)",
+            "one_of": [0, 2, 3]
+          }
+        ],
+        "operator": "or"
+      }
+    },
+    {
+      "label": "Flaps",
+      "read": "(L:MD11_FLAP_RNG)",
+      "on": "77831 (>L:CEVENT)",
+      "expect_min": 38,
+      "repeat_on": true
+    },
+    {
+      "label": "Spoilers",
+      "read": "(L:MD11_SPDBRK_HANDLE)",
+      "on": "77829 (>L:CEVENT)",
+      "expect": 1
+    }
+  ]
+}

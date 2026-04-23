@@ -1,4 +1,4 @@
-## Contributing to crewmatea310
+## Contributing to crewmatemd11
 
 Improvements are welcomed — report bugs, submit documentation fixes, add new flows, or contribute voice models.
 
@@ -22,8 +22,8 @@ Prerequisites
 Basic setup
 
 ```bash
-git clone https://github.com/alexlenh/CrewMateA310.git
-cd crewmatea310
+git clone https://github.com/alexlenh/CrewMateMD11.git
+cd crewmatemd11
 npm install
 ```
 
@@ -45,6 +45,12 @@ Build/Publish SideCar
 .\build-sidecar.ps1
 ```
 
+Create voice .ogg files
+
+```powershell
+.\FOvoices.ps1
+```
+
 ## Commands reference
 
 - `format` — Run Prettier across the entire repo to apply formatting, then run `cargo fmt` to format Rust code in `src-tauri`.
@@ -55,6 +61,7 @@ Build/Publish SideCar
 - `lint:frontend` — Run ESLint over the frontend codebase to surface JS/TS lint issues.
 - `lint:frontend:fix` — Run ESLint with `--fix` to automatically fix fixable frontend issues.
 - `lint:backend` — Run `cargo clippy` for the Rust backend and treat warnings as errors (`-D warnings`).
+- `fix` — Run `format` and `lint` sequentially, applying the ESLint `--fix` flag to resolve frontend issues automatically.
 - `check` — Run `format:check` then `lint` to validate formatting and linting in one step.
 
 These scripts are defined in `package.json`; use them as shown above when preparing changes or opening a PR.
@@ -91,7 +98,7 @@ PR checklist
 
 Do not commit secrets or sensitive credentials (API keys, passwords, certificates) to the repository. Use environment variables or a secure secret store for any runtime secrets.
 
-To report a security vulnerability or disclose sensitive issues privately, follow the instructions in https://github.com/alexlenh/CrewMateA310?tab=security-ov-file.
+To report a security vulnerability or disclose sensitive issues privately, follow the instructions in https://github.com/alexlenh/CrewMateMD11?tab=security-ov-file.
 
 ## Questions
 

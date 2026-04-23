@@ -1,0 +1,95 @@
+{
+  "id": "after_landing",
+  "name": "After Landing Checklist",
+  "items": [
+    {
+      "challenge": "spoilers.ogg",
+      "fo_only_response": true,
+      "copilot_response": "retracted.ogg",
+      "label": "Spoilers"
+    },
+    {
+      "challenge": "flaps_slats.ogg",
+      "fo_only_response": true,
+      "copilot_response": "up_ret.ogg",
+      "label": "Flaps and slats"
+    },
+    {
+      "challenge": "wxr_xpndr.ogg",
+      "fo_only_response": true,
+      "label": "WXR and Transponder",
+      "copilot_response": "off_tara.ogg"
+    },
+    {
+      "challenge": "auto_brake.ogg",
+      "fo_only_response": true,
+      "label": "Autobrake",
+      "copilot_response": "off.ogg"
+    },
+    {
+      "challenge": "stab_trim.ogg",
+      "copilot_response": "3_anu.ogg",
+      "fo_only_response": true,
+      "label": "Trim"
+    },
+    {
+      "challenge": "ext_lights.ogg",
+      "label": "Exterior lights",
+      "fo_only_response": true,
+      "copilot_response": "set.ogg"
+    },
+    {
+      "label": "Anti Ice",
+      "challenge": "anti_ice.ogg",
+      "fo_only_response": true,
+      "validations": [
+        {
+          "when": {
+            "store": { "path": "takeoff.antiIce", "equals": "off" }
+          },
+          "copilot_response": "off.ogg",
+          "checks": [
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG1_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG2_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG3_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_WING_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 0 }
+          ]
+        },
+        {
+          "when": {
+            "store": { "path": "takeoff.antiIce", "equals": "oneng" }
+          },
+          "copilot_response": "engineai.ogg",
+          "checks": [
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG1_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG2_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG3_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_WING_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 0 }
+          ]
+        },
+        {
+          "when": {
+            "store": { "path": "takeoff.antiIce", "equals": "onengfoil" }
+          },
+          "copilot_response": "enginefoilai.ogg",
+          "checks": [
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG1_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG2_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG3_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_WING_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "challenge": "apu.ogg",
+      "label": "APU",
+      "copilot_response": "on.ogg",
+      "fo_only_response": true
+    }
+  ],
+  "completion": "after_landing_checklist_completed.ogg"
+}

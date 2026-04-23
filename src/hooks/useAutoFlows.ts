@@ -1,178 +1,155 @@
 import { useEffect, useRef, useCallback } from "react"
 
-import { executeFlow } from "@/services/flowRunner"
+import { executeFlow, isPostLandingTimerActive } from "@/services/flowRunner"
 import { useFlowStore } from "@/store/flowStore"
 import { useGoAroundStore } from "@/store/goAroundStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 
-/**
- * Tracks which auto-triggered flows have already fired this phase.
- * Reset selectively on ground↔airborne transitions.
- */
-interface TriggeredFlags {
-  afterStart: boolean
-  afterTakeoffP2: boolean
-  afterTakeoffP1: boolean
-  landing: boolean
-  afterLanding: boolean
-  climbTenK: boolean
-  descTenK: boolean
-  shutdown: boolean
-}
-
 interface PrevValues {
   onGround: number
-  ignitionKnob: number
   flapsIndex: number
-  spoilersArmed: number
   landingGear: number
   alt: number
   mixture1: number
   mixture2: number
-  thrredalt: number
+  mixture3: number
+  taxiLight: number
 }
 
 export function useAutoFlows() {
-  const triggered = useRef<TriggeredFlags>({
+  const triggered = useRef({
     afterStart: false,
-    afterTakeoffP2: false,
-    afterTakeoffP1: false,
-    landing: false,
-    afterLanding: false,
+    afterTakeoff: false,
     climbTenK: false,
+    des: false,
     descTenK: false,
-    shutdown: false
+    shutdownP1: false,
+    shutdownP2: false
   })
-
   const prev = useRef<PrevValues>({
     onGround: 1,
-    ignitionKnob: 3,
     flapsIndex: 0,
-    spoilersArmed: 0,
     landingGear: 1,
     alt: 0,
     mixture1: 1,
     mixture2: 1,
-    thrredalt: 0
+    mixture3: 1,
+    taxiLight: 0
   })
 
-  const phase = useRef<"ground" | "airborne">("ground")
-  const primed = useRef(false)
+  const engineN1AboveThresholdSince = useRef<number | null>(null)
+  const descentSince = useRef<number | null>(null)
+  const state = useRef({ phase: "ground" as "ground" | "airborne", primed: false, taxiLightTurnedOff: false })
 
-  // Re-arm after-takeoff flow on go-around
   const goAroundCount = useRef(useGoAroundStore.getState().count)
-  useEffect(() => {
-    return useGoAroundStore.subscribe((s) => {
-      if (s.count !== goAroundCount.current) {
-        goAroundCount.current = s.count
-        triggered.current.afterTakeoffP1 = false
-        triggered.current.afterTakeoffP2 = false
-      }
-    })
-  }, [])
+
+  useEffect(
+    () =>
+      useGoAroundStore.subscribe((s) => {
+        if (s.count !== goAroundCount.current) {
+          goAroundCount.current = s.count
+          triggered.current.afterTakeoff = false
+        }
+      }),
+    []
+  )
 
   const tick = useCallback(() => {
     const t = useTelemetryStore.getState().telemetry
     if (!t || t.isSlewActive) return
 
-    // First tick: seed previous values from live telemetry so we don't
-    // detect false edges (e.g. ignitionKnob already 1 on app start).
-    if (!primed.current) {
-      primed.current = true
-      prev.current.onGround = t.onGround
-      prev.current.ignitionKnob = t.ignitionKnob ?? 3
-      prev.current.flapsIndex = t.flapsIndex ?? 0
-      prev.current.spoilersArmed = t.spoilersArmed ?? 0
-      prev.current.landingGear = t.landingGear ?? 1
-      prev.current.alt = t.alt ?? 0
-      prev.current.mixture1 = t.mixture1 ?? 1
-      prev.current.mixture2 = t.mixture2 ?? 1
-      prev.current.thrredalt = t.thrredalt ?? 1024
-      phase.current = t.onGround ? "ground" : "airborne"
+    const st = state.current
+    const p = prev.current
+    const fl = triggered.current
+
+    if (!st.primed) {
+      st.primed = true
+      p.onGround = t.onGround
+      p.flapsIndex = t.flapsIndex ?? 0
+      p.landingGear = t.landingGear ?? 1
+      p.alt = t.alt ?? 0
+      p.mixture1 = t.mixture1 ?? 1
+      p.mixture2 = t.mixture2 ?? 1
+      p.mixture3 = t.mixture3 ?? 1
+      p.taxiLight = t.taxiLight ?? 0
+      st.phase = t.onGround ? "ground" : "airborne"
+
+      if ((t.engineN1_2 ?? 0) > 23) {
+        fl.afterStart = true
+        engineN1AboveThresholdSince.current = Date.now()
+      }
       return
     }
 
-    const fl = triggered.current
-    const p = prev.current
-    const isRunning = useFlowStore.getState().executionState === "running"
+    const eng2N1 = t.engineN1_2 ?? 0
+    const now = Date.now()
 
-    if (phase.current === "ground" && !t.onGround && t.vs > 200) {
-      // Ground → Airborne
-      phase.current = "airborne"
-      fl.afterStart = false
-      fl.shutdown = false
-      fl.afterLanding = false
+    engineN1AboveThresholdSince.current = eng2N1 > 23 ? (engineN1AboveThresholdSince.current ?? now) : null
+    descentSince.current = !t.onGround && t.vs < -1000 && t.alt > 15000 ? (descentSince.current ?? now) : null
+
+    if (p.taxiLight !== 0 && (t.taxiLight ?? 0) === 0) st.taxiLightTurnedOff = true
+
+    if (st.phase === "ground" && !t.onGround && t.vs > 200) {
+      st.phase = "airborne"
+    } else if (st.phase === "airborne" && t.onGround && t.ias < 80) {
+      st.phase = "ground"
+      st.taxiLightTurnedOff = false
+      fl.afterTakeoff = fl.climbTenK = fl.des = fl.descTenK = fl.shutdownP1 = fl.shutdownP2 = false
     }
 
-    if (phase.current === "airborne" && t.onGround && t.ias < 80) {
-      // Airborne → Ground
-      phase.current = "ground"
-      fl.afterTakeoffP1 = false
-      fl.afterTakeoffP2 = false
-      fl.landing = false
-      fl.climbTenK = false
-      fl.descTenK = false
-    }
-
-    if (!isRunning) {
-      // After Start: ignition knob 0 → 1 while on ground
-      if (!fl.afterStart && t.onGround && p.ignitionKnob !== 3 && t.ignitionKnob === 3) {
+    if (useFlowStore.getState().executionState !== "running") {
+      if (
+        !fl.afterStart &&
+        t.onGround &&
+        engineN1AboveThresholdSince.current !== null &&
+        now - engineN1AboveThresholdSince.current >= 4000
+      ) {
         fl.afterStart = true
         executeFlow("after_start")
-      }
-
-      // Thrust Reduction
-      else if (!fl.afterTakeoffP1 && !t.onGround && p.alt <= t.thrredalt && t.alt >= t.thrredalt) {
-        fl.afterTakeoffP1 = true
-        executeFlow("thr_red")
-      } else if (!fl.afterTakeoffP2 && !t.onGround && p.flapsIndex > 0 && t.flapsIndex === 0) {
-        fl.afterTakeoffP2 = true
-        executeFlow("both_packs")
-      }
-
-      // After Landing: spoilers disarmed on ground
-      else if (!fl.afterLanding && t.onGround && p.spoilersArmed === 1 && t.spoilersArmed === 0) {
-        fl.afterLanding = true
-        executeFlow("after_landing")
-      }
-
-      // Climb through 10,000 ft
-      else if (!fl.climbTenK && !t.onGround && t.vs > 100 && p.alt < 10000 && t.alt >= 10000) {
+      } else if (!fl.afterTakeoff && !t.onGround && p.flapsIndex > 0 && t.flapsIndex === 0) {
+        fl.afterTakeoff = true
+        executeFlow("after_takeoff")
+      } else if (!fl.climbTenK && !t.onGround && t.vs > 100 && p.alt < 10000 && (t.alt ?? 0) >= 10000) {
         fl.climbTenK = true
         executeFlow("climb_ten_thousand_flow")
-      } else if (!fl.landing && !t.onGround && p.landingGear === 0 && t.landingGear === 1) {
-        fl.landing = true
-        executeFlow("landing")
-      }
-
-      // Descend through 10,000 ft
-      else if (!fl.descTenK && !t.onGround && t.vs < -100 && p.alt > 10000 && t.alt <= 10000) {
+      } else if (!fl.des && !t.onGround && descentSince.current !== null && now - descentSince.current >= 5000) {
+        fl.des = true
+        executeFlow("des")
+      } else if (!fl.descTenK && !t.onGround && t.vs < -100 && p.alt > 10000 && (t.alt ?? 0) <= 10000) {
         fl.descTenK = true
         executeFlow("desc_ten_thousand_flow")
-      }
-
-      // Shutdown: both engine master switches to cutoff on ground
-      else if (
-        !fl.shutdown &&
+      } else if (
+        !fl.shutdownP1 &&
         t.onGround &&
-        (p.mixture1 === 1 || p.mixture2 === 1) &&
-        t.mixture1 === 0 &&
-        t.mixture2 === 0
+        t.parkingBrake === 1 &&
+        st.taxiLightTurnedOff &&
+        !isPostLandingTimerActive()
       ) {
-        fl.shutdown = true
-        executeFlow("shutdown")
+        fl.shutdownP1 = true
+        st.taxiLightTurnedOff = false
+        executeFlow("shutdownP1")
+      } else if (
+        !fl.shutdownP2 &&
+        t.onGround &&
+        (p.mixture1 === 1 || p.mixture2 === 1 || p.mixture3 === 1) &&
+        !t.mixture1 &&
+        !t.mixture2 &&
+        !t.mixture3
+      ) {
+        fl.afterStart = false
+        fl.shutdownP2 = true
+        executeFlow("shutdownP2")
       }
     }
 
-    p.thrredalt = t.thrredalt ?? 1024
+    p.taxiLight = t.taxiLight ?? 0
     p.onGround = t.onGround
-    p.ignitionKnob = t.ignitionKnob ?? 3
     p.flapsIndex = t.flapsIndex ?? 0
-    p.spoilersArmed = t.spoilersArmed ?? 0
     p.landingGear = t.landingGear ?? 1
     p.alt = t.alt ?? 0
     p.mixture1 = t.mixture1 ?? 1
     p.mixture2 = t.mixture2 ?? 1
+    p.mixture3 = t.mixture3 ?? 1
   }, [])
 
   useEffect(() => {

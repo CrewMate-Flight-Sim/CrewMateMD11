@@ -1,0 +1,30 @@
+{
+  "id": "des_P1",
+  "name": "Descent/Approach Checklist through seatbelts",
+  "items": [
+    {
+      "challenge": "ldg_data.ogg",
+      "response": ["checked", "set and checked"],
+      "copilot_response": "set.ogg",
+      "label": "Landing Data"
+    },
+    {
+      "challenge": "wshld_ai.ogg",
+      "fo_only_response": true,
+      "copilot_response": "on.ogg",
+      "label": "Windshield anti ice"
+    },
+    {
+      "challenge": "dh_mda.ogg",
+      "response": ["feet set", "set and checked"],
+      "label": "DH/MDA"
+    },
+    {
+      "challenge": "seat_belts.ogg",
+      "label": "Seat belts",
+      "copilot_response": "on.ogg",
+      "fo_only_response": true
+    }
+  ],
+  "completion": "hold_at_altm.ogg"
+}

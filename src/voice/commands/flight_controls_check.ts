@@ -1,41 +1,53 @@
 import { simvarSet } from "@/API/simvarApi"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, isSoundPlaying } from "@/services/playSounds"
+import { usePerformanceStore } from "@/store/performanceStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
 
-const FULL_THRESHOLD = 0.45
-const NEUTRAL_THRESHOLD = 0.15
+import { delay } from "../commandDispatch"
 
-interface Step {
+const AXIS_FULL_POS = 16383
+const AXIS_FULL_NEG = 0
+const AXIS_NEUTRAL = 8192
+
+const RUDDER_FULL_THRESHOLD = 0.45
+const RUDDER_NEUTRAL_THRESHOLD = 0.15
+
+interface SilentStep {
   condition: (t: Telemetry) => boolean
-  sound: string
 }
 
-const steps: Step[] = [
-  { condition: (t) => t.elevatorPosition > FULL_THRESHOLD, sound: "full_up.ogg" },
-  { condition: (t) => t.elevatorPosition < -FULL_THRESHOLD, sound: "full_down.ogg" },
-  { condition: (t) => Math.abs(t.elevatorPosition) < NEUTRAL_THRESHOLD, sound: "neutral.ogg" },
+interface FOStep {
+  setValue: () => Promise<void>
+  sound?: string
+}
 
-  { condition: (t) => t.aileronPosition < -FULL_THRESHOLD, sound: "full_left.ogg" },
-  { condition: (t) => t.aileronPosition > FULL_THRESHOLD, sound: "full_right.ogg" },
-  { condition: (t) => Math.abs(t.aileronPosition) < NEUTRAL_THRESHOLD, sound: "neutral.ogg" },
+// Module-level atomic execution lock to protect voice commands
+let isCheckRunning = false
 
-  { condition: (t) => t.rudderPosition < -FULL_THRESHOLD, sound: "full_left.ogg" },
-  { condition: (t) => t.rudderPosition > FULL_THRESHOLD, sound: "full_right.ogg" },
-  { condition: (t) => Math.abs(t.rudderPosition) < NEUTRAL_THRESHOLD, sound: "neutral.ogg" }
+const foSteps: FOStep[] = [
+  { setValue: () => simvarSet(`${AXIS_FULL_NEG} (>K:ELEVATOR_SET)`), sound: "full_up.ogg" },
+  { setValue: () => simvarSet(`${AXIS_NEUTRAL} (>K:ELEVATOR_SET)`) },
+  { setValue: () => simvarSet(`${AXIS_FULL_POS} (>K:ELEVATOR_SET)`), sound: "full_down.ogg" },
+  { setValue: () => simvarSet(`${AXIS_NEUTRAL} (>K:ELEVATOR_SET)`), sound: "neutral.ogg" },
+  { setValue: () => simvarSet(`${AXIS_FULL_NEG} (>K:AILERON_SET)`), sound: "full_left.ogg" },
+  { setValue: () => simvarSet(`(>K:CENTER_AILER_RUDDER)`) },
+  { setValue: () => simvarSet(`${AXIS_FULL_POS} (>K:AILERON_SET)`), sound: "full_right.ogg" },
+  { setValue: () => simvarSet(`(>K:CENTER_AILER_RUDDER)`), sound: "neutral.ogg" }
+]
+
+const rudderSteps: SilentStep[] = [
+  { condition: (t) => t.rudderPosition < -RUDDER_FULL_THRESHOLD },
+  { condition: (t) => t.rudderPosition > RUDDER_FULL_THRESHOLD },
+  { condition: (t) => Math.abs(t.rudderPosition) < RUDDER_NEUTRAL_THRESHOLD }
 ]
 
 function waitFor(condition: (t: Telemetry) => boolean): Promise<void> {
-  return new Promise((resolve) => {
-    // Check immediately in case the condition is already true
-    const current = useTelemetryStore.getState().telemetry
-    if (current && condition(current)) {
-      resolve()
-      return
-    }
+  const current = useTelemetryStore.getState().telemetry
+  if (current && condition(current)) return Promise.resolve()
 
-    // Subscribe — fires on every telemetry push from the backend
+  return new Promise((resolve) => {
     const unsub = useTelemetryStore.subscribe((state) => {
       const t = state.telemetry
       if (t && condition(t)) {
@@ -46,35 +58,57 @@ function waitFor(condition: (t: Telemetry) => boolean): Promise<void> {
   })
 }
 
-/** Resolves once the backend reports no sound is playing. */
-function waitForSoundDone(): Promise<void> {
-  return new Promise((resolve) => {
-    const id = setInterval(async () => {
-      if (!(await isSoundPlaying())) {
-        clearInterval(id)
-        resolve()
-      }
-    }, 50)
-  })
-}
-
-export async function opencloseFCTLECAM(position: number) {
-  try {
-    const expression = `${position} (>L:PUSH_ECAM_FCTL)`
-    await simvarSet(expression)
-  } catch (error) {
-    console.error("Error opening FCTL ECAM", error)
+async function waitForSoundDone(): Promise<void> {
+  while (await isSoundPlaying()) {
+    await delay(50)
   }
 }
 
 export async function flightControlsCheck() {
-  await waitForSoundDone()
+  // Voice guard: Abort immediately if already running to prevent overlap glitching
+  if (isCheckRunning) return
+  isCheckRunning = true
 
-  for (const step of steps) {
-    await waitFor(step.condition)
-    await playSound(step.sound)
+  try {
     await waitForSoundDone()
-  }
 
-  executeFlow("after_flight_controls_check")
+    // FO sets elevator and aileron positions and calls out each state
+    for (const step of foSteps) {
+      // 1. SAFETY: Ensure any audio from the PRIOR step is 100% silent before moving hardware
+      await waitForSoundDone()
+
+      // 2. Send command to physically move the control surface
+      await step.setValue()
+
+      // 3. Physical transit wait (increased to 2200ms for full high-fidelity hydraulic sweep)
+      await delay(750)
+
+      if (step.sound) {
+        // 4. Play sound only once the mechanical step is verified complete
+        await playSound(step.sound)
+
+        // 5. Block right here until THIS step's speech is completely finished
+        await waitForSoundDone()
+
+        // 6. Natural human breathing room pause before loop cycles back to step 1
+        await delay(400)
+      } else {
+        // Padding for internal silent centering resets
+        await delay(300)
+      }
+    }
+
+    // Captain performs rudder check — script blocks until physical input matches threshold
+    for (const step of rudderSteps) {
+      await waitFor(step.condition)
+    }
+
+    const { armNav } = usePerformanceStore.getState().takeoff
+    executeFlow((armNav ?? true) ? "taxi" : "taxi_vector")
+  } catch (error) {
+    console.error("[FlightControlsCheck] Execution failure:", error)
+  } finally {
+    // Release the voice latch regardless of success or failure pathing
+    isCheckRunning = false
+  }
 }

@@ -42,48 +42,56 @@ export function LandingWindow() {
     handleChange(e.target.name, e.target.value)
   }
 
-  const labelRow = "flex items-center gap-1 h-4"
-
   return (
-    <div className="h-screen bg-black text-white p-3 flex flex-col gap-3">
-      {/* Flaps + Anti Ice */}
-
-      <div className="grid grid-cols-3 gap-2">
+    <div className="h-screen bg-black text-white p-3 flex flex-col gap-3 overflow-hidden">
+      <div className="grid grid-cols-2 gap-2">
+        {/* Flaps */}
         <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="antiIce" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Anti Ice
+          <div className="flex items-center justify-between">
+            <Label htmlFor="flaps" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
+              Flaps
             </Label>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-[200px] bg-slate-800 border-slate-700">
-                  Will leave Flaps down on "After Landing" flow if Anti Ice is used
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
-
-          <select
-            id="antiIce"
-            name="antiIce"
-            value={landing.antiIce}
-            onChange={handleSelectChange}
-            className={selectCls}
-          >
-            <option value="off">OFF</option>
-            <option value="oneng">ENG</option>
-            <option value="onengwing">ENG+WING</option>
+          <select id="flaps" className={selectCls} value={landing.flaps} onChange={handleSelectChange}>
+            <option value="35">35</option>
+            <option value="50">50</option>
           </select>
         </div>
 
+        {/* Transition Level */}
         <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="transitionLevel" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              TL
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">TL</Label>
+            <span className="text-[11px] font-mono text-cyan-500/80 leading-none">
+              {formatToFL(landing.transitionLevel)}
+            </span>
+          </div>
+          <Input
+            type="text"
+            inputMode="numeric"
+            className="h-8 bg-slate-900/50 border-slate-600 text-white text-xs font-mono text-center px-1 focus-visible:ring-cyan-500"
+            value={landing.transitionLevel ?? ""}
+            onChange={(e) => {
+              const val = e.target.value
+              if (val === "" || /^\d+$/.test(val)) {
+                handleChange("transitionLevel", val === "" ? "" : Number(val))
+              }
+            }}
+            onWheel={(e) => {
+              e.preventDefault()
+              const delta = e.deltaY < 0 ? 500 : -500
+              const current = landing.transitionLevel ?? 0
+              const snapped = Math.min(22000, Math.max(3000, Math.round((current + delta) / 500) * 500))
+              handleChange("transitionLevel", snapped)
+            }}
+          />
+        </div>
+
+        {/* Anti Ice */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="antiIce" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
+              Anti Ice
             </Label>
             <TooltipProvider>
               <Tooltip>
@@ -91,139 +99,42 @@ export function LandingWindow() {
                   <Info className="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
                 </TooltipTrigger>
                 <TooltipContent className="text-xs max-w-[200px] bg-slate-800 border-slate-700">
-                  Transition Level
+                  Restricts flaps to 28° if used. Note: On 'Auto-AICE' airframes, Anti-Ice is managed by the aircraft
+                  and will not be triggered by this flow.
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-          <Input
-            type="number"
-            id="transitionLevel"
-            name="transitionLevel"
-            value={landing.transitionLevel ?? 0}
-            step={500}
-            min={3000}
-            max={22000}
-            onChange={(e) => {
-              const numericValue = Number(e.target.value)
-
-              if (numericValue <= 21000) {
-                handleChange("transitionLevel", numericValue)
-              }
-            }}
-            className="h-8 bg-slate-900/50 border-slate-600 text-white text-xs font-mono text-center px-1 focus-visible:ring-cyan-500"
-            placeholder="0"
-          />
-          <div className="text-[10px] text-slate-400 text-center mt-1 font-mono">
-            {formatToFL(landing.transitionLevel)}
-          </div>
+          <select id="antiIce" className={selectCls} value={landing.antiIce} onChange={handleSelectChange}>
+            <option value="off">OFF</option>
+            <option value="oneng">ENG</option>
+            <option value="onengfoil">ENG+FOIL</option>
+          </select>
         </div>
+
+        {/* Missed Approach */}
         <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="missedAltitude" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Missed App (ft)
-            </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Missed App (ft)</Label>
           </div>
           <Input
             type="number"
             min={1000}
             max={20000}
-            step={100}
+            step={landing.missedAltitude >= 10000 ? 500 : 100}
             id="missedAltitude"
             name="missedAltitude"
             value={landing.missedAltitude}
             onChange={handleNumberInput}
             className="h-8 bg-slate-900/50 border-slate-600 text-white text-xs font-mono text-center px-1 focus-visible:ring-cyan-500"
-            placeholder="-"
-          />
-        </div>
-      </div>
-
-      {/* APU + Auto Brake */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="landingElevation" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              Landing Elevation
-            </Label>
-          </div>
-
-          <Input
-            type="number"
-            id="landingElevation"
-            name="landingElevation"
-            value={landing.landingElevation ?? ""}
-            onChange={handleNumberInput}
-            className="h-8 bg-slate-900/50 border-slate-600 text-white text-xs font-mono text-center px-1 focus-visible:ring-cyan-500"
             placeholder="—"
           />
-        </div>
-
-        <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="apuStart" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              APU
-            </Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-[200px] bg-slate-800 border-slate-700">
-                  Will start the APU on "After Landing" flow if set to "Auto"
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          <select
-            id="apuStart"
-            name="apuStart"
-            value={landing.apuStart}
-            onChange={handleSelectChange}
-            className={selectCls}
-          >
-            <option value="auto">Auto</option>
-            <option value="manual">Manual</option>
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <div className={labelRow}>
-            <Label htmlFor="autoBrake" className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-              AUTO BRAKE
-            </Label>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-cyan-400 transition-colors" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-[200px] bg-slate-800 border-slate-700">
-                  Autobrake will be set after ground spoilers are armed
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          <select
-            id="autoBrake"
-            name="autoBrake"
-            value={landing.autoBrake}
-            onChange={handleSelectChange}
-            className={selectCls}
-          >
-            <option value="off">OFF</option>
-            <option value="min">LOW</option>
-            <option value="med">MED</option>
-            <option value="max">MAX</option>
-          </select>
         </div>
       </div>
 
       <Button
         onClick={() => getCurrentWindow().close()}
-        className="w-full h-8 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-sm mt-3"
+        className="w-full h-8 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-sm mt-auto"
       >
         Ok
       </Button>

@@ -152,7 +152,7 @@ pub fn run() {
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::Folder {
                         path: logs_dir,
-                        file_name: Some("crewmateinia310".to_string()),
+                        file_name: Some("crewmatetfdimd11".to_string()),
                     },
                 ))
                 .level(log::LevelFilter::Info)
@@ -162,7 +162,7 @@ pub fn run() {
                 .plugin(log_plugin)
                 .expect("Failed to initialize logging plugin");
 
-            log::info!("Crewmate INI A310 application loaded...");
+            log::info!("Crewmate TFDI MD11 application loaded...");
 
             if let Err(e) = setup_app_data_directories(app.handle()) {
                 log::error!("Failed to setup app data directories: {}", e);
