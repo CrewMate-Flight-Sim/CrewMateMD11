@@ -57,7 +57,6 @@
         <tag>out.pid="2"; out.cval=rules.FL_HUNDREDS_VALUE;</tag>
       </item>
 
-
       <!-- Altitude feet -->
       <item>
         <item>set</item>
@@ -244,7 +243,6 @@
   ════════════════════════════════════════════════════════════════════════════ -->
   <rule id="DISCRETE_COMMANDS">
     <one-of>
-
       <item>gear up<tag>out.pid="1";</tag></item>
       <item>gear down<tag>out.pid="2";</tag></item>
       <item>slats retract<tag>out.pid="3";</tag></item>
@@ -673,5 +671,4 @@
       <item>ninety<tag>out="90";</tag></item>
     </one-of>
   </rule>
-
 </grammar>

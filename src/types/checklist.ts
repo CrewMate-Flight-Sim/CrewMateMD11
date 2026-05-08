@@ -20,12 +20,15 @@ export interface Condition {
 }
 
 export interface Check {
-  type: "simvar" | "store" | "any"
+  type: "simvar" | "store" | "any" | "flaps_to"
   var?: string // simvar
   expected?: number | boolean | { store: string } | string
   store?: string // store
   equals?: string
   groups?: Check[][]
+  target_var?: string
+  dial_var?: string
+  tolerance?: number
 }
 
 export interface ValidationRule {

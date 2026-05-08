@@ -40,6 +40,32 @@ export function getFlowById(id: string): Flow | undefined {
 }
 
 export const vars: Record<string, string> = {}
+
+export const MD11_FLAPS_DIAL_MAP: Record<number, number> = {
+  10: 0,
+  11: 6,
+  12: 13,
+  13: 20,
+  14: 26,
+  15: 33,
+  16: 40,
+  17: 46,
+  18: 53,
+  19: 60,
+  20: 66,
+  21: 73,
+  22: 79,
+  23: 86,
+  24: 93,
+  25: 99
+}
+
+export function resolveFlapsDialPercent(flaps: number): number | null {
+  const key = Math.round(Number(flaps))
+  if (!Number.isFinite(key)) return null
+  return MD11_FLAPS_DIAL_MAP[key] ?? null
+}
+
 export async function getTemplateVars(): Promise<Record<string, string>> {
   const { takeoff, landing } = usePerformanceStore.getState()
 
@@ -52,30 +78,9 @@ export async function getTemplateVars(): Promise<Record<string, string>> {
     }
     await new Promise((r) => setTimeout(r, 150))
   }
-  const MD11_FLAPS_MAP: Record<number, number> = {
-    10: 0,
-    11: 6,
-    12: 13,
-    13: 20,
-    14: 26,
-    15: 33,
-    16: 40,
-    17: 46,
-    18: 53,
-    19: 60,
-    20: 66,
-    21: 73,
-    22: 79,
-    23: 86,
-    24: 93,
-    25: 99
-  }
-  function resolveFlaps(flaps: number): number {
-    return MD11_FLAPS_MAP[flaps] ?? 33
-  }
   const trim = takeoff.trim ?? 0
   vars["trim"] = String(((trim + 1.0) / 16.5) * 100)
-  vars["flaps"] = String(resolveFlaps(Number(efbFlapDegree)))
+  vars["flaps"] = String(resolveFlapsDialPercent(Number(efbFlapDegree)) ?? 33)
   vars["flapsefb"] = String(efbFlapDegree)
 
   const antiIce = takeoff.antiIce ?? "off"
