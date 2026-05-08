@@ -31,7 +31,7 @@
   <!-- ═══════════════════════════════════════════════════════════════════════════
        FO_COMMANDS  (parameterized — cval carries the numeric value)
   ════════════════════════════════════════════════════════════════════════════ -->
-<rule id="FO_COMMANDS">
+  <rule id="FO_COMMANDS">
     <one-of>
       <!-- Heading -->
       <item>
@@ -41,7 +41,7 @@
         <tag>out.pid="1"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
       </item>
 
-<!-- Flight level — digit-by-digit: "flight level two seven zero" → "270" -->
+      <!-- Flight level — digit-by-digit: "flight level two seven zero" → "270" -->
       <item>
         <item>set</item>
         <item>flight level</item>
@@ -56,7 +56,6 @@
         <ruleref uri="#FL_HUNDREDS_VALUE" />
         <tag>out.pid="2"; out.cval=rules.FL_HUNDREDS_VALUE;</tag>
       </item>
-
 
       <!-- Altitude feet -->
       <item>
@@ -136,7 +135,7 @@
   <rule id="FMA_CALLOUTS">
     <item>
       <tag>out.th=""; out.lt=""; out.la=""; out.vt=""; out.va="";</tag>
-      
+
       <!-- Column 1: SPEED/ATS -->
       <item repeat="0-1">
         <ruleref uri="#FMA_SPEED_MODE" />
@@ -197,15 +196,15 @@
       <item>localizer<tag>out="LOC";</tag></item>
     </one-of>
   </rule>
-      <!-- ARMED SUB-RULES (The "1A" logic) -->
-    <rule id="FMA_LATERAL_MODE_1A">
-      <one-of>
-        <item>nav armed<tag>out="NAV ARMED";</tag></item>
-        <item>land armed<tag>out="LAND ARMED";</tag></item>
-        <item>loc armed<tag>out="LOC ARMED";</tag></item>
-        <item>v o r armed<tag>out="VOR ARMED";</tag></item>
-      </one-of>
-    </rule>
+  <!-- ARMED SUB-RULES (The "1A" logic) -->
+  <rule id="FMA_LATERAL_MODE_1A">
+    <one-of>
+      <item>nav armed<tag>out="NAV ARMED";</tag></item>
+      <item>land armed<tag>out="LAND ARMED";</tag></item>
+      <item>loc armed<tag>out="LOC ARMED";</tag></item>
+      <item>v o r armed<tag>out="VOR ARMED";</tag></item>
+    </one-of>
+  </rule>
 
   <!-- FMA column 3: Vertical / Approach Status -->
   <rule id="FMA_VERTICAL_MODE">
@@ -244,7 +243,6 @@
   ════════════════════════════════════════════════════════════════════════════ -->
   <rule id="DISCRETE_COMMANDS">
     <one-of>
-
       <item>gear up<tag>out.pid="1";</tag></item>
       <item>gear down<tag>out.pid="2";</tag></item>
       <item>slats retract<tag>out.pid="3";</tag></item>
@@ -389,7 +387,6 @@
       <item>flaps twenty three<tag>out.pid="163";</tag></item>
       <item>flaps twenty four<tag>out.pid="164";</tag></item>
       <item>flaps twenty five<tag>out.pid="165";</tag></item>
-
     </one-of>
   </rule>
 
@@ -673,5 +670,4 @@
       <item>ninety<tag>out="90";</tag></item>
     </one-of>
   </rule>
-
 </grammar>

@@ -11,7 +11,7 @@ import { useSettingsStore } from "@/store/settingsStore"
 import { useVoiceHintProgressStore } from "@/store/voiceHintProgressStore"
 import type { Check, ChecklistItem, ValidationRule } from "@/types/checklist"
 
-import { vars, getTemplateVars } from "./flowLoader"
+import { vars, getTemplateVars, resolveFlapsDialPercent } from "./flowLoader"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -25,23 +25,41 @@ const checkAbort = (s: AbortSignal) => {
   if (s.aborted) throw new Error("Checklist aborted")
 }
 
-/** Resolves with the next recognised speech string, or null on abort */
-async function waitForSpeechResponse(signal: AbortSignal): Promise<string | null> {
+type SpeechRecognizedPayload = {
+  type?: string
+  text?: string
+  commandType?: string
+  payload?: Record<string, unknown>
+}
+
+type SpeechInput = {
+  text: string
+  commandType?: string
+  payload?: Record<string, unknown>
+}
+
+async function waitForSpeechInput(signal: AbortSignal): Promise<SpeechInput | null> {
   if (signal.aborted) return null
-  return new Promise<string | null>((resolve) => {
+  return new Promise<SpeechInput | null>((resolve) => {
     let unlistenFn: (() => void) | null = null
     let resolved = false
-    const done = (v: string | null) => {
+    const done = (v: SpeechInput | null) => {
       if (resolved) return
       resolved = true
       unlistenFn?.()
       resolve(v)
     }
     signal.addEventListener("abort", () => done(null), { once: true })
-    listen<{ text?: string; type?: string }>("speech_recognized", (e) => {
+    listen<SpeechRecognizedPayload>("speech_recognized", (e) => {
       if (e.payload?.type === "speech_unrecognized") return
       const text = e.payload?.text?.trim().toLowerCase()
-      if (text) done(text)
+      if (text) {
+        done({
+          text,
+          commandType: e.payload?.commandType,
+          payload: e.payload?.payload
+        })
+      }
     }).then((fn) => {
       unlistenFn = fn
       if (signal.aborted) done(null)
@@ -53,6 +71,37 @@ async function waitForSpeechResponse(signal: AbortSignal): Promise<string | null
 
 const NUM_WORD = `(?:zero|one|two|three|four|five|six|seven|eight|nine|niner|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)`
 const NUM_RE = new RegExp(`\\b${NUM_WORD}(?:[\\s-]+${NUM_WORD}){0,3}\\b`, "i")
+
+const DISCRETE_FLAP_COMMAND_TO_VALUE: Record<string, number> = {
+  flaps_ten: 10,
+  flaps_eleven: 11,
+  flaps_twelve: 12,
+  flaps_thirteen: 13,
+  flaps_fourteen: 14,
+  flaps_fifteen: 15,
+  flaps_sixteen: 16,
+  flaps_seventeen: 17,
+  flaps_eighteen: 18,
+  flaps_nineteen: 19,
+  flaps_twenty: 20,
+  flaps_twenty_one: 21,
+  flaps_twenty_two: 22,
+  flaps_twenty_three: 23,
+  flaps_twenty_four: 24,
+  flaps_twenty_five: 25
+}
+
+function getSpokenFlapSetting(spoken: string, command?: string): number | null {
+  if (command) {
+    const mapped = DISCRETE_FLAP_COMMAND_TO_VALUE[command]
+    if (mapped !== undefined) return mapped
+  }
+
+  const input = spoken.toLowerCase().trim().replace(/-/g, " ")
+  const digits = input.match(/\b(1\d|2[0-5])\b/)
+  if (digits) return Number(digits[1])
+  return null
+}
 
 /**
  * Returns true if `spoken` satisfies the response token pattern.
@@ -147,6 +196,24 @@ async function runChecks(checks: Check[], signal: AbortSignal): Promise<boolean>
     }
 
     if (check.type === "store") pass = getStoreValue(check.store!) === check.equals
+
+    if (check.type === "flaps_to") {
+      const targetVar = check.target_var ?? "(L:md11_efb_flaps)"
+      const dialVar = check.dial_var ?? "(L:MD11_DIALAFLAP_WHEEL_RNG)"
+      const tolerance = typeof check.tolerance === "number" ? Math.max(0, check.tolerance) : 2
+
+      const targetRaw = await readSimVar(targetVar)
+      const dialRaw = await readSimVar(dialVar)
+      checkAbort(signal)
+
+      if (targetRaw === null || dialRaw === null) {
+        pass = false
+      } else {
+        const expectedDial = resolveFlapsDialPercent(targetRaw)
+        pass = expectedDial !== null && Math.abs(dialRaw - expectedDial) <= tolerance
+      }
+    }
+
     if (!pass) return false
   }
   return true
@@ -264,15 +331,30 @@ async function executeNormalItem(item: ChecklistItem, index: number, signal: Abo
     await wsf()
 
     // Wait for a speech response that matches the expected token list
-    let spoken: string | null = null
+    let spoken: SpeechInput | null = null
     while (true) {
-      spoken = await waitForSpeechResponse(signal)
+      spoken = await waitForSpeechInput(signal)
       if (spoken === null) return
-      if (!responseList.length || matchesAny(spoken, responseList)) break
+      if (!responseList.length || matchesAny(spoken.text, responseList)) break
     }
 
-    const s = spoken!
+    const s = spoken.text
     checkAbort(signal)
+
+    if (item.flaps_confirmation) {
+      const command =
+        spoken.commandType === "discrete" && typeof spoken.payload?.command === "string"
+          ? spoken.payload.command
+          : undefined
+      const spokenFlap = getSpokenFlapSetting(s, command)
+      const expectedFlap = Math.round(Number(vars["flapsefb"]))
+      if (spokenFlap === null || (Number.isFinite(expectedFlap) && spokenFlap !== expectedFlap)) {
+        await playSound(item.incorrect ?? "are_you_sure.ogg")
+        await wsf()
+        if (hold()) continue
+        else break
+      }
+    }
 
     // Run validation rules if present
     if (item.validations?.length) {
@@ -288,7 +370,6 @@ async function executeNormalItem(item: ChecklistItem, index: number, signal: Abo
         await wsf()
         responsePlayed = true
       }
-      break
     }
 
     // Flaps readback
