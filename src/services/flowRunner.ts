@@ -34,8 +34,10 @@ const BLOCKED_FLOWS = new Set(["before_takeoff"])
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 const getRandomStepDelay = () => Math.random() * STEP_DELAY_RANGE_MS + STEP_DELAY_MIN_MS
 const fuzzyEquals = (a: number, b: number, epsilon = FUZZY_EQUALS_EPSILON) => Math.abs(a - b) < epsilon
-const toNumber = (value: number | string) => typeof value === "string" ? parseFloat(value) : value
-const waitForSoundFinished = async () => { while (await isSoundPlaying()) await sleep(100) }
+const toNumber = (value: number | string) => (typeof value === "string" ? parseFloat(value) : value)
+const waitForSoundFinished = async () => {
+  while (await isSoundPlaying()) await sleep(100)
+}
 
 // ---------------------------------------------------------------------------
 // SimVar I/O
@@ -70,32 +72,50 @@ async function writeSimvar(expression: string): Promise<void> {
 
 function resolveFlowOption(path: string): unknown {
   const { takeoff, landing } = usePerformanceStore.getState()
-  return path.split(".").reduce<unknown>((acc, key) => {
-    if (!acc || typeof acc !== "object") return undefined
-    return (acc as Record<string, unknown>)[key]
-  }, { takeoff, landing })
+  return path.split(".").reduce<unknown>(
+    (acc, key) => {
+      if (!acc || typeof acc !== "object") return undefined
+      return (acc as Record<string, unknown>)[key]
+    },
+    { takeoff, landing }
+  )
 }
 
 function optionMatchesExpected(actual: unknown, expected: FlowConditionValue): boolean {
   if (typeof actual === "number" && typeof expected === "number") return fuzzyEquals(actual, expected)
-  const a = Number(actual), e = Number(expected)
-  return (!Number.isNaN(a) && !Number.isNaN(e)) ? fuzzyEquals(a, e) : String(actual) === String(expected)
+  const a = Number(actual),
+    e = Number(expected)
+  return !Number.isNaN(a) && !Number.isNaN(e) ? fuzzyEquals(a, e) : String(actual) === String(expected)
 }
 
-function simvarMatchesExpected(actual: number | null, expected: FlowConditionValue, epsilon = FUZZY_EQUALS_EPSILON): boolean {
+function simvarMatchesExpected(
+  actual: number | null,
+  expected: FlowConditionValue,
+  epsilon = FUZZY_EQUALS_EPSILON
+): boolean {
   if (typeof expected !== "number" && typeof expected !== "string") return false
   return actual !== null && fuzzyEquals(actual, toNumber(expected), epsilon)
 }
 
-async function evaluateSingleCondition(condition: { read?: string; option?: string; one_of: FlowConditionValue[] }): Promise<boolean> {
+async function evaluateSingleCondition(condition: {
+  read?: string
+  option?: string
+  one_of: FlowConditionValue[]
+}): Promise<boolean> {
   if ("option" in condition && condition.option !== undefined) {
     const optionValue = resolveFlowOption(condition.option)
-    if (optionValue === undefined) { console.warn(`[FlowRunner] Step condition option not found: "${condition.option}"`); return false }
+    if (optionValue === undefined) {
+      console.warn(`[FlowRunner] Step condition option not found: "${condition.option}"`)
+      return false
+    }
     return condition.one_of.some((e) => optionMatchesExpected(optionValue, e))
   }
   if (condition.read !== undefined) {
     const val = await readSimvar(condition.read)
-    if (val === null) { console.warn(`[FlowRunner] Step condition read failed for "${condition.read}"`); return false }
+    if (val === null) {
+      console.warn(`[FlowRunner] Step condition read failed for "${condition.read}"`)
+      return false
+    }
     return condition.one_of.some((e) => simvarMatchesExpected(val, e))
   }
   return false
@@ -104,7 +124,10 @@ async function evaluateSingleCondition(condition: { read?: string; option?: stri
 async function evaluateCondition(condition: FlowCondition): Promise<boolean> {
   if ("read" in condition || "option" in condition) return evaluateSingleCondition(condition)
   if ("conditions" in condition) {
-    const { conditions, operator = "and" } = condition as { conditions: FlowCondition[]; operator?: FlowConditionOperator }
+    const { conditions, operator = "and" } = condition as {
+      conditions: FlowCondition[]
+      operator?: FlowConditionOperator
+    }
     if (!conditions.length) return true
     const results = await Promise.all(conditions.map((c) => evaluateCondition(c)))
     return operator === "and" ? results.every(Boolean) : results.some(Boolean)
@@ -112,7 +135,7 @@ async function evaluateCondition(condition: FlowCondition): Promise<boolean> {
   return false
 }
 
-const shouldExecuteStep = async (step: FlowStep) => step.only_if ? evaluateCondition(step.only_if) : true
+const shouldExecuteStep = async (step: FlowStep) => (step.only_if ? evaluateCondition(step.only_if) : true)
 
 // ---------------------------------------------------------------------------
 // Step satisfaction checks
@@ -121,7 +144,11 @@ const shouldExecuteStep = async (step: FlowStep) => step.only_if ? evaluateCondi
 function stepAlreadySatisfied(currentValue: number | null, step: FlowStep): boolean {
   if (currentValue === null) return false
   if (step.expect_min !== undefined) return currentValue >= toNumber(step.expect_min)
-  return simvarMatchesExpected(currentValue, step.expect, step.trim_on ? TRIM_FUZZY_EQUALS_EPSILON : FUZZY_EQUALS_EPSILON)
+  return simvarMatchesExpected(
+    currentValue,
+    step.expect,
+    step.trim_on ? TRIM_FUZZY_EQUALS_EPSILON : FUZZY_EQUALS_EPSILON
+  )
 }
 
 function stepVerificationPassed(value: number | null, step: FlowStep): boolean {
@@ -138,10 +165,15 @@ class PostLandingTimer {
   private expiresAt: number | null = null
   private timeoutId: ReturnType<typeof setTimeout> | null = null
 
-  get isActive() { return this.expiresAt !== null && Date.now() < this.expiresAt }
+  get isActive() {
+    return this.expiresAt !== null && Date.now() < this.expiresAt
+  }
 
   clear(): void {
-    if (this.timeoutId !== null) { clearTimeout(this.timeoutId as unknown as number); this.timeoutId = null }
+    if (this.timeoutId !== null) {
+      clearTimeout(this.timeoutId as unknown as number)
+      this.timeoutId = null
+    }
     this.expiresAt = null
   }
 
@@ -152,8 +184,11 @@ class PostLandingTimer {
     this.timeoutId = setTimeout(async () => {
       this.expiresAt = null
       this.timeoutId = null
-      try { await playSound("five_minutes.ogg") }
-      catch (err) { console.error("[FlowRunner] Failed to play post-landing expiry announcement:", err) }
+      try {
+        await playSound("five_minutes.ogg")
+      } catch (err) {
+        console.error("[FlowRunner] Failed to play post-landing expiry announcement:", err)
+      }
     }, delayMs)
   }
 }
@@ -175,14 +210,23 @@ class FlowRunner {
   }
 
   async execute(flowId: string): Promise<void> {
-    if (this.abortController) { this.abortController.abort(); this.abortController = null }
+    if (this.abortController) {
+      this.abortController.abort()
+      this.abortController = null
+    }
 
     const store = useFlowStore.getState()
     const rawFlow = getFlowById(flowId)
-    if (!rawFlow) { store.setError(`Flow "${flowId}" not found`); return }
+    if (!rawFlow) {
+      store.setError(`Flow "${flowId}" not found`)
+      return
+    }
 
     const preconditionError = await this.checkPreconditions(flowId)
-    if (preconditionError) { store.setError(preconditionError); return }
+    if (preconditionError) {
+      store.setError(preconditionError)
+      return
+    }
 
     const flow: Flow = await resolveFlow(rawFlow)
     store.setFlow(flow)
@@ -282,9 +326,10 @@ class FlowRunner {
 
     if (step.trim_on) {
       setStepStatus(index, "executing")
-      const target = step.expect !== undefined
-        ? toNumber(step.expect)
-        : (((usePerformanceStore.getState().takeoff.trim ?? 0) + 1.0) / 16.5) * 100
+      const target =
+        step.expect !== undefined
+          ? toNumber(step.expect)
+          : (((usePerformanceStore.getState().takeoff.trim ?? 0) + 1.0) / 16.5) * 100
       await this.setTrim(signal, step.read, target)
       setStepStatus(index, "done")
       return
@@ -292,8 +337,10 @@ class FlowRunner {
 
     const currentValue = await readSimvar(step.read)
     this.checkAbort(signal)
-    console.log(`[FlowRunner] Step "${step.label}": read=${currentValue}, ` +
-      (step.expect_min !== undefined ? `expect_min=${step.expect_min}` : `expect=${step.expect}`))
+    console.log(
+      `[FlowRunner] Step "${step.label}": read=${currentValue}, ` +
+        (step.expect_min !== undefined ? `expect_min=${step.expect_min}` : `expect=${step.expect}`)
+    )
 
     if (stepAlreadySatisfied(currentValue, step)) {
       if (step.wait_ms) await this.abortableSleep(step.wait_ms, signal)
@@ -310,7 +357,9 @@ class FlowRunner {
 
   private async writeStep(step: FlowStep, signal: AbortSignal): Promise<void> {
     if (!step.on) throw new Error(`[FlowRunner] Missing step.on for step "${step.label}"`)
-    step.repeat_on ? await this.writeUntilSatisfied(step, signal) : (await writeSimvar(step.on), this.checkAbort(signal))
+    step.repeat_on
+      ? await this.writeUntilSatisfied(step, signal)
+      : (await writeSimvar(step.on), this.checkAbort(signal))
   }
 
   private async writeUntilSatisfied(step: FlowStep, signal: AbortSignal): Promise<void> {
@@ -349,7 +398,10 @@ class FlowRunner {
     for (let attempt = 0; attempt < STEP_VERIFY_RETRIES; attempt++) {
       this.checkAbort(signal)
       if (!step.skip_delay) await sleep(STEP_VERIFY_DELAY_MS)
-      if (stepVerificationPassed(await readSimvar(step.read), step)) { verified = true; break }
+      if (stepVerificationPassed(await readSimvar(step.read), step)) {
+        verified = true
+        break
+      }
     }
 
     if (!verified) {

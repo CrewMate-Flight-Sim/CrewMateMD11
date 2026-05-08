@@ -150,7 +150,7 @@
       "label": "Cage standby ADI",
       "read": "(L:MD11_MIP_STBY_AI_PITCH_RNG)",
       "on": "94987(>:CEVENT)",
-      "expect": 50, 
+      "expect": 50,
       "only_if": {
         "conditions": [
           {
