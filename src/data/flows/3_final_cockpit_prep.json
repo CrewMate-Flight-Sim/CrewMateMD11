@@ -3,6 +3,12 @@
   "name": "Final Cockpit Preparation",
   "steps": [
     {
+      "label": "Set Dial a Flap",
+      "read": "(L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "on": "{flaps} (>L:MD11_DIALAFLAP_WHEEL_RNG)",
+      "expect": "{flaps}"
+    },
+    {
       "label": "Set Autobrake",
       "read": "(L:MD11_CTR_AUTOBRAKE_SW)",
       "on": "82211 (>L:CEVENT)",

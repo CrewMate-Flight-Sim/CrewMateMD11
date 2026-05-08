@@ -10,12 +10,6 @@
       "expect": 1
     },
     {
-      "label": "Set Dial a Flap",
-      "read": "(L:MD11_DIALAFLAP_WHEEL_RNG)",
-      "on": "{flaps} (>L:MD11_DIALAFLAP_WHEEL_RNG)",
-      "expect": "{flaps}"
-    },
-    {
       "label": "TCAS",
       "read": "(L:md11_ped_xpndr_mode_kb)",
       "on": "69877 (>L:CEVENT)",

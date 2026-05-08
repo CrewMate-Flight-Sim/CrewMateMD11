@@ -357,9 +357,12 @@ class FlowRunner {
 
   private async writeStep(step: FlowStep, signal: AbortSignal): Promise<void> {
     if (!step.on) throw new Error(`[FlowRunner] Missing step.on for step "${step.label}"`)
-    step.repeat_on
-      ? await this.writeUntilSatisfied(step, signal)
-      : (await writeSimvar(step.on), this.checkAbort(signal))
+    if (step.repeat_on) {
+      await this.writeUntilSatisfied(step, signal)
+    } else {
+      await writeSimvar(step.on)
+      this.checkAbort(signal)
+    }
   }
 
   private async writeUntilSatisfied(step: FlowStep, signal: AbortSignal): Promise<void> {

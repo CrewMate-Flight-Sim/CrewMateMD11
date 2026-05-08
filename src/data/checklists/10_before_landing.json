@@ -69,7 +69,7 @@
     },
     {
       "challenge": "altimeters.ogg",
-      "response": ["#4 set", "set and checked"],
+      "response": ["#3 set", "#4 set", "set and checked"],
       "copilot_response": "xchk.ogg",
       "label": "Altimeters"
     },
