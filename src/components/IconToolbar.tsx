@@ -34,8 +34,10 @@ export function IconToolbar({ voiceEnabled, onToggleVoice, voiceDisabled }: Icon
   const enginesOn =
     (telemetry?.engineN1_1 ?? 0) >= N1_IDLE_MAX ||
     (telemetry?.engineN1_2 ?? 0) >= N1_IDLE_MAX ||
+    (telemetry?.engineN1_3 ?? 0) >= N1_IDLE_MAX ||
     (telemetry?.mixture1 ?? 0) >= 0.5 ||
-    (telemetry?.mixture2 ?? 0) >= 0.5
+    (telemetry?.mixture2 ?? 0) >= 0.5 ||
+    (telemetry?.mixture3 ?? 0) >= 0.5
 
   const timeDisplay = String(Math.floor(remainingSeconds / 60)).padStart(2, "0")
 
@@ -50,7 +52,7 @@ export function IconToolbar({ voiceEnabled, onToggleVoice, voiceDisabled }: Icon
   }
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-5">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

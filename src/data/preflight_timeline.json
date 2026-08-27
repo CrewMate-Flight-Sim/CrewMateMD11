@@ -5,19 +5,19 @@
     "type": "reminder"
   },
   {
-    "minuteMark": 47,
+    "minuteMark": 49,
     "label": "FO Cockpit Preparation part 1",
     "type": "flow",
     "flowId": "fo_cockpit_prep1"
   },
   {
-    "minuteMark": 45,
+    "minuteMark": 47,
     "label": "PM Walkaround",
     "type": "reminder",
     "sound": "walkaround.ogg"
   },
   {
-    "minuteMark": 33,
+    "minuteMark": 35,
     "label": "PM Walkaround completed, starts part 2 of his cockpit preparation",
     "type": "flow",
     "flowId": "fo_cockpit_prep2",

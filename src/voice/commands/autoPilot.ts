@@ -1,6 +1,5 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
-
-import { delay } from "../commandDispatch"
+import { delay } from "@/lib/utils"
 
 const btn = async (press: number, release: number, ms = 150) => {
   await simvarSet(`${press} (>L:CEVENT)`)

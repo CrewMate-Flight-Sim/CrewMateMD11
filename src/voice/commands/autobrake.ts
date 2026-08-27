@@ -1,6 +1,5 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
-
-import { delay } from "../commandDispatch"
+import { delay } from "@/lib/utils"
 
 export type AutobrakePosition = 1 | 2 | 3 | 4 // 0 = takeoff, excluded
 

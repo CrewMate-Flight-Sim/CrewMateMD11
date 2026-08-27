@@ -1,26 +1,46 @@
 import type { ChecklistItem } from "@/types/checklist"
 
-/** Applies final display formatting: weight units → "xxx.x <unit>", feet → "xxxx feet" */
 export function renderResponseToken(token: string): string {
-  return token === "feet" ? "xxxx feet" : token.replace("#.#", "x.x")
+  if (token === "feet") return "xxxx feet"
+  return token.replace("#.#", "x.x")
 }
 
 export function formatResponseToken(token: string): string {
-  // Chain replacements directly; handles exact matches and embedded tokens uniformly
   return token.replace(/#4/g, "####").replace(/#3/g, "###").replace(/#2/g, "##")
 }
 
 export function getDisplayResponses(item: ChecklistItem): string[] {
+  const extras: string[] = []
+
+  if (item.label?.includes("DH/MDA")) {
+    extras.push("#3 feet set")
+  }
+
+  const base = item.response ?? []
+  const combined = [...extras, ...base]
+
   const seen = new Set<string>()
   const out: string[] = []
 
-  for (const token of item.response ?? []) {
-    const formatted = formatResponseToken(token)
+  for (const rawToken of combined) {
+    const formatted = formatResponseToken(rawToken)
     if (!seen.has(formatted)) {
       seen.add(formatted)
-      out.push(renderResponseToken(formatted))
+      out.push(formatted)
     }
   }
 
-  return out
+  // Check if our formatted numeric DH/MDA set example was added
+  const hasNumericDHSet = out.some((s) => s.toLowerCase().includes("### feet set"))
+
+  let filtered = out
+  if (hasNumericDHSet) {
+    // Hide the plain generic variations ("feet set", "feet", "set")
+    filtered = filtered.filter((s) => {
+      const lower = s.toLowerCase()
+      return lower !== "feet set" && lower !== "feet" && lower !== "set"
+    })
+  }
+
+  return filtered.map(renderResponseToken)
 }

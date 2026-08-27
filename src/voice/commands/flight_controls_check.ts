@@ -1,11 +1,10 @@
 import { simvarSet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, isSoundPlaying } from "@/services/playSounds"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
-
-import { delay } from "../commandDispatch"
 
 const AXIS_FULL_POS = 16383
 const AXIS_FULL_NEG = 0

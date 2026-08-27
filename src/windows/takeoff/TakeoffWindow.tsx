@@ -148,7 +148,7 @@ export function TakeoffWindow() {
             onChange={handleSelectChange}
             className={STYLES.select}
           >
-            <option value="off">OFF</option>
+            <option value="off">OFF/AUTO</option>
             <option value="oneng">ENG</option>
             <option value="onengfoil">ENG+AIRFOIL</option>
           </select>

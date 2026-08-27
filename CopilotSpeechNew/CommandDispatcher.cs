@@ -266,7 +266,6 @@ namespace VoiceSidecar
         [78] = "disarmed",
         [79] = "on_and_auto",
         [80] = "up_neutral",
-        [81] = "standard_set",
         [82] = "normal",
         [83] = "secured",
         [84] = "low",
@@ -312,7 +311,7 @@ namespace VoiceSidecar
         [126] = "apu_tbs",
         [127] = "brakes_on_chocks_on",
         [128] = "engine_start_3",
-
+        [129] = "pushback_request",
         [150] = "flaps_ten",
         [151] = "flaps_eleven",
         [152] = "flaps_twelve",

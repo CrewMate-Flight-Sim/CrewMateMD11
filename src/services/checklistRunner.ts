@@ -13,46 +13,21 @@ import type { Check, ChecklistItem, ValidationRule } from "@/types/checklist"
 import { vars, getTemplateVars, resolveFlapsDialPercent } from "./flowLoader"
 import { getMd11Variant } from "./MD11variant"
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const wsf = async (signal?: AbortSignal) => {
-  await sleep(50)
-  while (await isSoundPlaying()) {
-    if (signal?.aborted) return
-    await sleep(100)
-  }
-}
-const checkAbort = (s: AbortSignal) => {
-  if (s.aborted) throw new Error("Checklist aborted")
-}
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
-type SpeechRecognizedPayload = { type?: string; text?: string; commandType?: string; payload?: Record<string, unknown> }
-type SpeechInput = { text: string; commandType?: string; payload?: Record<string, unknown> }
+const SIMVAR = { READ_RETRIES: 5, READ_RETRY_DELAY: 150 }
+const BLOCKED_CHECKLISTS = new Set(["taxi", "before_takeoff"])
 
-async function waitForSpeechInput(signal: AbortSignal): Promise<SpeechInput | null> {
-  if (signal.aborted) return null
-  return new Promise<SpeechInput | null>((resolve) => {
-    let unlistenFn: (() => void) | null = null
-    let resolved = false
-    const done = (v: SpeechInput | null) => {
-      if (resolved) return
-      resolved = true
-      unlistenFn?.()
-      resolve(v)
-    }
-    signal.addEventListener("abort", () => done(null), { once: true })
-    listen<SpeechRecognizedPayload>("speech_recognized", (e) => {
-      if (e.payload?.type === "speech_unrecognized") return
-      const text = e.payload?.text?.trim().toLowerCase()
-      if (text) done({ text, commandType: e.payload?.commandType, payload: e.payload?.payload })
-    }).then((fn) => {
-      unlistenFn = fn
-      if (signal.aborted) done(null)
-    })
-  })
-}
+const AUTO_CHECK_RETRY_DELAY = 2000
+const FO_ONLY_POLL_DELAY = 200
 
-const NUM_WORD = `(?:zero|one|two|three|four|five|six|seven|eight|nine|niner|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)`
-const NUM_RE = new RegExp(`\\b${NUM_WORD}(?:[\\s-]+${NUM_WORD}){0,3}\\b`, "i")
+const AUTOBRAKE_FILES: Record<number, string> = { 2: "min.ogg", 3: "med.ogg", 4: "max.ogg" }
+
+const NUMBER_WORD_PATTERN = `(?:zero|one|two|three|four|five|six|seven|eight|nine|niner|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)`
+const NUMBER_WORDS_RE = new RegExp(`\\b${NUMBER_WORD_PATTERN}(?:[\\s-]+${NUMBER_WORD_PATTERN}){0,3}\\b`, "i")
+const NUMBER_TOKEN_PATTERNS: Record<string, RegExp> = { "#2": /\b\d{2}\b/, "#3": /\b\d{3}\b/, "#4": /\b\d{4}\b/ }
 
 const FLAP_WORDS = [
   "ten",
@@ -76,6 +51,88 @@ const DISCRETE_FLAP_COMMAND_TO_VALUE: Record<string, number> = Object.fromEntrie
   FLAP_WORDS.map((w, i) => [`flaps_${w}`, i + 10])
 )
 
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
+
+// Small debounce before polling, then waits out any sound already playing.
+async function waitForSoundFinished(signal?: AbortSignal): Promise<void> {
+  await sleep(50)
+  while (await isSoundPlaying()) {
+    if (signal?.aborted) return
+    await sleep(100)
+  }
+}
+
+async function playSyncSound(soundFile: string): Promise<void> {
+  await waitForSoundFinished()
+  await playSound(soundFile)
+  await waitForSoundFinished()
+}
+
+function checkAbort(signal: AbortSignal): void {
+  if (signal.aborted) throw new Error("Checklist aborted")
+}
+
+// ---------------------------------------------------------------------------
+// Speech input
+// ---------------------------------------------------------------------------
+
+type SpeechRecognizedPayload = {
+  type?: string
+  text?: string
+  commandType?: string
+  payload?: Record<string, unknown>
+}
+type SpeechInput = { text: string; commandType?: string; payload?: Record<string, unknown> }
+
+async function waitForSpeechInput(signal: AbortSignal): Promise<SpeechInput | null> {
+  if (signal.aborted) return null
+
+  return new Promise<SpeechInput | null>((resolve) => {
+    let unlistenFn: (() => void) | null = null
+    let resolved = false
+
+    const done = (value: SpeechInput | null) => {
+      if (resolved) return
+      resolved = true
+      unlistenFn?.()
+      resolve(value)
+    }
+
+    signal.addEventListener("abort", () => done(null), { once: true })
+
+    listen<SpeechRecognizedPayload>("speech_recognized", (event) => {
+      if (event.payload?.type === "speech_unrecognized") return
+      const text = event.payload?.text?.trim().toLowerCase()
+      if (text) done({ text, commandType: event.payload?.commandType, payload: event.payload?.payload })
+    }).then((fn) => {
+      unlistenFn = fn
+      if (signal.aborted) done(null)
+    })
+  })
+}
+
+function matchesResponse(spoken: string, response: string): boolean {
+  if (response === "*") return true
+  const input = spoken.toLowerCase()
+  for (const token of response.toLowerCase().split(/\s+/)) {
+    const numPattern = NUMBER_TOKEN_PATTERNS[token]
+    if (numPattern) {
+      if (!numPattern.test(spoken) && (token !== "#2" || !NUMBER_WORDS_RE.test(input))) return false
+    } else if (!new RegExp(`\\b${token}\\b`).test(input)) {
+      return false
+    }
+  }
+  return true
+}
+
+function matchesAnyResponse(spoken: string, responses: string[]): boolean {
+  return responses.some((r) => matchesResponse(spoken, r))
+}
+
 function getSpokenFlapSetting(spoken: string, command?: string): number | null {
   if (command && DISCRETE_FLAP_COMMAND_TO_VALUE[command] !== undefined) {
     return DISCRETE_FLAP_COMMAND_TO_VALUE[command]
@@ -88,21 +145,9 @@ function getSpokenFlapSetting(spoken: string, command?: string): number | null {
   return digits ? Number(digits[1]) : null
 }
 
-const NUM_PATTERNS: Record<string, RegExp> = { "#2": /\b\d{2}\b/, "#3": /\b\d{3}\b/, "#4": /\b\d{4}\b/ }
-
-function matchesResponse(spoken: string, response: string): boolean {
-  if (response === "*") return true
-  const input = spoken.toLowerCase()
-  for (const token of response.toLowerCase().split(/\s+/)) {
-    const numPat = NUM_PATTERNS[token]
-    if (numPat) {
-      if (!numPat.test(spoken) && (token !== "#2" || !NUM_RE.test(input))) return false
-    } else if (!input.includes(token)) return false
-  }
-  return true
-}
-
-const matchesAny = (spoken: string, responses: string[]) => responses.some((r) => matchesResponse(spoken, r))
+// ---------------------------------------------------------------------------
+// SimVar / store readers
+// ---------------------------------------------------------------------------
 
 function getStoreValue(storePath: string): string | undefined {
   const state = usePerformanceStore.getState() as unknown as Record<string, Record<string, string>>
@@ -111,18 +156,22 @@ function getStoreValue(storePath: string): string | undefined {
 }
 
 async function readSimVar(expression: string): Promise<number | null> {
-  for (let i = 0; i < 5; i++) {
+  for (let attempt = 0; attempt < SIMVAR.READ_RETRIES; attempt++) {
     try {
-      const v = await simvarGet(expression)
-      if (v !== null) return v
+      const value = await simvarGet(expression)
+      if (value !== null) return value
     } catch (err) {
       console.warn(`[ChecklistRunner] Failed to read simvar "${expression}":`, err)
       return null
     }
-    await sleep(150)
+    await sleep(SIMVAR.READ_RETRY_DELAY)
   }
   return null
 }
+
+// ---------------------------------------------------------------------------
+// Check evaluation
+// ---------------------------------------------------------------------------
 
 async function runChecks(checks: Check[], signal: AbortSignal): Promise<boolean> {
   for (const check of checks) {
@@ -140,6 +189,7 @@ async function runChecks(checks: Check[], signal: AbortSignal): Promise<boolean>
     if (check.type === "simvar" && check.var) {
       const raw = await readSimVar(check.var)
       checkAbort(signal)
+
       let expected: number | null = null
       const expType = typeof check.expected
 
@@ -151,9 +201,9 @@ async function runChecks(checks: Check[], signal: AbortSignal): Promise<boolean>
         const n = parseFloat((check.expected as string).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? ""))
         expected = isNaN(n) ? null : n
       } else if (expType === "object" && check.expected !== null) {
-        const s = getStoreValue((check.expected as { store: string }).store)
-        if (s !== undefined) {
-          const n = parseFloat(s)
+        const storeRaw = getStoreValue((check.expected as { store: string }).store)
+        if (storeRaw !== undefined) {
+          const n = parseFloat(storeRaw)
           expected = isNaN(n) ? null : n
         }
       }
@@ -179,6 +229,7 @@ async function runChecks(checks: Check[], signal: AbortSignal): Promise<boolean>
 
     if (!pass) return false
   }
+
   return true
 }
 
@@ -187,6 +238,7 @@ async function findPassingRule(
   spoken: string,
   signal: AbortSignal
 ): Promise<ValidationRule | null> {
+  // Find the rule whose response token best (longest) matches spoken
   let bestMatch: ValidationRule | undefined
   let bestLen = -1
 
@@ -198,63 +250,165 @@ async function findPassingRule(
       }
     }
   }
-  if (bestMatch && (await runChecks(bestMatch.checks ?? [], signal))) return bestMatch
 
-  for (const rule of validations) {
-    const { when: w } = rule
-    if (
-      ((w.store && getStoreValue(w.store.path) === w.store.equals) || w.always) &&
-      (await runChecks(rule.checks ?? [], signal))
-    ) {
-      return rule
-    }
+  // If a response-based rule matched, only check that one
+  if (bestMatch) {
+    const ok = await runChecks(bestMatch.checks ?? [], signal)
+    return ok ? bestMatch : null
   }
+
+  // No response matched — try always/store rules in order (handles silent mode
+  // and items with no response-based validations)
+  for (const rule of validations) {
+    const w = rule.when
+    const conditionMet = (w.store && getStoreValue(w.store.path) === w.store.equals) || w.always === true
+    if (!conditionMet) continue
+
+    const ok = await runChecks(rule.checks ?? [], signal)
+    if (ok) return rule
+  }
+
   return null
 }
 
-let abortController: AbortController | null = null
+// ---------------------------------------------------------------------------
+// Checklist runner
+// ---------------------------------------------------------------------------
 
-const BLOCKED_CHECKLISTS = new Set(["taxi", "before_takeoff"])
-const AUTOBRAKE_FILES: Record<number, string> = { 2: "min.ogg", 3: "med.ogg", 4: "max.ogg" }
+class ChecklistRunner {
+  private abortController: AbortController | null = null
 
-// Helper to bundle repetitive audio-wait sequences
-async function playWithSync(soundFile: string): Promise<void> {
-  await wsf()
-  await playSound(soundFile)
-  await wsf()
-}
+  // ── Public API ────────────────────────────────────────────────────────────
 
-async function executeNormalItem(item: ChecklistItem, index: number, signal: AbortSignal): Promise<void> {
-  const cargo = getMd11Variant() === "cargo"
-  const { setStepStatus } = useChecklistStore.getState()
-  setStepStatus(index, "active")
-  let responsePlayed = false
+  abort(): void {
+    this.abortController?.abort()
+    this.abortController = null
+  }
 
-  // 1. Auto-check Phase
-  if (!item.challenge) {
+  async execute(checklistId: string): Promise<void> {
+    const cargo = getMd11Variant() === "cargo"
+
+    if (this.abortController) {
+      this.abortController.abort()
+      this.abortController = null
+    }
+
+    const store = useChecklistStore.getState()
+    const checklist = getChecklistById(checklistId)
+    if (!checklist) {
+      store.setError(`Checklist "${checklistId}" not found`)
+      return
+    }
+
+    await getTemplateVars()
+
+    const preconditionError = this.checkPreconditions(checklistId)
+    if (preconditionError) {
+      playSound("cabin_not_secure.ogg")
+      store.setError(preconditionError)
+      return
+    }
+
+    store.setChecklist(checklist)
+
+    this.abortController = new AbortController()
+    const { signal } = this.abortController
+
+    try {
+      await this.runItems(checklist.items, signal)
+
+      await playSyncSound(checklist.completion)
+
+      store.setExecutionState("completed")
+      this.onChecklistCompleted(checklist.id, cargo)
+    } catch (err) {
+      const message = String(err)
+      if (message.includes("aborted")) {
+        store.setExecutionState("aborted")
+      } else {
+        store.setError(message)
+      }
+    } finally {
+      this.abortController = null
+    }
+  }
+
+  // ── Precondition checks ───────────────────────────────────────────────────
+
+  private checkPreconditions(checklistId: string): string | null {
+    const cabinTimer = useCabinReadyTimerStore.getState()
+    if (cabinTimer.isRunning && BLOCKED_CHECKLISTS.has(checklistId)) {
+      return "Cannot start taxi checklist - cabin ready timer is running"
+    }
+    return null
+  }
+
+  // ── Item iteration ────────────────────────────────────────────────────────
+
+  private async runItems(items: ChecklistItem[], signal: AbortSignal): Promise<void> {
+    for (let i = 0; i < items.length; i++) {
+      checkAbort(signal)
+      useChecklistStore.getState().setStepIndex(i)
+      await this.executeItem(items[i], i, signal)
+    }
+  }
+
+  // ── Single item execution ─────────────────────────────────────────────────
+
+  private async executeItem(item: ChecklistItem, index: number, signal: AbortSignal): Promise<void> {
+    const cargo = getMd11Variant() === "cargo"
+    const { setStepStatus } = useChecklistStore.getState()
+    setStepStatus(index, "active")
+
+    if (!item.challenge) {
+      await this.runAutoCheckItem(item, signal)
+      setStepStatus(index, "complete")
+      return
+    }
+
+    if (cargo && item.cargo_skip) {
+      setStepStatus(index, "complete")
+      return
+    }
+
+    if (item.fo_only_response) {
+      await this.runFoOnlyItem(item, signal)
+      setStepStatus(index, "complete")
+      return
+    }
+
+    const result = await this.runInteractiveItem(item, signal)
+    if (result === null) return // aborted; status left as "active"
+
+    if (!result.responsePlayed && item.copilot_response) {
+      await playSyncSound(item.copilot_response)
+    }
+    await waitForSoundFinished()
+
+    setStepStatus(index, "complete")
+  }
+
+  // ── Auto-check phase (no challenge, validations only) ─────────────────────
+
+  private async runAutoCheckItem(item: ChecklistItem, signal: AbortSignal): Promise<void> {
     if (item.validations?.length) {
       while (true) {
         checkAbort(signal)
         if (await findPassingRule(item.validations, "", signal)) break
-        if (item.incorrect) await playWithSync(item.incorrect)
-        await sleep(2000)
+        if (item.incorrect) await playSyncSound(item.incorrect)
+        await sleep(AUTO_CHECK_RETRY_DELAY)
       }
     }
     if (item.delay_ms) await sleep(item.delay_ms)
-    setStepStatus(index, "complete")
-    return
   }
 
-  // 2. Cargo skip Phase
-  if (cargo && item.cargo_skip) {
-    setStepStatus(index, "complete")
-    return
-  }
+  // ── First-officer-only phase (challenge plays, no crew speech expected) ───
 
-  // 3. First Officer Only Phase
-  if (item.fo_only_response) {
-    await wsf()
-    const challengeDone = playSound(item.challenge)
+  private async runFoOnlyItem(item: ChecklistItem, signal: AbortSignal): Promise<void> {
+    await waitForSoundFinished()
+    const challengeDone = playSound(item.challenge!)
+    let responsePlayed = false
+
     if (item.validations?.length) {
       while (true) {
         checkAbort(signal)
@@ -262,145 +416,135 @@ async function executeNormalItem(item: ChecklistItem, index: number, signal: Abo
         if (rule) {
           await challengeDone
           if (rule.copilot_response) {
-            await playWithSync(rule.copilot_response)
+            await playSyncSound(rule.copilot_response)
             responsePlayed = true
           }
           break
         }
-        await sleep(200)
+        await sleep(FO_ONLY_POLL_DELAY)
       }
     } else {
       await challengeDone
     }
-    if (!responsePlayed && item.copilot_response) await playWithSync(item.copilot_response)
-    setStepStatus(index, "complete")
-    return
+
+    if (!responsePlayed && item.copilot_response) await playSyncSound(item.copilot_response)
   }
 
-  // 4. Normal Item Interactive Phase
-  const responseList = item.response ?? []
-  const hold = () => useSettingsStore.getState().holdOnIncorrect
-  let stepAccepted = false
+  // ── Normal interactive phase (challenge → speech response → confirmations) ─
 
-  while (!stepAccepted) {
-    checkAbort(signal)
-    await playWithSync(item.challenge)
+  private async runInteractiveItem(
+    item: ChecklistItem,
+    signal: AbortSignal
+  ): Promise<{ responsePlayed: boolean } | null> {
+    const responseList = item.response ?? []
+    const hold = () => useSettingsStore.getState().holdOnIncorrect
+    let responsePlayed = false
+    let stepAccepted = false
 
-    let spoken: SpeechInput | null = null
-    while (true) {
-      spoken = await waitForSpeechInput(signal)
-      if (spoken === null) return
-      if (!responseList.length || matchesAny(spoken.text, responseList)) break
-    }
+    while (!stepAccepted) {
+      checkAbort(signal)
+      await playSyncSound(item.challenge!)
 
-    const s = spoken.text
-    checkAbort(signal)
+      const spoken = await this.waitForMatchingResponse(responseList, signal)
+      if (spoken === null) return null // aborted
+      checkAbort(signal)
 
-    if (item.flaps_confirmation) {
-      const command =
-        spoken.commandType === "discrete" && typeof spoken.payload?.command === "string"
-          ? spoken.payload.command
-          : undefined
-      const spokenFlap = getSpokenFlapSetting(s, command)
-      const expectedFlap = Math.round(Number(vars["flapsefb"]))
-      if (spokenFlap === null || (Number.isFinite(expectedFlap) && spokenFlap !== expectedFlap)) {
-        await playWithSync(item.incorrect ?? "are_you_sure.ogg")
-        if (!hold()) stepAccepted = true
-        continue
+      if (item.flaps_confirmation) {
+        const ok = await this.checkFlapsConfirmation(item, spoken)
+        if (!ok) {
+          if (!hold()) stepAccepted = true
+          continue
+        }
       }
-    }
 
-    if (item.validations?.length) {
-      const rule = await findPassingRule(item.validations, s, signal)
-      if (!rule) {
-        await playWithSync(item.incorrect ?? "are_you_sure.ogg")
-        if (!hold()) stepAccepted = true
-        continue
+      if (item.validations?.length) {
+        const rule = await findPassingRule(item.validations, spoken.text, signal)
+        if (!rule) {
+          await playSyncSound(item.incorrect ?? "are_you_sure.ogg")
+          if (!hold()) stepAccepted = true
+          continue
+        }
+        if (rule.copilot_response) {
+          await playSyncSound(rule.copilot_response)
+          responsePlayed = true
+        }
       }
-      if (rule.copilot_response) {
-        await playWithSync(rule.copilot_response)
+
+      if (item.flaps_confirmation && vars["flapsefb"]) {
+        await playSyncSound(`flaps_${vars["flapsefb"]}.ogg`)
         responsePlayed = true
       }
-    }
 
-    if (item.flaps_confirmation && vars["flapsefb"]) {
-      await playWithSync(`flaps_${vars["flapsefb"]}.ogg`)
-      responsePlayed = true
-    }
-
-    if (item.trim_confirmation) {
-      const rawTrim = (await readSimVar("(L:MD11_EXT_STAB_TRIM)")) ?? 0
-      const units = Math.max(0, Number(rawTrim) * 0.165 - 1.0).toFixed(1)
-      const [whole, decimal] = units.split(".")
-      const files = [`${whole}.ogg`, "point.ogg", `${decimal}.ogg`]
-      await playSoundSequence([...files, "units_set.ogg"])
-      await wsf()
-    }
-
-    if (item.abrk_confirmation) {
-      const raw = (await simvarGet("(L:MD11_CTR_AUTOBRAKE_SW)")) ?? 0
-      const file = AUTOBRAKE_FILES[Math.round(Number(raw))]
-      if (file) {
-        await playSoundSequence(["set.ogg", file])
-        await wsf()
+      if (item.trim_confirmation) {
+        await this.playTrimConfirmation()
       }
+
+      if (item.abrk_confirmation) {
+        await this.playAutobrakeConfirmation()
+      }
+
+      stepAccepted = true
     }
 
-    stepAccepted = true
+    return { responsePlayed }
   }
 
-  if (!responsePlayed && item.copilot_response) await playWithSync(item.copilot_response)
-  await wsf()
-  setStepStatus(index, "complete")
-}
-
-export async function executeChecklist(checklistId: string): Promise<void> {
-  const cargo = getMd11Variant() === "cargo"
-  const store = useChecklistStore.getState()
-  abortController?.abort()
-  abortController = null
-
-  const checklist = getChecklistById(checklistId)
-  if (!checklist) {
-    store.setError(`Checklist "${checklistId}" not found`)
-    return
-  }
-
-  await getTemplateVars()
-  const cabinTimer = useCabinReadyTimerStore.getState()
-  if (cabinTimer.isRunning && BLOCKED_CHECKLISTS.has(checklistId)) {
-    playSound("cabin_not_secure.ogg")
-    store.setError("Cannot start taxi checklist - cabin ready timer is running")
-    return
-  }
-
-  store.setChecklist(checklist)
-  abortController = new AbortController()
-  const { signal } = abortController
-
-  try {
-    for (let i = 0; i < checklist.items.length; i++) {
-      checkAbort(signal)
-      useChecklistStore.getState().setStepIndex(i)
-      await executeNormalItem(checklist.items[i], i, signal)
+  private async waitForMatchingResponse(responseList: string[], signal: AbortSignal): Promise<SpeechInput | null> {
+    while (true) {
+      const spoken = await waitForSpeechInput(signal)
+      if (spoken === null) return null
+      if (!responseList.length || matchesAnyResponse(spoken.text, responseList)) return spoken
     }
-    await playWithSync(checklist.completion)
-    useChecklistStore.getState().setExecutionState("completed")
-    useVoiceHintProgressStore.getState().recordChecklistCompleted(checklist.id)
+  }
+
+  private async checkFlapsConfirmation(item: ChecklistItem, spoken: SpeechInput): Promise<boolean> {
+    const command =
+      spoken.commandType === "discrete" && typeof spoken.payload?.command === "string"
+        ? spoken.payload.command
+        : undefined
+    const spokenFlap = getSpokenFlapSetting(spoken.text, command)
+    const expectedFlap = Math.round(Number(vars["flapsefb"]))
+    const ok = spokenFlap !== null && (!Number.isFinite(expectedFlap) || spokenFlap === expectedFlap)
+    if (!ok) await playSyncSound(item.incorrect ?? "are_you_sure.ogg")
+    return ok
+  }
+
+  private async playTrimConfirmation(): Promise<void> {
+    const rawTrim = (await readSimVar("(L:MD11_EXT_STAB_TRIM)")) ?? 0
+    const units = Math.max(0, Number(rawTrim) * 0.165 - 1.0).toFixed(1)
+    const [whole, decimal] = units.split(".")
+    const files = [`${whole}.ogg`, "point.ogg", `${decimal}.ogg`]
+    await playSoundSequence([...files, "units_set.ogg"])
+    await waitForSoundFinished()
+  }
+
+  private async playAutobrakeConfirmation(): Promise<void> {
+    const raw = (await simvarGet("(L:MD11_CTR_AUTOBRAKE_SW)")) ?? 0
+    const file = AUTOBRAKE_FILES[Math.round(Number(raw))]
+    if (!file) return
+    await playSoundSequence(["set.ogg", file])
+    await waitForSoundFinished()
+  }
+
+  // ── Completion side-effects ───────────────────────────────────────────────
+
+  private onChecklistCompleted(checklistId: string, cargo: boolean): void {
+    useVoiceHintProgressStore.getState().recordChecklistCompleted(checklistId)
 
     if (checklistId === "after_start" && !cargo) {
-      cabinTimer.startTimer(1 + Math.random() * 3)
+      useCabinReadyTimerStore.getState().startTimer(1 + Math.random() * 3)
     }
-  } catch (err) {
-    const msg = String(err)
-    if (msg.includes("aborted")) useChecklistStore.getState().setExecutionState("aborted")
-    else useChecklistStore.getState().setError(msg)
-  } finally {
-    abortController = null
+    if (checklistId === "parking") {
+      useVoiceHintProgressStore.getState().resetForColdGround()
+    }
   }
 }
 
-export function abortChecklist(): void {
-  abortController?.abort()
-  abortController = null
-}
+// ---------------------------------------------------------------------------
+// Module-level singleton + public API
+// ---------------------------------------------------------------------------
+
+const runner = new ChecklistRunner()
+
+export const executeChecklist = (checklistId: string): Promise<void> => runner.execute(checklistId)
+export const abortChecklist = (): void => runner.abort()

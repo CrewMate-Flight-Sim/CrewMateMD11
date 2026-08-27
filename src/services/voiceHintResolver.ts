@@ -33,7 +33,6 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
   // Fast, zero-overhead value mapping via type casting
   const t = telemetry as unknown as Record<string, number>
   const ias = t.ias ?? 0
-  const vs = t.vs ?? 0
   const alt = t.alt ?? 0
   const flapsIndex = t.flapsIndex ?? 0
   const landingGear = t.landingGear ?? 0
@@ -49,58 +48,64 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
 
   // ── AIRBORNE PHASES ──────────────────────────────────────────────────────────
   if (!ground) {
-    const descending = vs < -300
     const perfTA = usePerformanceStore.getState().takeoff.transitionAltitude || 5000
     const perfTL = usePerformanceStore.getState().landing.transitionLevel || 5000
-    const hasAtCl = lastCl === "after_takeoff_to_the_line" || lastCl === "after_takeoff_below_the_line"
 
-    if (!descending) {
-      if (flapsIndex > 0)
-        return {
-          id: "initial_climb",
-          title: "Initial climb",
-          phrases: ["gear up", "flaps up", "slats retract", "autoflight"]
-        }
-
-      if (!hasAtCl) {
-        if (alt > perfTA)
-          return {
-            id: "after_takeoff_below_the_line",
-            title: "After takeoff",
-            phrases: ["after takeoff checklist below the line", "seatbelts auto"]
-          }
-        return { id: "after_takeoff_to_line", title: "After takeoff", phrases: ["after takeoff checklist to the line"] }
+    if ((lastCl === "before_takeoff" || lastFl === "after_takeoff") && flapsIndex > 0)
+      return {
+        id: "initial_climb",
+        title: "Initial climb",
+        phrases: ["gear up", "flaps up", "slats retract", "autoflight"]
       }
 
-      if (lastCl === "after_takeoff_below_the_line" && lastFl === "climb_ten_thousand_flow") {
-        return { id: "climb_cruise", title: "Climb / cruise", phrases: ["seatbelts auto"] }
-      }
-    } else {
-      if (alt > perfTL)
-        return {
-          id: "descent_high",
-          title: "Descent / Approach",
-          phrases: ["descent approach checklist through seat belts"]
-        }
-
-      if (alt <= perfTL && lastCl !== "des_P2" && lastFl !== "desc_ten_thousand_flow") {
-        return { id: "descent_low", title: "Approach", phrases: ["complete descent approach checklist"] }
+    // 1. Target "Below the line" FIRST if conditions are met
+    if (lastFl === "after_takeoff" && lastCl === "after_takeoff_to_the_line" && alt > perfTA)
+      return {
+        id: "after_takeoff_below_the_line",
+        title: "After takeoff",
+        phrases: ["after takeoff checklist below the line", "seatbelts auto"]
       }
 
-      if (lastFl === "desc_ten_thousand_flow" && landingGear !== 25) {
-        const phrases = ["slats extend", "flaps X", "gear down"]
-        if (lastCl !== "des_P2") phrases.unshift("complete descent approach checklist")
-        return { id: "approach_low", title: "Approach", phrases }
+    // 2. Only hint "To the line" if it HAS NOT been completed yet
+    if (lastFl === "after_takeoff" && lastCl !== "after_takeoff_to_the_line" && flapsIndex === 0)
+      return {
+        id: "after_takeoff_checklist",
+        title: "After takeoff checklist to the line",
+        phrases: ["after takeoff checklist to the line"]
       }
 
-      if (landingGear === 25)
-        return {
-          id: "short_final",
-          title: "Short final",
-          phrases: ["flaps X", "autobrake X", "Before landing checklist", "go around", "continue"]
-        }
+    if (lastFl === "des" && alt > perfTL)
+      return {
+        id: "descent_high",
+        title: "Descent / Approach",
+        phrases: ["descent approach checklist through seat belts"]
+      }
+
+    if (alt <= perfTL && lastCl !== "des_P2" && lastCl === "des_P1") {
+      return { id: "descent_low", title: "Approach", phrases: ["complete descent approach checklist"] }
     }
-    return null
+
+    if (lastFl === "desc_ten_thousand_flow" && landingGear !== 25) {
+      const phrases = ["slats extend", "flaps X", "gear down"]
+      if (lastCl !== "des_P2") phrases.unshift("complete descent approach checklist")
+      return { id: "approach_low", title: "Approach", phrases }
+    }
+
+    if (landingGear === 25)
+      return {
+        id: "short_final",
+        title: "Short final",
+        phrases: ["flaps X", "autobrake X", "Before landing checklist", "go around", "continue"]
+      }
+
+    const cruisePhrases: string[] = []
+    if (alt > 10000) cruisePhrases.push("seatbelts auto")
+
+    return {
+      id: "climb_cruise",
+      title: "Climb / cruise",
+      phrases: cruisePhrases
+    }
   }
 
   // ── GROUND PHASES ────────────────────────────────────────────────────────────

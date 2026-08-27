@@ -1,8 +1,12 @@
 import { useEffect, useRef, useCallback } from "react"
 
+import { simvarSet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
+import { startPostLandingTimer } from "@/services/flowRunner"
 import { playSound, isSoundPlaying } from "@/services/playSounds"
 import { useGoAroundStore } from "@/store/goAroundStore"
 import { usePerformanceStore } from "@/store/performanceStore"
+import { useSettingsStore } from "@/store/settingsStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
 
@@ -197,6 +201,16 @@ export function useCallouts() {
       if (crossedDown(p.speed, ias, 80) && !st.called80ldg) {
         st.called80ldg = true
         playSound("80_knots.ogg")
+        setTimeout(async () => {
+          if (useSettingsStore.getState().postLandingShutdownEnabled) {
+            void simvarSet("1 (>L:MD11_RSIDE_TIMER_SW)")
+            await delay(150)
+            void simvarSet("95488 (>L:CEVENT)")
+            startPostLandingTimer()
+            await delay(150)
+            void simvarSet("95489 (>L:CEVENT)")
+          }
+        }, 5000)
       }
       if (crossedDown(p.speed, ias, 60) && !st.called60) {
         st.called60 = true

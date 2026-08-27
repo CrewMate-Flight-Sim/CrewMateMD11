@@ -454,7 +454,6 @@
       <item>disarmed<tag>out.pid="78";</tag></item>
       <item>on and auto<tag>out.pid="79";</tag></item>
       <item>up and neutral<tag>out.pid="80";</tag></item>
-      <item>standard set<tag>out.pid="81";</tag></item>
       <item>normal<tag>out.pid="82";</tag></item>
       <item>secured<tag>out.pid="83";</tag></item>
       <item>low<tag>out.pid="84";</tag></item>
@@ -508,7 +507,7 @@
       <item>to be started<tag>out.pid="126";</tag></item>
       <item>chocks in and brakes on<tag>out.pid="127";</tag></item>
       <item>starting engine three<tag>out.pid="128";</tag></item>
-
+      <item>we are ready for pushback<tag>out.pid="129";</tag></item>
       <item>flaps ten<tag>out.pid="150";</tag></item>
       <item>flaps eleven<tag>out.pid="151";</tag></item>
       <item>flaps twelve<tag>out.pid="152";</tag></item>

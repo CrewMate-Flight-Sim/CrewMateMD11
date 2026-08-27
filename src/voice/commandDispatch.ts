@@ -1,4 +1,5 @@
 import { simvarGet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, playSoundSequence } from "@/services/playSounds"
@@ -32,14 +33,13 @@ import { setFlaps } from "./commands/flaps"
 import { flightControlsCheck } from "./commands/flight_controls_check"
 import { setGearHandle } from "./commands/gear"
 import { executeGoAround } from "./commands/goAround"
-import { disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
+import { callPushback, disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
 import { setStrobeLights, setNoseLights, setRwyTOFF } from "./commands/lights"
 import { setSeatBelts } from "./commands/seat_belts"
 import { setWipers } from "./commands/wipers"
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
 export const checklistAbortCommands = new Set(["checklist_cancel"])
-export const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 const randomDelay = (min: number, max: number) => delay(min + Math.random() * (max - min))
 
 const isInvalidMD11Alt = (alt: number): boolean => {
@@ -288,6 +288,10 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
     await randomDelay(2000, 6000)
     await playSound("go_ahead.ogg", { pack: gePack() })
     useGroundEngineerStore.getState().activate()
+  },
+  pushback_request: async () => {
+    useGroundEngineerStore.getState().deactivate()
+    await callPushback()
   },
   connect_gpu: () => runGroundAction(() => setGPU(true), "gpu_on.ogg"),
   disconnect_gpu: () => runGroundAction(() => setGPU(false), "gpu_off.ogg"),

@@ -27,9 +27,8 @@
 - EN-US voice Language Package needs to be installed (OS can be set to any display language)
 - To use the speech trainer, the OS Display Language needs to be set to EN-US
 
-1. Install the .msi package
+1. Install the .exe package
 2. Open the CrewMate.exe (the voice recognition engine will start automatically)
-3. Download and activate a voice model from the settings window
 
 ## Requirements
 
@@ -84,4 +83,4 @@ Contributions are welcome! Check out the [Contribution Guidelines](.github/Contr
 
 This project is licensed under the GNU GPLv3.
 
-This project is not endorsed by or affiliated with Microsoft or Inibuilds.
+This project is not endorsed by or affiliated with Microsoft or TFDi Design.

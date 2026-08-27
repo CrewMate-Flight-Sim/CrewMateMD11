@@ -49,8 +49,8 @@ This tutorial assumes you are parked at the gate with engines off. You are the C
 ### Typical preflight timeline (example)
 
 - 50 min: Crew arrives at aircraft and FO takes his/her seat.
-- 47 min: FO starts his/her cockpit preparation before IRS aligned.
-- 45 min: FO goes out for walkaround. CA starts setting up FMS and doing his/her cockpit preparation.
+- 49 min: FO starts his/her cockpit preparation before IRS aligned.
+- 48 min: FO goes out for walkaround. CA starts setting up FMS and doing his/her cockpit preparation.
   ![CA cockpit preparation](Images/1%20COCKPIT%20PREPARATION.png)
 - 33 min: FO returns from walkaround and starts the 2nd part of the cockpit preparation.
 - 25 min: PF briefs the departure.
@@ -70,11 +70,11 @@ This tutorial assumes you are parked at the gate with engines off. You are the C
 ### Taxi
 
 - Announce clear left.
-- PM announces when the cabin is ready.
+- PM announces when the cabin is ready. (passenger only)
 - Check flight controls at a convenient time before or during taxi.
 - PM will check the main controls, you check the rudder.
 - After the controls check, PM performs the TAXI flow.
-- After the 2nd TAXI flow is completed is pressed and a cabin report is received, PF calls for the Taxi checklist.
+- After the 2nd TAXI flow is completed is pressed and a cabin report is received (passenger only), PF calls for the Taxi checklist.
   ![CA taxi](Images/5%20TAXI%20PROCEDURE.png)
 
 ### Line‑up & Takeoff
@@ -91,8 +91,6 @@ This tutorial assumes you are parked at the gate with engines off. You are the C
 - When the aircraft is clean call for the AFTER TAKEOFF checklist to the line.
 - When the aircraft is above transition altitude and altimeters are standard call for the AFTER TAKEOFF checklist below the line.
   ![CA after takeoff](Images/8%20AFTER%20TAKEOFF%20PROCEDURE.png)
-
-### Climb to 10,000 ft
 
 ### Descent Preparation
 

@@ -21,7 +21,7 @@
       "read": "(L:md11_aovhd_gpws_sw)",
       "on": "73770 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 30000
+      "wait_ms": 35000
     },
     {
       "label": "Fuel used reset",

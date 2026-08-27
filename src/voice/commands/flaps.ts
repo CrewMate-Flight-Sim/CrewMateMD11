@@ -1,8 +1,7 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
 import { playSound } from "@/services/playSounds"
 import { useTelemetryStore } from "@/store/telemetryStore"
-
-import { delay } from "../commandDispatch"
 
 const md11FlapDetents: Record<number, number> = {
   0: 0, // UP / RET
