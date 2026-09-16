@@ -86,6 +86,7 @@ $phrases = @{
 "check_thrust"                         = "Check thrust"
 "checked"                              = "Checked"
 "clear_right"                          = "Clear right"
+"clear_appr"                           = "Clear on the approach"
 "cockpit_preparation_checklist_complete" = "Cockpit preparation checklist complete"
 
 "confirmed"                            = "Confirmed"

@@ -191,7 +191,7 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
   if (engOff) {
     if (lastFl === "shutdownP2") return { id: "parking_phase", title: "Parking", phrases: ["parking checklist"] }
     if (preflightTimerRunning)
-      return { id: "prep_timeline", title: "Prepare", phrases: ["cockpit preparation checklist" ,"start the apu"] }
+      return { id: "prep_timeline", title: "Prepare", phrases: ["cockpit preparation checklist", "start the apu"] }
     return {
       id: "prep",
       title: "Prepare",
