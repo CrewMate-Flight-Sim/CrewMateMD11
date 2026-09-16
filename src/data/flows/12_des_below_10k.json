@@ -1,7 +1,6 @@
 {
   "id": "desc_ten_thousand_flow",
   "name": "Below 10k/FL100",
-  "sound_end": "cabin_landing.ogg",
   "steps": [
     {
       "label": "Lights on",

@@ -39,6 +39,18 @@ import { setSeatBelts } from "./commands/seat_belts"
 import { setWipers } from "./commands/wipers"
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
+
+export const foAwayAllowedCommands = new Set([
+  "ground_call",
+  "pushback_request",
+  "connect_gpu",
+  "disconnect_gpu",
+  "connect_asu",
+  "disconnect_asu",
+  "disconnect_all_ground",
+  "prepare_aircraft"
+])
+
 export const checklistAbortCommands = new Set(["checklist_cancel"])
 const randomDelay = (min: number, max: number) => delay(min + Math.random() * (max - min))
 
@@ -319,7 +331,8 @@ export async function dispatchFoCommand(
       const cmd = payload.command as string | undefined
       if (!cmd) return false
       const handler = discreteCommandMap[cmd]
-      if (handler) await handler()
+      if (!handler) return false
+      await handler()
       return true
     }
 

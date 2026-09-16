@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "CrewMateMD11",
+  "productName": "CrewMate MD11",
   "version": "0.3.0",
   "identifier": "crewmatemd11",
   "build": {

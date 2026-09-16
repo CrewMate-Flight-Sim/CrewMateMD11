@@ -1,6 +1,7 @@
 {
   "id": "des",
   "name": "Descent",
+  "sound_end": "cabin_landing.ogg",
   "steps": [
     {
       "label": "Windshield anti ice on",
