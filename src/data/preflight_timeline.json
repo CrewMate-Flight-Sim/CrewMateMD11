@@ -29,7 +29,7 @@
     "type": "reminder"
   },
   {
-    "minuteMark": 15,
+    "minuteMark": 12,
     "label": "Final cockpit preparation",
     "type": "flow",
     "sound": "final_cockpit_prep.ogg",

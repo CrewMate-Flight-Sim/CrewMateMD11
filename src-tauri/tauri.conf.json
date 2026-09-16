@@ -31,13 +31,7 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": true,
-    "targets": ["nsis"],
-    "windows": {
-      "nsis": {
-        "installMode": "perMachine",
-        "startMenuFolder": "CrewMate MD11"
-      }
-    },
+    "targets": ["msi"],
     "externalBin": ["bin/copilot_speech"],
     "resources": ["sounds", "bin/grammar.xml", "Trainer"],
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
