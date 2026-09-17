@@ -371,6 +371,11 @@ class ChecklistRunner {
       return
     }
 
+    if (item.transit_skip && getStoreValue("landing.preflight") === "transit") {
+      setStepStatus(index, "complete")
+      return
+    }
+
     if (item.fo_only_response) {
       await this.runFoOnlyItem(item, signal)
       setStepStatus(index, "complete")

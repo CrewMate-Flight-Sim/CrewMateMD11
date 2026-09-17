@@ -79,18 +79,6 @@
       "read": "(L:md11_ovhd_elec_gly_ext_pwr_bt)",
       "on": "90139 (>L:CEVENT)",
       "expect": 0,
-      "only_if": {
-        "conditions": [
-          {
-            "read": "(L:md11_ovhd_elec_ext_pwr_on_lt)",
-            "one_of": [0]
-          },
-          {
-            "read": "(L:MD11_EXT_GPU)",
-            "one_of": [1]
-          }
-        ]
-      },
       "wait_ms": 18000
     },
     {

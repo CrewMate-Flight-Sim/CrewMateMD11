@@ -63,7 +63,8 @@ const simVars = [
   { key: "rwy_turnoff_r_bt", expression: "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)" },
   { key: "seat_belts_sw", expression: "(L:MD11_OVHD_LTS_SEAT_BELTS_SW)" },
   { key: "wiper_l_kb", expression: "(L:MD11_OVHD_L_WIPER_KB)" },
-  { key: "wiper_r_kb", expression: "(L:MD11_OVHD_R_WIPER_KB)" }
+  { key: "wiper_r_kb", expression: "(L:MD11_OVHD_R_WIPER_KB)" },
+  { key: "tfdievent", expression: "(L:CEVENT)" }
 ]
 
 const RETRY_INTERVAL_MS = 5000

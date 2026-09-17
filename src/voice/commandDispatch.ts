@@ -145,7 +145,7 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
     playSound("check.ogg")
     StartAPU()
   },
-  standard_set: () =>  playSound("xchk.ogg"),
+  standard_set: () => playSound("xchk.ogg"),
 
   // Lights
   taxi_lights_on: () => {

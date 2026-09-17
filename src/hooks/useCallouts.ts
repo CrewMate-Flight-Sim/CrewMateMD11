@@ -96,6 +96,8 @@ export function useCallouts() {
   const soundQueue = useRef<string[]>([])
   const prev = useRef<PreviousValues>({ speed: 0, alt: 0, radioAlt: 0, onGround: 1, fcpAlt: 0 })
   const goAroundCount = useRef(useGoAroundStore.getState().count)
+  const stdPressed = useRef(false)
+  const stdPressedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const state = useRef<CalloutState>({
     calledThrustSet: false,
@@ -173,6 +175,25 @@ export function useCallouts() {
         transitionLevel: false,
         oneToGo: false
       })
+    }
+
+    // Track STD button press (CEVENT 86057) - suppress transition callouts for 3s
+    const tfdievent = t.tfdievent ?? 0
+    if (tfdievent === 86057) {
+      stdPressed.current = true
+      if (stdPressedTimeout.current) clearTimeout(stdPressedTimeout.current)
+      stdPressedTimeout.current = setTimeout(() => {
+        stdPressed.current = false
+      }, 3000)
+    }
+
+    // Reset STD press lock on new flight (airborne -> onGround)
+    if (onGround && !p.onGround) {
+      stdPressed.current = false
+      if (stdPressedTimeout.current) {
+        clearTimeout(stdPressedTimeout.current)
+        stdPressedTimeout.current = null
+      }
     }
 
     if (onGround) {
@@ -255,12 +276,16 @@ export function useCallouts() {
         }
       }
       if (!st.transitionAltitude && transitionAltitude > 0 && crossedUp(p.alt, alt, transitionAltitude)) {
-        st.transitionAltitude = true
-        playSound("transiton_altitude.ogg")
+        if (!stdPressed.current) {
+          st.transitionAltitude = true
+          playSound("transiton_altitude.ogg")
+        }
       }
       if (!st.transitionLevel && transitionLevel > 0 && crossedDown(p.alt, alt, transitionLevel)) {
-        st.transitionLevel = true
-        playSound("transiton_level.ogg")
+        if (!stdPressed.current) {
+          st.transitionLevel = true
+          playSound("transiton_level.ogg")
+        }
       }
     }
 

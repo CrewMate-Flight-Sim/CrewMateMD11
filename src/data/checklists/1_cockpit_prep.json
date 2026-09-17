@@ -12,13 +12,15 @@
       "challenge": "hyd_panel.ogg",
       "label": "Hydraulics Panel",
       "fo_only_response": true,
-      "copilot_response": "auto.ogg"
+      "copilot_response": "auto.ogg",
+      "transit_skip": true
     },
     {
       "challenge": "fuel_panel.ogg",
       "label": "Fuel Panel",
       "fo_only_response": true,
-      "copilot_response": "auto.ogg"
+      "copilot_response": "auto.ogg",
+      "transit_skip": true
     },
     {
       "challenge": "ext_lights.ogg",
@@ -37,13 +39,15 @@
       "challenge": "oxy_system.ogg",
       "response": ["checked", "set and checked"],
       "copilot_response": "set_100.ogg",
-      "label": "Oxygen System"
+      "label": "Oxygen System",
+      "transit_skip": true
     },
     {
       "challenge": "to_wrng.ogg",
       "fo_only_response": true,
       "copilot_response": "checked.ogg",
-      "label": "Takeoff Warning"
+      "label": "Takeoff Warning",
+      "transit_skip": true
     },
     {
       "challenge": "fuel_sw.ogg",
