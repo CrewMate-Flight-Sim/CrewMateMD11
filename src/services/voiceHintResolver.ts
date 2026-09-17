@@ -59,7 +59,7 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
       }
 
     // 1. Target "Below the line" FIRST if conditions are met
-    if (lastFl === "after_takeoff" && lastCl === "after_takeoff_to_the_line" && alt > perfTA)
+    if (lastCl === "after_takeoff_to_the_line" && alt > perfTA)
       return {
         id: "after_takeoff_below_the_line",
         title: "After takeoff",

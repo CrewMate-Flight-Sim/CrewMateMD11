@@ -266,6 +266,7 @@ namespace VoiceSidecar
         [78] = "disarmed",
         [79] = "on_and_auto",
         [80] = "up_neutral",
+        [81] = "standard_set",
         [82] = "normal",
         [83] = "secured",
         [84] = "low",

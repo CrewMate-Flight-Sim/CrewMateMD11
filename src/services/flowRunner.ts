@@ -399,9 +399,9 @@ class FlowRunner {
 
   // ── Sound helpers ─────────────────────────────────────────────────────────
 
-  private async playSyncSound(soundFile: string, signal?: AbortSignal): Promise<void> {
+  private async playSyncSound(soundFile: string, signal?: AbortSignal, pack?: string): Promise<void> {
     await waitForSoundFinished()
-    await playSound(soundFile)
+    await playSound(soundFile, pack ? { pack } : undefined)
     await waitForSoundFinished()
     if (signal) this.checkAbort(signal)
   }
@@ -417,7 +417,14 @@ class FlowRunner {
   private async playSoundAfterExecute(step: FlowStep, signal: AbortSignal): Promise<void> {
     if (!step.sound_after_execute) return
     if (!step.skip_delay) await this.abortableSleep(STEP_VERIFY.SOUND_AFTER_DELAY, signal)
-    await this.playSyncSound(step.sound_after_execute, signal)
+
+    let pack: string | undefined
+    if (step.sound_after_execute_pack) {
+      pack =
+        step.sound_after_execute_pack === "ge" ? useSettingsStore.getState().geSoundPack : step.sound_after_execute_pack
+    }
+
+    await this.playSyncSound(step.sound_after_execute, signal, pack)
   }
 
   // A fixed exchange with the ground engineer before hydraulics testing

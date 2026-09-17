@@ -18,6 +18,7 @@ export interface FlowStep {
   hyd_test?: boolean
   sound_on_execute?: string
   sound_after_execute?: string
+  sound_after_execute_pack?: string
   repeat_on?: boolean
   only_if?: FlowCondition
 }

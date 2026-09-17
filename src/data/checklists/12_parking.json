@@ -46,9 +46,22 @@
     },
     {
       "challenge": "parking_brake.ogg",
-      "response": ["released", "set", "set and checked"],
+      "response": ["released", "set and checked"],
       "label": "Parking Brake",
-      "copilot_response": "set.ogg"
+      "copilot_response": "released.ogg",
+      "validations": [
+        {
+          "when": { "responses": ["released", "set and checked"] },
+          "incorrect": "are_you_sure.ogg",
+          "checks": [
+            {
+              "type": "simvar",
+              "var": "(L:MD11_THR_PARK_LVR)",
+              "expected": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "challenge": "irs.ogg",

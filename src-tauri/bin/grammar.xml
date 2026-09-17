@@ -442,7 +442,6 @@
       <item>reviewed<tag>out.pid="59";</tag></item>
       <item>shutdown engine two<tag>out.pid="60";</tag></item>
       <item>anti ice auto<tag>out.pid="61";</tag></item>
-      <item>set standard<tag>out.pid="64";</tag></item>
       <item>completed<tag>out.pid="70";</tag></item>
       <item>confirm<tag>out.pid="71";</tag></item>
       <item>negative<tag>out.pid="72";</tag></item>

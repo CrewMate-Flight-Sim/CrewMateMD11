@@ -442,7 +442,6 @@
       <item>reviewed<tag>out.pid="59";</tag></item>
       <item>shutdown engine two<tag>out.pid="60";</tag></item>
       <item>anti ice auto<tag>out.pid="61";</tag></item>
-      <item>set standard<tag>out.pid="64";</tag></item>
       <item>completed<tag>out.pid="70";</tag></item>
       <item>confirm<tag>out.pid="71";</tag></item>
       <item>negative<tag>out.pid="72";</tag></item>
@@ -454,6 +453,7 @@
       <item>disarmed<tag>out.pid="78";</tag></item>
       <item>on and auto<tag>out.pid="79";</tag></item>
       <item>up and neutral<tag>out.pid="80";</tag></item>
+      <item>standard set<tag>out.pid="81";</tag></item>
       <item>normal<tag>out.pid="82";</tag></item>
       <item>secured<tag>out.pid="83";</tag></item>
       <item>low<tag>out.pid="84";</tag></item>

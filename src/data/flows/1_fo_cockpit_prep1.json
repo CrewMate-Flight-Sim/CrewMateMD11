@@ -37,7 +37,19 @@
       "label": "External power on",
       "read": "(L:md11_ovhd_elec_ext_pwr_bt)",
       "on": "90143 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_elec_ext_pwr_on_lt)",
+            "one_of": [0]
+          },
+          {
+            "read": "(L:MD11_EXT_GPU)",
+            "one_of": [1]
+          }
+        ]
+      }
     },
     {
       "label": "Galley external power on",
@@ -52,6 +64,10 @@
           {
             "read": "(L:MD11_EXT_GPU)",
             "one_of": [1]
+          },
+          {
+            "read": "(L:md11_ovhd_elec_gly_ext_pwr_avail_lt)",
+            "one_of": [1]
           }
         ]
       },
@@ -63,6 +79,18 @@
       "read": "(L:md11_ovhd_elec_gly_ext_pwr_bt)",
       "on": "90139 (>L:CEVENT)",
       "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_elec_ext_pwr_on_lt)",
+            "one_of": [0]
+          },
+          {
+            "read": "(L:MD11_EXT_GPU)",
+            "one_of": [1]
+          }
+        ]
+      },
       "wait_ms": 18000
     },
     {
@@ -71,26 +99,58 @@
       "on": "73748 (>L:CEVENT)",
       "sound_on_execute": "fire_test.ogg",
       "expect": 1,
-      "wait_ms": 13000
+      "wait_ms": 13000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Fire test",
       "read": "(L:md11_aovhd_firetest_bt)",
       "on": "73749 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Ann lights and air test",
       "read": "(L:md11_ovhd_annunlt_test_bt)",
       "on": "90408 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 12000
+      "wait_ms": 12000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Ann lights and air test",
       "read": "(L:md11_ovhd_annunlt_test_bt)",
       "on": "90409 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "IRS on",
@@ -173,52 +233,116 @@
       "read": "(L:md11_ovhd_cvr_test_bt)",
       "on": "90358 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 5000
+      "wait_ms": 5000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "CVR test",
       "read": "(L:md11_ovhd_cvr_test_bt)",
       "on": "90359 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "HYD test",
       "read": "(L:MD11_PED_SD_HYD_BT)",
       "on": "69836 (>L:CEVENT)",
       "expect": 1,
-      "skip_delay": true
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "HYD test",
       "read": "(L:MD11_PED_SD_HYD_BT)",
       "on": "69837 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "HYD test",
       "read": "(L:md11_ovhd_hyd_hyd_test_grd)",
       "on": "1 (>L:md11_ovhd_hyd_hyd_test_grd)",
       "expect": 1,
-      "hyd_test": true
+      "hyd_test": true,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "HYD test",
       "read": "(L:md11_ovhd_hyd_hyd_test_bt)",
       "on": "90191 (>L:CEVENT)",
       "expect": 1,
-      "skip_delay": true
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "HYD test",
       "read": "(L:md11_ovhd_hyd_hyd_test_bt)",
       "on": "90192 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "HYD test",
       "read": "(L:md11_ovhd_hyd_hyd_test_grd)",
       "on": "0 (>L:md11_ovhd_hyd_hyd_test_grd)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Cargo",

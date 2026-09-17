@@ -22,6 +22,140 @@
       "expect": 0
     },
     {
+      "label": "IRS off",
+      "read": "(L:md11_ovhd_irs_1_kb)",
+      "on": "90112 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS off",
+      "read": "(L:md11_ovhd_irs_2_kb)",
+      "on": "90114 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS off",
+      "read": "(L:md11_ovhd_irs_3_kb)",
+      "on": "90116 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_1_kb)",
+      "on": "90112 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      }
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_2_kb)",
+      "on": "90114 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      }
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_3_kb)",
+      "on": "90116 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      }
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_init_bt)",
+      "on": "82099 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          },
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      },
+      "skip_delay": true
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_init_bt)",
+      "on": "82100 (>L:CEVENT)",
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          },
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      },
+      "expect": 0
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_lsk_4r_bt)",
+      "on": "82085 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          },
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      },
+      "skip_delay": true
+    },
+    {
+      "label": "Align IRS",
+      "read": "(L:md11_rmcdu_lsk_4r_bt)",
+      "on": "82086 (>L:CEVENT)",
+      "only_if": {
+        "conditions": [
+          {
+            "read": "(L:md11_ovhd_irs_1_lt)",
+            "one_of": [1]
+          },
+          {
+            "option": "landing.preflight",
+            "one_of": ["transit"]
+          }
+        ]
+      },
+      "expect": 0
+    },
+    {
       "label": "Open STATUS synoptic",
       "read": "(L:md11_ped_sd_status_bt)",
       "on": "69834 (>L:CEVENT)",
@@ -38,7 +172,9 @@
       "label": "Set chocks",
       "read": "(L:md11_ext_chocks)",
       "on": "1 (>L:md11_ext_chocks)",
-      "expect": 1
+      "expect": 1,
+      "sound_after_execute": "chk_in.ogg",
+      "sound_after_execute_pack": "ge"
     }
   ]
 }

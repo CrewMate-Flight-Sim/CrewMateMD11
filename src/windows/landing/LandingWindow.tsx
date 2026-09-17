@@ -129,7 +129,7 @@ export function LandingWindow() {
             value={landing.antiIce}
             onChange={handleSelectChange}
           >
-            <option value="off">OFF</option>
+            <option value="off">OFF/AUTO</option>
             <option value="oneng">ENG</option>
             <option value="onengfoil">ENG+FOIL</option>
           </select>
@@ -152,6 +152,35 @@ export function LandingWindow() {
             className={STYLES.input}
             placeholder="—"
           />
+        </div>
+
+        {/*Next flight preflight*/}
+        <div className={STYLES.fieldWrapper}>
+          <div className={STYLES.headerRow}>
+            <Label htmlFor="antiIce" className={STYLES.label}>
+              Next flight preflight?
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className={STYLES.infoIcon} />
+                </TooltipTrigger>
+                <TooltipContent className={STYLES.tooltipContent}>
+                  This will select if next preflight will be transit check (shorter) or full check
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <select
+            id="preflight"
+            name="preflight"
+            className={STYLES.select}
+            value={landing.preflight}
+            onChange={handleSelectChange}
+          >
+            <option value="full">FULL</option>
+            <option value="transit">TRANSIT</option>
+          </select>
         </div>
       </div>
 

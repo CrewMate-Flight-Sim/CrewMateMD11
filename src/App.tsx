@@ -11,13 +11,13 @@ import { SpeechEngineError } from "@/components/SpeechEngineError"
 import { TextBar } from "@/components/textBar"
 import { VoiceGuide } from "@/components/VoiceGuide"
 import { useAutoFlows } from "@/hooks/useAutoFlows"
-import { useBaroSync } from "@/hooks/useBaroSync"
 import { useCallouts } from "@/hooks/useCallouts"
 import { useCloseConfirm } from "@/hooks/useCloseConfirm"
 import { usePreflightTimer } from "@/hooks/usePreflightTimer"
 import { useSimConnection } from "@/hooks/useSimConnection"
 import { useSpeechCommands } from "@/hooks/useSpeechCommands"
 import { useVoiceHints } from "@/hooks/useVoiceHints"
+import { usePerformanceStore } from "@/store/performanceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
@@ -26,7 +26,6 @@ import "./App.css"
 
 function App() {
   useSimConnection()
-  useBaroSync()
 
   const status = useTelemetryStore((state) => state.status)
   const connected = status === "connected"
@@ -46,6 +45,13 @@ function App() {
   const voiceHintPhase = useVoiceHints({ voiceEnabled, connected })
 
   useCloseConfirm()
+
+  // On app startup, always default the next-flight preflight to FULL.
+  // The Landing window is a separate Tauri window, so opening/closing it
+  // does not remount this component — the reset only happens on real app start.
+  useEffect(() => {
+    usePerformanceStore.getState().setLandingData({ preflight: "full" })
+  }, [])
 
   useEffect(() => {
     getCurrentWindow()

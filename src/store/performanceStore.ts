@@ -14,6 +14,7 @@ interface LandingData {
   missedAltitude: number
   antiIce?: string
   flaps?: string
+  preflight?: string
 }
 
 interface PerformanceStore {
@@ -36,7 +37,8 @@ const defaultLandingData: LandingData = {
   transitionLevel: 7000,
   missedAltitude: 3000,
   flaps: "35",
-  antiIce: "off"
+  antiIce: "off",
+  preflight: "full"
 }
 
 export const usePerformanceStore = create<PerformanceStore>()(

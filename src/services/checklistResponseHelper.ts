@@ -12,7 +12,7 @@ export function formatResponseToken(token: string): string {
 export function getDisplayResponses(item: ChecklistItem): string[] {
   const extras: string[] = []
 
-  if (item.label?.includes("DH/MDA")) {
+  if (item.label?.includes("DH/BARO")) {
     extras.push("#3 feet set")
   }
 

@@ -27,7 +27,6 @@ import {
   setProf,
   setSpdHold
 } from "./commands/autoPilot"
-import { setStdBaro } from "./commands/baro"
 import { shutdownE2 } from "./commands/engine"
 import { setFlaps } from "./commands/flaps"
 import { flightControlsCheck } from "./commands/flight_controls_check"
@@ -146,7 +145,7 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
     playSound("check.ogg")
     StartAPU()
   },
-  set_standard: () => setStdBaro(1),
+  standard_set: () =>  playSound("xchk.ogg"),
 
   // Lights
   taxi_lights_on: () => {

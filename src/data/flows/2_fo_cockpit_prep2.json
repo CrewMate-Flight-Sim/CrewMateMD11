@@ -14,14 +14,30 @@
       "read": "(L:md11_aovhd_gpws_sw)",
       "on": "73769 (>L:CEVENT)",
       "expect": 0,
-      "wait_ms": 5000
+      "wait_ms": 5000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "GPWS",
       "read": "(L:md11_aovhd_gpws_sw)",
       "on": "73770 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 35000
+      "wait_ms": 35000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Fuel used reset",
@@ -92,20 +108,44 @@
       "label": "Oxy test",
       "read": "(L:md11_rside_oxy_flow_sw)",
       "on": "95514 (>L:CEVENT)",
-      "expect": 1
+      "expect": 1,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Oxy test",
       "read": "(L:md11_rside_oxy_test_bt)",
       "on": "95515 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 2000
+      "wait_ms": 2000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Oxy test",
       "read": "(L:md11_rside_oxy_test_bt)",
       "on": "95516 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Open CONFIG synoptic",
@@ -139,40 +179,88 @@
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:1, Percent)",
       "on": "16383 (>K:THROTTLE1_SET)",
       "expect": 100,
-      "wait_ms": 4000
+      "wait_ms": 4000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:1, Percent)",
       "on": "1 (>K:THROTTLE1_CUT)",
-      "expect": 100
+      "expect": 100,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:2, Percent)",
       "on": "16383 (>K:THROTTLE2_SET)",
       "expect": 100,
-      "skip_delay": true
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:3, Percent)",
       "on": "16383 (>K:THROTTLE3_SET)",
       "expect": 100,
-      "wait_ms": 4000
+      "wait_ms": 4000,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:2, Percent)",
       "on": "1 (>K:THROTTLE2_CUT)",
       "expect": 100,
-      "skip_delay": true
+      "skip_delay": true,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:3, Percent)",
       "on": "1 (>K:THROTTLE3_CUT)",
-      "expect": 100
+      "expect": 100,
+      "only_if": {
+        "conditions": [
+          {
+            "option": "landing.preflight",
+            "one_of": ["full"]
+          }
+        ]
+      }
     },
     {
       "label": "Open STATUS synoptic",
