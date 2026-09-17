@@ -13,14 +13,6 @@ $voicesToGenerate = @(
     "en-US-ChristopherNeural"
 )
 
-# Other voices:
-# "en-US-AriaNeural"  - Female, friendly
-# "en-US-GuyNeural"   - Male, professional
-# "en-US-DavisNeural" - Male, authoritative
-# "en-US-JennyNeural"  - Female, clear
-$trimmedFiles = @("v_one", "rotate")
-
-
 $phrases = @{
     "0"                                      = "Zero"
     "0_taxi"                                 = "Zero taxi"
