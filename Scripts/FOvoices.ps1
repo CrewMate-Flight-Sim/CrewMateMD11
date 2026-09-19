@@ -193,6 +193,7 @@ $phrases = @{
     "spoilers"                               = "Spoilers"
     "spoilers_dep"                           = "Spoilers deployed"
     "stab_trim"                              = "Stabilizer trim"
+    "standard_set"                           = "Standard set"
 
     "taxi_completed"                         = "Taxi checklist completed"
     "tcas"                                   = "T cas"

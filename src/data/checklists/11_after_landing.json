@@ -45,7 +45,7 @@
       "validations": [
         {
           "when": {
-            "store": { "path": "takeoff.antiIce", "equals": "off" }
+            "store": { "path": "landing.antiIce", "equals": "off" }
           },
           "copilot_response": "off.ogg",
           "checks": [
@@ -53,12 +53,13 @@
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG2_BT)", "expected": 0 },
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG3_BT)", "expected": 0 },
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_WING_BT)", "expected": 0 },
-            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 0 }
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OPT_AUTO_AICE)", "expected": 0 }
           ]
         },
         {
           "when": {
-            "store": { "path": "takeoff.antiIce", "equals": "oneng" }
+            "store": { "path": "landing.antiIce", "equals": "oneng" }
           },
           "copilot_response": "engineai.ogg",
           "checks": [
@@ -66,12 +67,13 @@
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG2_BT)", "expected": 1 },
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG3_BT)", "expected": 1 },
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_WING_BT)", "expected": 0 },
-            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 0 }
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 0 },
+            { "type": "simvar", "var": "(L:MD11_OPT_AUTO_AICE)", "expected": 0 }
           ]
         },
         {
           "when": {
-            "store": { "path": "takeoff.antiIce", "equals": "onengfoil" }
+            "store": { "path": "landing.antiIce", "equals": "onengfoil" }
           },
           "copilot_response": "enginefoilai.ogg",
           "checks": [
@@ -79,8 +81,14 @@
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG2_BT)", "expected": 1 },
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_ENG3_BT)", "expected": 1 },
             { "type": "simvar", "var": "(L:MD11_OVHD_AICE_WING_BT)", "expected": 1 },
-            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 1 }
+            { "type": "simvar", "var": "(L:MD11_OVHD_AICE_TAIL_BT)", "expected": 1 },
+            { "type": "simvar", "var": "(L:MD11_OPT_AUTO_AICE)", "expected": 0 }
           ]
+        },
+        {
+          "when": { "always": true },
+          "copilot_response": "auto.ogg",
+          "checks": [{ "type": "simvar", "var": "(L:MD11_OPT_AUTO_AICE)", "expected": 1 }]
         }
       ]
     },
