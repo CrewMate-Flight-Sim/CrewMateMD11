@@ -9,6 +9,6 @@ export async function setStdBaro(position: number) {
     await simvarSet(expression2)
     await simvarSet(expression3)
   } catch (error) {
-    console.error("Error setting standard barometer:", error)
+    console.error("[Baro] Error setting standard barometer:", error)
   }
 }

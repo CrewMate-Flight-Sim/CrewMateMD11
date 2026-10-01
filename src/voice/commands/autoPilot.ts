@@ -52,7 +52,7 @@ export async function setAirspeedDial(targetKnots: number) {
       currentSpd = (await simvarGet("(L:md11_afs_spd)")) ?? 0
     }
   } catch (error) {
-    console.error("Error adjusting speed:", error)
+    console.error("[AutoPilot] Error adjusting speed:", error)
   }
 }
 
@@ -81,7 +81,7 @@ export async function setHeadingDial(targetDegrees: number) {
       currentHdg = (await simvarGet("(L:md11_afs_hdg)")) ?? 0
     }
   } catch (error) {
-    console.error("Error adjusting heading:", error)
+    console.error("[AutoPilot] Error adjusting heading:", error)
   }
 }
 
@@ -131,6 +131,6 @@ export async function setAltitudeDial(targetFeet: number) {
       cur = await read()
     }
   } catch (error) {
-    console.error("Error adjusting altitude:", error)
+    console.error("[AutoPilot] Error adjusting altitude:", error)
   }
 }

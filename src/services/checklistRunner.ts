@@ -11,7 +11,7 @@ import { useVoiceHintProgressStore } from "@/store/voiceHintProgressStore"
 import type { Check, ChecklistItem, ValidationRule } from "@/types/checklist"
 
 import { vars, getTemplateVars, resolveFlapsDialPercent } from "./flowLoader"
-import { getMd11Variant } from "./MD11variant"
+import { getMd11Variant } from "./md11Variant"
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const wsf = async (signal?: AbortSignal) => {

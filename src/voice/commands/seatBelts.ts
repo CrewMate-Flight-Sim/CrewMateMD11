@@ -19,6 +19,6 @@ export async function setSeatBelts(position: number) {
       await delay(50)
     }
   } catch (error) {
-    console.error("Error setting seat belts:", error)
+    console.error("[SeatBelts] Error setting seat belts:", error)
   }
 }

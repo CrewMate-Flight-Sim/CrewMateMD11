@@ -7,7 +7,7 @@ import { usePerformanceStore } from "@/store/performanceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
 
-import { setEngAntiIce, setAirfoilAntiIce, setAntiIceSystemMode } from "./commands/anti_ice"
+import { setEngAntiIce, setAirfoilAntiIce, setAntiIceSystemMode } from "./commands/antiIce"
 import { StartAPU } from "./commands/apu"
 import { setAutobrakeDial } from "./commands/autobrake"
 import {
@@ -29,12 +29,12 @@ import {
 import { setStdBaro } from "./commands/baro"
 import { shutdownE2 } from "./commands/engine"
 import { setFlaps } from "./commands/flaps"
-import { flightControlsCheck } from "./commands/flight_controls_check"
+import { flightControlsCheck } from "./commands/flightControlsCheck"
 import { setGearHandle } from "./commands/gear"
 import { executeGoAround } from "./commands/goAround"
 import { disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
 import { setStrobeLights, setNoseLights, setRwyTOFF } from "./commands/lights"
-import { setSeatBelts } from "./commands/seat_belts"
+import { setSeatBelts } from "./commands/seatBelts"
 import { setWipers } from "./commands/wipers"
 
 // ─── Utilities ──────────────────────────────────────────────────────────────

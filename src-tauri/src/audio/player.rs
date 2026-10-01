@@ -1,4 +1,4 @@
-use crate::audio::audio_devices;
+use crate::audio::devices;
 use rodio::{buffer::SamplesBuffer, Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -81,7 +81,7 @@ impl AudioPlayer {
         let (stream, stream_handle) = match device.as_deref() {
             None | Some("default") => OutputStream::try_default()?,
             Some(idx) => {
-                let devices = audio_devices::list_output_devices()?;
+                let devices = devices::list_output_devices()?;
                 let found = devices
                     .into_iter()
                     .find(|d| d.index == idx)

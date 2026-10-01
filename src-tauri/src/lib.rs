@@ -1,17 +1,17 @@
 use std::sync::{mpsc, Arc, Mutex};
 mod audio;
-use audio::audio_commands::{
+use audio::commands::{
     get_sound_packs, is_audio_playing, play_sound, play_sound_sequence, AudioPlayerState,
 };
-use audio::audio_devices::{
+use audio::devices::{
     get_available_input_devices, get_available_output_devices, set_input_device, set_output_device,
 };
-use audio::audio_player::AudioPlayer;
-use brigdes::speech_bridge::get_speech_input_devices;
+use audio::player::AudioPlayer;
+use bridges::speech_bridge::get_speech_input_devices;
 use tauri_plugin_window_state::StateFlags;
 
-mod brigdes;
-use brigdes::speech_bridge::SpeechBridge;
+mod bridges;
+use bridges::speech_bridge::SpeechBridge;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::Emitter;
 use tauri::Manager;
@@ -46,7 +46,7 @@ fn set_confidence_threshold(state: tauri::State<'_, SpeechBridgeState>, threshol
         threshold.clamp(0.0, 1.0)
     } else {
         log::warn!(
-            "Received non-finite confidence threshold: {:?}, using default 0.85",
+            "[Speech] Received non-finite confidence threshold: {:?}, using default 0.85",
             threshold
         );
         0.85
@@ -154,14 +154,14 @@ pub fn run() {
                 Ok(app_data_dir) => {
                     let logs_path = app_data_dir.join("logs");
                     if let Err(e) = std::fs::create_dir_all(&logs_path) {
-                        eprintln!("Failed to create logs directory: {}", e);
+                        eprintln!("[App] Failed to create logs directory: {}", e);
                         app_data_dir
                     } else {
                         logs_path
                     }
                 }
                 Err(e) => {
-                    eprintln!("Failed to get app data directory: {}", e);
+                    eprintln!("[App] Failed to get app data directory: {}", e);
                     std::path::PathBuf::from(".")
                 }
             };
@@ -180,10 +180,10 @@ pub fn run() {
                 .plugin(log_plugin)
                 .expect("Failed to initialize logging plugin");
 
-            log::info!("Crewmate TFDI MD11 application loaded...");
+            log::info!("[App] Crewmate TFDI MD11 application loaded...");
 
             if let Err(e) = setup_app_data_directories(app.handle()) {
-                log::error!("Failed to setup app data directories: {}", e);
+                log::error!("[App] Failed to setup app data directories: {}", e);
             }
 
             // Close request handling

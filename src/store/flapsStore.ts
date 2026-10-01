@@ -5,7 +5,7 @@ interface FlapsStore {
   setPreviousFlapsPosition: (position: number) => void
 }
 
-export const useFlapsStore = create<FlapsStore>((set) => ({
+export const useFlapsStore = create<FlapsStore>()((set) => ({
   previousFlapsPosition: null,
   setPreviousFlapsPosition: (position) => set({ previousFlapsPosition: position })
 }))

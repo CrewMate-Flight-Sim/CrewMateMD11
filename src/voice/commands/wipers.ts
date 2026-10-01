@@ -52,6 +52,6 @@ export async function setWipers(position: number) {
 
     playSound("check.ogg")
   } catch (error) {
-    console.error("Error setting MD-11 wipers:", error)
+    console.error("[Wipers] Error setting MD-11 wipers:", error)
   }
 }

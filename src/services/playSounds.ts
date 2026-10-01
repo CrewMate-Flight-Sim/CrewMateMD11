@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core"
 
 import { useSettingsStore } from "@/store/settingsStore"
 
-import { getMd11Variant } from "./MD11variant"
+import { getMd11Variant } from "./md11Variant"
 
 interface PlaySoundOptions {
   pack?: string
@@ -26,7 +26,7 @@ const INHIBITED_CARGO_SOUNDS = new Set([
 export const playSound = async (filename: string, options?: PlaySoundOptions) => {
   try {
     if (getMd11Variant() === "cargo" && INHIBITED_CARGO_SOUNDS.has(filename)) {
-      console.log(`Sound inhibited in cargo mode: ${filename}`)
+      console.log(`[PlaySounds] Sound inhibited in cargo mode: ${filename}`)
       return
     }
 
@@ -37,7 +37,7 @@ export const playSound = async (filename: string, options?: PlaySoundOptions) =>
       volume: options?.volume ?? state.soundVolume / 100
     })
   } catch (error) {
-    console.error("Error playing sound via backend:", error)
+    console.error("[PlaySounds] Error playing sound via backend:", error)
   }
 }
 
@@ -62,6 +62,6 @@ export const playSoundSequence = async (files: (SoundSequenceEntry | string)[], 
       volume: options?.volume ?? state.soundVolume / 100
     })
   } catch (error) {
-    console.error("Error playing sound sequence via backend:", error)
+    console.error("[PlaySounds] Error playing sound sequence via backend:", error)
   }
 }

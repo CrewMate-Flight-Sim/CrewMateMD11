@@ -2,7 +2,7 @@ import { create } from "zustand"
 
 import { playSound } from "@/services/playSounds"
 
-interface CabinReadyTimerState {
+interface CabinReadyTimerStore {
   isActive: boolean
   isRunning: boolean
   isExpired: boolean
@@ -23,7 +23,7 @@ function clearTimer(): void {
   }
 }
 
-export const useCabinReadyTimerStore = create<CabinReadyTimerState>((set) => ({
+export const useCabinReadyTimerStore = create<CabinReadyTimerStore>()((set) => ({
   isActive: false,
   isRunning: false,
   isExpired: false,

@@ -53,7 +53,7 @@ export async function setEngAntiIce(position: number) {
       }
     }
   } catch (error) {
-    console.error("Error setting MD-11 engine anti-ice:", error)
+    console.error("[AntiIce] Error setting MD-11 engine anti-ice:", error)
   }
 }
 
@@ -65,6 +65,6 @@ export async function setAirfoilAntiIce(position: number) {
     await delay(200)
     await setAntiIceToggle(position, "L:MD11_OVHD_AICE_TAIL_ON_LT", 90422, isAuto)
   } catch (error) {
-    console.error("Error setting MD-11 airfoil anti-ice:", error)
+    console.error("[AntiIce] Error setting MD-11 airfoil anti-ice:", error)
   }
 }

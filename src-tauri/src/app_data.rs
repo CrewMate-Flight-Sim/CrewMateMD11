@@ -8,7 +8,7 @@ pub fn setup_app_data_directories(app_handle: &tauri::AppHandle) -> tauri::Resul
         // Ensure the app data directory exists
         if !app_data_dir.exists() {
             std::fs::create_dir_all(&app_data_dir).map_err(tauri::Error::Io)?;
-            log::info!("Created app data directory: {:?}", app_data_dir);
+            log::info!("[AppData] Created app data directory: {:?}", app_data_dir);
         }
     }
     Ok(())

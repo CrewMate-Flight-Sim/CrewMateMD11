@@ -25,6 +25,6 @@ export async function setAutobrakeDial(targetPosition: AutobrakePosition) {
       safetyBreak++
     }
   } catch (error) {
-    console.error("Error adjusting autobrake:", error)
+    console.error("[Autobrake] Error adjusting autobrake:", error)
   }
 }

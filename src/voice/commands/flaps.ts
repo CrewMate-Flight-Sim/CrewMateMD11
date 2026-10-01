@@ -4,7 +4,7 @@ import { useTelemetryStore } from "@/store/telemetryStore"
 
 import { delay } from "../commandDispatch"
 
-const md11FlapDetents: Record<number, number> = {
+const FLAP_DETENTS: Record<number, number> = {
   0: 0, // UP / RET
   1: 20, // 0 / EXT (Slats Only)
   2: 46.91, // DAF (Standard Approach Flaps 15)
@@ -13,7 +13,7 @@ const md11FlapDetents: Record<number, number> = {
   5: 100 // 50 (Full)
 }
 
-const md11FlapSpeeds: Record<number, number> = {
+const FLAP_SPEED_LIMITS: Record<number, number> = {
   1: 280, // Slats
   2: 255, // Flaps 15
   3: 210, // Flaps 28
@@ -21,7 +21,7 @@ const md11FlapSpeeds: Record<number, number> = {
   5: 175 // Flaps 50
 }
 
-const md11SoundMap: Record<number, string> = {
+const SOUND_MAP: Record<number, string> = {
   0: "slats_retr.ogg",
   2: "flaps_15.ogg",
   3: "flaps_28.ogg",
@@ -34,11 +34,11 @@ export async function setFlaps(targetIndex: number) {
     const { telemetry } = useTelemetryStore.getState()
     const currentSpeed = telemetry?.ias ?? 0
     const isOnGround = telemetry?.onGround ?? 0
-    const targetValue = md11FlapDetents[targetIndex] ?? 0
+    const targetValue = FLAP_DETENTS[targetIndex] ?? 0
 
     // 1. FO Speed Check
     // Fix: Default to Vfe speed limit max value if index doesn't have an explicit entry
-    const speedLimit = md11FlapSpeeds[targetIndex]
+    const speedLimit = FLAP_SPEED_LIMITS[targetIndex]
 
     if (!isOnGround && speedLimit !== undefined && currentSpeed > speedLimit) {
       await playSound("check_speed.ogg")
@@ -69,9 +69,9 @@ export async function setFlaps(targetIndex: number) {
     await delay(5000)
 
     if (targetIndex === 1) {
-      playSound(initialRng > md11FlapDetents[1] ? "flaps_up.ogg" : "slats_ext.ogg")
+      playSound(initialRng > FLAP_DETENTS[1] ? "flaps_up.ogg" : "slats_ext.ogg")
     } else {
-      const confirmation = md11SoundMap[targetIndex]
+      const confirmation = SOUND_MAP[targetIndex]
       if (confirmation) playSound(confirmation)
     }
   } catch (error) {

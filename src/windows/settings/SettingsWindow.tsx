@@ -56,7 +56,7 @@ export function SettingsWindow() {
           setGeSoundPack(ge[0])
         }
       } catch (error) {
-        console.error("Failed to fetch sound packs:", error)
+        console.error("[SettingsWindow] Failed to fetch sound packs:", error)
       }
     }
 
@@ -74,7 +74,7 @@ export function SettingsWindow() {
           invoke("set_output_device", { device: "default" }).catch(() => {})
         }
       } catch (e) {
-        console.error("Failed to fetch output devices", e)
+        console.error("[SettingsWindow] Failed to fetch output devices", e)
       }
     }
 
@@ -87,7 +87,7 @@ export function SettingsWindow() {
         const devices = await invoke<AudioDevice[]>("get_speech_input_devices")
         setAvailableInputDevices(devices ?? [])
       } catch (e) {
-        console.error("Failed to fetch input devices", e)
+        console.error("[SettingsWindow] Failed to fetch input devices", e)
       }
     }
 

@@ -12,7 +12,7 @@ export async function setStrobeLights(position: number) {
       await simvarSet("90273 (>L:CEVENT)")
     }
   } catch (error) {
-    console.error("Error setting strobe lights:", error)
+    console.error("[Lights] Error setting strobe lights:", error)
   }
 }
 
@@ -28,7 +28,7 @@ export async function setNoseLights(position: number) {
 
     await simvarSet(expression)
   } catch (error) {
-    console.error("Error setting nose lights:", error)
+    console.error("[Lights] Error setting nose lights:", error)
   }
 }
 
@@ -56,6 +56,6 @@ export async function setRwyTOFF(position: number) {
       await delay(150)
     }
   } catch (error) {
-    console.error("Error setting runway turnoff lights:", error)
+    console.error("[Lights] Error setting runway turnoff lights:", error)
   }
 }
