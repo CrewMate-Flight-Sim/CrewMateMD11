@@ -40,7 +40,9 @@ async function waitForSpeechInput(signal: AbortSignal): Promise<SpeechInput | nu
     signal.addEventListener("abort", () => done(null), { once: true })
     listen<SpeechRecognizedPayload>("speech_recognized", (e) => {
       if (e.payload?.type === "speech_unrecognized") return
-      const text = e.payload?.text?.trim().toLowerCase()
+      // The engine sends altimeter answers as words; responses like "1013 set" are matched on the digits
+      const raw = e.payload?.commandType === "altimeter" ? e.payload?.payload?.raw : undefined
+      const text = raw != null ? `${raw} set` : e.payload?.text?.trim().toLowerCase()
       if (text) done({ text, commandType: e.payload?.commandType, payload: e.payload?.payload })
     }).then((fn) => {
       unlistenFn = fn
