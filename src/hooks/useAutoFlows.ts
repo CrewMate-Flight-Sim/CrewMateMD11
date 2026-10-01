@@ -1,14 +1,13 @@
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef } from "react"
 
+import { useTelemetryTick } from "@/hooks/useTelemetryTick"
 import { executeFlow, isPostLandingTimerActive } from "@/services/flowRunner"
 import { useFlowStore } from "@/store/flowStore"
 import { useGoAroundStore } from "@/store/goAroundStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 
 interface PrevValues {
-  onGround: number
   flapsIndex: number
-  landingGear: number
   alt: number
   mixture1: number
   mixture2: number
@@ -27,9 +26,7 @@ export function useAutoFlows() {
     shutdownP2: false
   })
   const prev = useRef<PrevValues>({
-    onGround: 1,
     flapsIndex: 0,
-    landingGear: 1,
     alt: 0,
     mixture1: 1,
     mixture2: 1,
@@ -54,7 +51,7 @@ export function useAutoFlows() {
     []
   )
 
-  const tick = useCallback(() => {
+  const tick = () => {
     const t = useTelemetryStore.getState().telemetry
     if (!t || t.isSlewActive) return
 
@@ -64,9 +61,7 @@ export function useAutoFlows() {
 
     if (!st.primed) {
       st.primed = true
-      p.onGround = t.onGround
       p.flapsIndex = t.flapsIndex ?? 0
-      p.landingGear = t.landingGear ?? 1
       p.alt = t.alt ?? 0
       p.mixture1 = t.mixture1 ?? 1
       p.mixture2 = t.mixture2 ?? 1
@@ -143,17 +138,12 @@ export function useAutoFlows() {
     }
 
     p.taxiLight = t.taxiLight ?? 0
-    p.onGround = t.onGround
     p.flapsIndex = t.flapsIndex ?? 0
-    p.landingGear = t.landingGear ?? 1
     p.alt = t.alt ?? 0
     p.mixture1 = t.mixture1 ?? 1
     p.mixture2 = t.mixture2 ?? 1
     p.mixture3 = t.mixture3 ?? 1
-  }, [])
+  }
 
-  useEffect(() => {
-    const id = setInterval(tick, 100)
-    return () => clearInterval(id)
-  }, [tick])
+  useTelemetryTick(tick)
 }

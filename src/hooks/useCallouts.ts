@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react"
 
+import { useTelemetryTick } from "@/hooks/useTelemetryTick"
 import { playSound, isSoundPlaying } from "@/services/playSounds"
 import { useGoAroundStore } from "@/store/goAroundStore"
 import { usePerformanceStore } from "@/store/performanceStore"
@@ -32,7 +33,6 @@ interface CalloutState {
 interface PreviousValues {
   speed: number
   alt: number
-  radioAlt: number
   onGround: number
   fcpAlt: number
 }
@@ -90,7 +90,7 @@ const phaseHandlers: Record<
 
 export function useCallouts() {
   const soundQueue = useRef<string[]>([])
-  const prev = useRef<PreviousValues>({ speed: 0, alt: 0, radioAlt: 0, onGround: 1, fcpAlt: 0 })
+  const prev = useRef<PreviousValues>({ speed: 0, alt: 0, onGround: 1, fcpAlt: 0 })
   const goAroundCount = useRef(useGoAroundStore.getState().count)
 
   const state = useRef<CalloutState>({
@@ -274,7 +274,6 @@ export function useCallouts() {
       prev.current = {
         speed: t.ias,
         alt: t.alt,
-        radioAlt: t.radioAlt,
         onGround: t.onGround,
         fcpAlt: t.fcpAlt ?? 0
       }
@@ -282,28 +281,25 @@ export function useCallouts() {
     })
   }, [runCrossings])
 
-  useEffect(() => {
-    const id = setInterval(async () => {
-      if (await isSoundPlaying()) return
-      const next = soundQueue.current.shift()
-      if (next) {
-        playSound(next)
-        return
-      }
-      const ls = state.current
-      if (ls.phase === "idle") return
-      const telemetryState = useTelemetryStore.getState().telemetry
-      if (!telemetryState) return
-      const now = Date.now()
-      const elapsed = ls.phaseStartTime ? now - ls.phaseStartTime : 0
-      const handler = phaseHandlers[ls.phase as Exclude<LandingPhase, "idle">]
-      if (typeof handler === "function") {
-        handler(ls, telemetryState as unknown as Record<string, number>, elapsed, now)
-      } else {
-        console.warn(`[useCallouts] Unknown landing phase: ${ls.phase}`)
-        resetLanding(ls)
-      }
-    }, 100)
-    return () => clearInterval(id)
-  }, [])
+  useTelemetryTick(async () => {
+    if (await isSoundPlaying()) return
+    const next = soundQueue.current.shift()
+    if (next) {
+      playSound(next)
+      return
+    }
+    const ls = state.current
+    if (ls.phase === "idle") return
+    const telemetryState = useTelemetryStore.getState().telemetry
+    if (!telemetryState) return
+    const now = Date.now()
+    const elapsed = ls.phaseStartTime ? now - ls.phaseStartTime : 0
+    const handler = phaseHandlers[ls.phase as Exclude<LandingPhase, "idle">]
+    if (typeof handler === "function") {
+      handler(ls, telemetryState as unknown as Record<string, number>, elapsed, now)
+    } else {
+      console.warn(`[useCallouts] Unknown landing phase: ${ls.phase}`)
+      resetLanding(ls)
+    }
+  })
 }
