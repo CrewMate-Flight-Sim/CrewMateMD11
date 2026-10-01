@@ -19,6 +19,7 @@ import { usePreflightTimer } from "@/hooks/usePreflightTimer"
 import { useSimConnection } from "@/hooks/useSimConnection"
 import { useSpeechCommands } from "@/hooks/useSpeechCommands"
 import { useVoiceHints } from "@/hooks/useVoiceHints"
+import { useFoPresenceStore } from "@/store/foPresenceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
@@ -63,6 +64,7 @@ function App() {
   }, [])
 
   const currentEvent = usePreflightTimerStore((s) => s.currentEvent)
+  const foAway = useFoPresenceStore((s) => s.isActive)
 
   // Context-Aware Mute Engine
   useEffect(() => {
@@ -137,6 +139,7 @@ function App() {
                   {currentEvent}
                 </span>
               )}
+              {foAway && <span className="text-xs text-amber-400/80 font-mono">FO outside</span>}
               <FlowPanel />
               <ChecklistPanel />
               <VoiceGuide phase={voiceHintPhase} />

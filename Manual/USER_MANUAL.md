@@ -295,6 +295,10 @@ The FO will confirm speed limits before moving flaps while airborne.
 
 - MSFS is probably running as administrator. Run CrewMate as administrator too.
 
+**The FO ignores everything I say before departure**
+
+- Between T-45 and T-33 on the preflight timer the FO is outside on the walkaround and does not answer. The **FO outside** indicator is shown while this is the case. Ground engineer calls still work.
+
 **The FO keeps repeating the challenge**
 
 - Your response didn't match the expected phrase. Listen to the challenge and use one of the phrases listed in this manual (voice matching can be tuned in settings).
