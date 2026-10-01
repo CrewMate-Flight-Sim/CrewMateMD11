@@ -3,11 +3,13 @@ import { delay } from "@/lib/utils"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, playSoundSequence } from "@/services/playSounds"
-import { buildMissedApproachAltSequence } from "@/services/soundSequences"
+import { buildMissedApproachAltSequence, buildPassingAltitudeSequence } from "@/services/soundSequences"
 import { useGroundEngineerStore } from "@/store/groundEngineerStore"
+import { usePassingAltitudeStore } from "@/store/passingAltitudeStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
+import { useTelemetryStore } from "@/store/telemetryStore"
 
 import { setEngAntiIce, setAirfoilAntiIce, setAntiIceSystemMode } from "./commands/antiIce"
 import { StartAPU } from "./commands/apu"
@@ -34,7 +36,7 @@ import { setFlaps } from "./commands/flaps"
 import { flightControlsCheck } from "./commands/flightControlsCheck"
 import { setGearHandle } from "./commands/gear"
 import { executeGoAround } from "./commands/goAround"
-import { disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
+import { callPushback, disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
 import { setStrobeLights, setNoseLights, setRwyTOFF } from "./commands/lights"
 import { setSeatBelts } from "./commands/seatBelts"
 import { setWipers } from "./commands/wipers"
@@ -102,6 +104,7 @@ async function runGroundAction(
 // Still work while the FO is on the walkaround: the ground engineer is someone else, and the timer drives the absence
 export const FO_AWAY_ALLOWED_COMMANDS = new Set([
   "ground_call",
+  "pushback_request",
   "connect_gpu",
   "disconnect_gpu",
   "connect_asu",
@@ -146,7 +149,20 @@ const DISCRETE_COMMAND_MAP: Record<string, () => void | Promise<void>> = {
     playSound("check.ogg")
     StartAPU()
   },
-  set_standard: () => setStdBaro(1),
+  set_standard: () => {
+    const t = useTelemetryStore.getState().telemetry
+    const passingAlt = usePassingAltitudeStore.getState()
+
+    setStdBaro(1)
+
+    // Only while climbing and not already tracking a level
+    if (t && !t.onGround && t.vs > 100 && !passingAlt.isTracking()) {
+      // Where the aircraft will be by the time the callout finishes (~9 s)
+      const targetAlt = t.pAlt + t.vs * (9 / 60)
+      playSoundSequence(buildPassingAltitudeSequence(targetAlt))
+      passingAlt.setTarget(targetAlt)
+    }
+  },
 
   // Lights
   taxi_lights_on: () => {
@@ -295,7 +311,20 @@ const DISCRETE_COMMAND_MAP: Record<string, () => void | Promise<void>> = {
   checklist_cancel: () => abortChecklist(),
   continue: () => playSound("check.ogg"),
 
+  // Control handover
+  you_have_ctrl: () => {
+    playSound("i_have_ctrl.ogg")
+  },
+  i_have_ctrl: () => {
+    playSound("you_have_ctrl.ogg")
+  },
+
   // Ground Services using the new helper
+  pushback_request: async () => {
+    if (!useGroundEngineerStore.getState().isActive) return
+    useGroundEngineerStore.getState().deactivate()
+    await callPushback()
+  },
   ground_call: async () => {
     await randomDelay(2000, 6000)
     await playSound("go_ahead.ogg", { pack: gePack() })

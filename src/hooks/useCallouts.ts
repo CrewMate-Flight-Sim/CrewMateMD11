@@ -3,6 +3,7 @@ import { useEffect, useRef, useCallback } from "react"
 import { useTelemetryTick } from "@/hooks/useTelemetryTick"
 import { playSound, isSoundPlaying } from "@/services/playSounds"
 import { useGoAroundStore } from "@/store/goAroundStore"
+import { usePassingAltitudeStore } from "@/store/passingAltitudeStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
@@ -215,6 +216,7 @@ export function useCallouts() {
             v1Inhibit: false
           })
         resetLanding(st)
+        usePassingAltitudeStore.getState().reset()
       }
     } else {
       if (vs > 120 && (t.radioAlt ?? 0) > 30 && !st.positiveClimb) {
@@ -247,6 +249,16 @@ export function useCallouts() {
       if (!st.transitionLevel && transitionLevel > 0 && crossedDown(p.alt, alt, transitionLevel)) {
         st.transitionLevel = true
         playSound("transiton_level.ogg")
+      }
+    }
+
+    // "Now" once the level announced at "set standard" is reached, on either altitude
+    const passingAlt = usePassingAltitudeStore.getState()
+    if (passingAlt.targetAltitude !== null && !passingAlt.hasCalled) {
+      if (alt >= passingAlt.targetAltitude || (t.pAlt ?? 0) >= passingAlt.targetAltitude) {
+        playSound("now_at.ogg")
+        passingAlt.markCalled()
+        setTimeout(() => passingAlt.reset(), 500)
       }
     }
 

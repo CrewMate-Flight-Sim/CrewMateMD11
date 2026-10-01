@@ -233,10 +233,18 @@ async function executeNormalItem(item: ChecklistItem, index: number, signal: Abo
   // 1. Auto-check Phase
   if (!item.challenge) {
     if (item.validations?.length) {
+      let called = false
       while (true) {
         checkAbort(signal)
         if (await findPassingRule(item.validations, "", signal)) break
-        if (item.incorrect) await playWithSync(item.incorrect)
+
+        // Said once, then waits for the switch
+        if (!called) {
+          called = true
+          if (item.incorrect) await playWithSync(item.incorrect)
+        }
+
+        if (!useSettingsStore.getState().holdOnIncorrect) break
         await sleep(2000)
       }
     }

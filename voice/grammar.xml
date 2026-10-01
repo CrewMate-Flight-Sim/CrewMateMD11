@@ -470,7 +470,11 @@
       <item>disconnect air starter<tag>out.pid="disconnect_asu";</tag></item>
       <item>disconnect A S U<tag>out.pid="disconnect_asu";</tag></item>
       <item>disconnect all<tag>out.pid="disconnect_all_ground";</tag></item>
+      <item>we are ready for pushback<tag>out.pid="pushback_request";</tag></item>
       <item>starting engine three<tag>out.pid="engine_start_3";</tag></item>
+      <!--Control handover-->
+      <item>you have control<tag>out.pid="you_have_ctrl";</tag></item>
+      <item>i have control<tag>out.pid="i_have_ctrl";</tag></item>
     </one-of>
   </rule>
 

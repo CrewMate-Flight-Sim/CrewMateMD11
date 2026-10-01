@@ -150,6 +150,7 @@ $phrases = @{
 "hyd_panel"                           = "Hydraulics panel"
 "hyd_test"                            = "can we perform the hydraulics test?"
 
+"i_have_ctrl"                          = "I have control"
 "ign"                                  = "Engine ignition"
 "irs"                                  = "IRS"
 "ldg_data" = "Landing data"
@@ -167,6 +168,7 @@ $phrases = @{
 "neutral"                              = "Neutral"
 "no_reverse"            = "No reverse"
 "no_spoilers"                          = "No spoilers"
+"now_at"                               = "Now"
 
 "off"                                  = "off"
 "on"                                   = "on"
@@ -178,6 +180,7 @@ $phrases = @{
 
 "parking_brake"                        = "Parking brake"
 "parking_checklist_completed"          = "Parking checklist completed"
+"passing_flight_level"                 = "Passing flight level"
 "prof_armed"                           = "Profile armed"
 "pitch_trim"                           = "Pitch Trim"
 "positive_climb"                       = "Positive climb"
@@ -202,6 +205,7 @@ $phrases = @{
 "spoilers_dep"                            = "Spoilers deployed"
 "stab_trim"                           = "Stabilizer trim"
 "standard_set"                        = "Standard Set and cross checked"
+"standard_cross_checked"               = "Standard cross checked"
 
 "taxi_completed"                       = "Taxi checklist completed"
 "tcas"                                 = "T cas"
@@ -226,6 +230,7 @@ $phrases = @{
 "wshld_ai"                             = "Windshield anti ice"
 "wxr_xpndr"                            = "Weather radar and transponder"
 "xchk"                                 = "Cross checked"
+"you_have_ctrl"                        = "You have control"
 }
 # Derive folder name from voice: "en-US-JennyNeural" -> "Jenny"
 
