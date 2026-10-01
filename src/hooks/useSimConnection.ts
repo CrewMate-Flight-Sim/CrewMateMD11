@@ -6,7 +6,7 @@ import { getAircraftTitle } from "@/API/simvarApi"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
 
-const simVars = [
+const SIM_VARS = [
   { key: "timeOfDay", expression: "(E:TIME OF DAY,Enum)" },
   { key: "ias", expression: "(A:AIRSPEED INDICATED,Knots)" },
   { key: "alt", expression: "(A:INDICATED ALTITUDE,Feet)" },
@@ -81,7 +81,7 @@ export function useSimConnection() {
         // Always stop first to ensure a clean reconnect when the flight reloads.
         await invoke("stop_telemetry_stream").catch(() => {})
         await invoke("start_telemetry_stream", {
-          variables: simVars,
+          variables: SIM_VARS,
           intervalMs: STREAM_INTERVAL_MS
         })
       } catch {

@@ -56,7 +56,7 @@ const resetLanding = (ls: CalloutState) => {
   ls.done = false
 }
 
-const phaseHandlers: Record<
+const PHASE_HANDLERS: Record<
   Exclude<LandingPhase, "idle">,
   (ls: CalloutState, t: Record<string, number>, elapsed: number, now: number) => void
 > = {
@@ -294,7 +294,7 @@ export function useCallouts() {
     if (!telemetryState) return
     const now = Date.now()
     const elapsed = ls.phaseStartTime ? now - ls.phaseStartTime : 0
-    const handler = phaseHandlers[ls.phase as Exclude<LandingPhase, "idle">]
+    const handler = PHASE_HANDLERS[ls.phase as Exclude<LandingPhase, "idle">]
     if (typeof handler === "function") {
       handler(ls, telemetryState as unknown as Record<string, number>, elapsed, now)
     } else {

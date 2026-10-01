@@ -25,7 +25,7 @@ interface FOStep {
 // Module-level atomic execution lock to protect voice commands
 let isCheckRunning = false
 
-const foSteps: FOStep[] = [
+const FO_STEPS: FOStep[] = [
   { setValue: () => simvarSet(`${AXIS_FULL_NEG} (>K:ELEVATOR_SET)`), sound: "full_up.ogg" },
   { setValue: () => simvarSet(`${AXIS_NEUTRAL} (>K:ELEVATOR_SET)`) },
   { setValue: () => simvarSet(`${AXIS_FULL_POS} (>K:ELEVATOR_SET)`), sound: "full_down.ogg" },
@@ -36,7 +36,7 @@ const foSteps: FOStep[] = [
   { setValue: () => simvarSet(`(>K:CENTER_AILER_RUDDER)`), sound: "neutral.ogg" }
 ]
 
-const rudderSteps: SilentStep[] = [
+const RUDDER_STEPS: SilentStep[] = [
   { condition: (t) => t.rudderPosition < -RUDDER_FULL_THRESHOLD },
   { condition: (t) => t.rudderPosition > RUDDER_FULL_THRESHOLD },
   { condition: (t) => Math.abs(t.rudderPosition) < RUDDER_NEUTRAL_THRESHOLD }
@@ -66,7 +66,7 @@ export async function flightControlsCheck() {
     await waitForSoundFinished()
 
     // FO sets elevator and aileron positions and calls out each state
-    for (const step of foSteps) {
+    for (const step of FO_STEPS) {
       // 1. SAFETY: Ensure any audio from the PRIOR step is 100% silent before moving hardware
       await waitForSoundFinished()
 
@@ -92,7 +92,7 @@ export async function flightControlsCheck() {
     }
 
     // Captain performs rudder check — script blocks until physical input matches threshold
-    for (const step of rudderSteps) {
+    for (const step of RUDDER_STEPS) {
       await waitFor(step.condition)
     }
 

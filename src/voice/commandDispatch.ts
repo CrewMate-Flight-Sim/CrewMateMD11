@@ -39,7 +39,7 @@ import { setSeatBelts } from "./commands/seatBelts"
 import { setWipers } from "./commands/wipers"
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
-export const checklistAbortCommands = new Set(["checklist_cancel"])
+export const CHECKLIST_ABORT_COMMANDS = new Set(["checklist_cancel"])
 const randomDelay = (min: number, max: number) => delay(min + Math.random() * (max - min))
 
 const isInvalidMD11Alt = (alt: number): boolean => {
@@ -99,7 +99,7 @@ async function runGroundAction(
 }
 
 // Still work while the FO is on the walkaround: the ground engineer is someone else, and the timer drives the absence
-export const foAwayAllowedCommands = new Set([
+export const FO_AWAY_ALLOWED_COMMANDS = new Set([
   "ground_call",
   "connect_gpu",
   "disconnect_gpu",
@@ -111,7 +111,7 @@ export const foAwayAllowedCommands = new Set([
 
 // ─── Discrete command map ─────────────────────────────────────────────────────
 
-const discreteCommandMap: Record<string, () => void | Promise<void>> = {
+const DISCRETE_COMMAND_MAP: Record<string, () => void | Promise<void>> = {
   // Gear & Flaps
   gear_up: () => setGearHandle(0),
   gear_down: () => setGearHandle(1),
@@ -319,7 +319,7 @@ export async function dispatchFoCommand(commandType: string, payload: Record<str
     case "discrete": {
       const cmd = payload.command as string | undefined
       if (!cmd) return false
-      const handler = discreteCommandMap[cmd]
+      const handler = DISCRETE_COMMAND_MAP[cmd]
       if (!handler) return false
       await handler()
       return true
