@@ -80,7 +80,6 @@ $phrases = @{
 "check"                                = "Check"
 "check_flaps"                          = "Check flaps"
 "check_landing_gear"                   = "Check landing gear"
-"check_seatbelts"                      = "Check seatbelts"
 "check_speed"                          = "Check speed"
 "check_spoilers"                       = "Check spoilers"
 "check_thrust"                         = "Check thrust"
