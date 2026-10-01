@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "CrewMateMD11",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "identifier": "crewmatemd11",
   "build": {
     "beforeDevCommand": "npm run voice:fetch && npm run dev",
@@ -31,15 +31,31 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": true,
-    "targets": ["msi"],
-    "externalBin": ["bin/copilot_speech"],
-    "resources": ["sounds", "bin/grammar.xml", "Trainer"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
+    "targets": [
+      "msi"
+    ],
+    "externalBin": [
+      "bin/copilot_speech"
+    ],
+    "resources": [
+      "sounds",
+      "bin/grammar.xml",
+      "Trainer"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   },
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc3MTRCNzVDNEIwRDQ2NQpSV1JsMUxERWRVdHhCMEdCSW5mWnZXMyt6SUJJMWlCcTZNbVpGZ2dSVGhCUGxMWWM2YUIvNUFZSgo=",
-      "endpoints": ["https://github.com/CrewMate-Flight-Sim/CrewMateMD11/releases/latest/download/latest.json"]
+      "endpoints": [
+        "https://github.com/CrewMate-Flight-Sim/CrewMateMD11/releases/latest/download/latest.json"
+      ]
     }
   }
 }
