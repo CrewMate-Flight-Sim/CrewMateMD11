@@ -2,7 +2,7 @@ import { listen } from "@tauri-apps/api/event"
 
 import { simvarGet } from "@/API/simvarApi"
 import { getChecklistById } from "@/services/checklistLoader"
-import { isSoundPlaying, playSound, playSoundSequence } from "@/services/playSounds"
+import { playSound, playSoundSequence, waitForSoundFinished } from "@/services/playSounds"
 import { useCabinReadyTimerStore } from "@/store/cabinReadyTimerStore"
 import { useChecklistStore } from "@/store/checklistStore"
 import { usePerformanceStore } from "@/store/performanceStore"
@@ -14,12 +14,10 @@ import { vars, getTemplateVars, resolveFlapsDialPercent } from "./flowLoader"
 import { getMd11Variant } from "./md11Variant"
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const wsf = async (signal?: AbortSignal) => {
+// A sound that was just started may not report as playing yet
+const wsf = async () => {
   await sleep(50)
-  while (await isSoundPlaying()) {
-    if (signal?.aborted) return
-    await sleep(100)
-  }
+  await waitForSoundFinished()
 }
 const checkAbort = (s: AbortSignal) => {
   if (s.aborted) throw new Error("Checklist aborted")

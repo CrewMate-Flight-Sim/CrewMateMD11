@@ -1,4 +1,5 @@
 import { simvarGet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, playSoundSequence } from "@/services/playSounds"
@@ -39,7 +40,6 @@ import { setWipers } from "./commands/wipers"
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
 export const checklistAbortCommands = new Set(["checklist_cancel"])
-export const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 const randomDelay = (min: number, max: number) => delay(min + Math.random() * (max - min))
 
 const isInvalidMD11Alt = (alt: number): boolean => {

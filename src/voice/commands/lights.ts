@@ -1,6 +1,5 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
-
-import { delay } from "../commandDispatch"
+import { delay } from "@/lib/utils"
 
 export async function setStrobeLights(position: number) {
   try {

@@ -1,8 +1,7 @@
 import { simvarSet, simvarGet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
 import { playSound } from "@/services/playSounds"
 import { useTelemetryStore } from "@/store/telemetryStore"
-
-import { delay } from "../commandDispatch"
 
 const GEAR_LOWER_SPEED_LIMIT = 260 // knots
 let spoilerArmingDelay: ReturnType<typeof setTimeout> | null = null

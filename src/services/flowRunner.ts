@@ -1,6 +1,6 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
 import { getFlowById, resolveFlow } from "@/services/flowLoader"
-import { playSound, isSoundPlaying, playSoundSequence } from "@/services/playSounds"
+import { playSound, playSoundSequence, waitForSoundFinished } from "@/services/playSounds"
 import { useCabinReadyTimerStore } from "@/store/cabinReadyTimerStore"
 import { useFlowStore } from "@/store/flowStore"
 import { usePerformanceStore } from "@/store/performanceStore"
@@ -21,9 +21,6 @@ const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms
 const getRandomStepDelay = () => Math.random() * (STEP_DELAY.MAX - STEP_DELAY.MIN) + STEP_DELAY.MIN
 const fuzzyEquals = (a: number, b: number, eps = FUZZY_EPS) => Math.abs(a - b) < eps
 const toNumber = (v: number | string) => (typeof v === "string" ? parseFloat(v) : v)
-const waitForSoundFinished = async () => {
-  while (await isSoundPlaying()) await sleep(100)
-}
 
 // SimVar I/O
 async function readSimvar(expression: string): Promise<number | null> {

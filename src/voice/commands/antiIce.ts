@@ -1,6 +1,5 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
-
-import { delay } from "../commandDispatch"
+import { delay } from "@/lib/utils"
 
 async function setAntiIceToggle(position: number, readVar: string, pressCevent: number, isAutoSystemFitted: boolean) {
   const current = (await simvarGet(`(${readVar})`)) ?? 0
