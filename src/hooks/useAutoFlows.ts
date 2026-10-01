@@ -74,14 +74,14 @@ export function useAutoFlows() {
       p.taxiLight = t.taxiLight ?? 0
       st.phase = t.onGround ? "ground" : "airborne"
 
-      if ((t.engineN1_2 ?? 0) > 23) {
+      if ((t.engine2N1 ?? 0) > 23) {
         fl.afterStart = true
         engineN1AboveThresholdSince.current = Date.now()
       }
       return
     }
 
-    const eng2N1 = t.engineN1_2 ?? 0
+    const eng2N1 = t.engine2N1 ?? 0
     const now = Date.now()
 
     engineN1AboveThresholdSince.current = eng2N1 > 23 ? (engineN1AboveThresholdSince.current ?? now) : null

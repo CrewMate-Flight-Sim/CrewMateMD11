@@ -70,7 +70,7 @@ const phaseHandlers: Record<
     }
   },
   reverser: (ls, t, elapsed, now) => {
-    if ((t.eng1_reverse ?? 0) > 0.1 || (t.eng2_reverse ?? 0) > 0.1 || (t.eng3_reverse ?? 0) > 0.1) {
+    if ((t.engine1Reverse ?? 0) > 0.1 || (t.engine2Reverse ?? 0) > 0.1 || (t.engine3Reverse ?? 0) > 0.1) {
       playSound("reverse_thr.ogg")
       advancePhase(ls, "decel", now)
     } else if (elapsed >= TIMEOUTS.REVERSER) {
@@ -140,7 +140,7 @@ export function useCallouts() {
     const v1 = t.v1 ?? 0
     const vr = t.vr ?? 0
     const onGround = !!t.onGround
-    const fcpAlt = t.fcp_alt ?? 0
+    const fcpAlt = t.fcpAlt ?? 0
     const now = Date.now()
 
     if (fcpAlt !== p.fcpAlt) st.oneToGo = false
@@ -175,7 +175,7 @@ export function useCallouts() {
       if (
         !st.calledThrustSet &&
         !st.called80to &&
-        [t.engineN1_1 ?? 0, t.engineN1_2 ?? 0, t.engineN1_3 ?? 0].every((n) => n >= 90)
+        [t.engine1N1 ?? 0, t.engine2N1 ?? 0, t.engine3N1 ?? 0].every((n) => n >= 90)
       ) {
         st.calledThrustSet = true
         st.v1Inhibit = false // ← clear inhibits set by previous landing
@@ -276,7 +276,7 @@ export function useCallouts() {
         alt: t.alt,
         radioAlt: t.radioAlt,
         onGround: t.onGround,
-        fcpAlt: t.fcp_alt ?? 0
+        fcpAlt: t.fcpAlt ?? 0
       }
       runCrossings(t, snapshot)
     })

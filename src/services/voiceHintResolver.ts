@@ -43,9 +43,9 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
     (t.mixture1 ?? 1) < 0.5 &&
     (t.mixture2 ?? 1) < 0.5 &&
     (t.mixture3 ?? 1) < 0.5 &&
-    (t.engineN1_1 ?? 0) < N1_IDLE_MAX &&
-    (t.engineN1_2 ?? 0) < N1_IDLE_MAX &&
-    (t.engineN1_3 ?? 0) < N1_IDLE_MAX
+    (t.engine1N1 ?? 0) < N1_IDLE_MAX &&
+    (t.engine2N1 ?? 0) < N1_IDLE_MAX &&
+    (t.engine3N1 ?? 0) < N1_IDLE_MAX
 
   // ── AIRBORNE PHASES ──────────────────────────────────────────────────────────
   if (!ground) {
