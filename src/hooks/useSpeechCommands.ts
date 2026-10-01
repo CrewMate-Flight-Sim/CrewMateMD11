@@ -77,14 +77,14 @@ export function useSpeechCommands({ voiceEnabled }: UseSpeechCommandsOptions) {
       setRecognizedText(spokenText)
 
       if (commandType && payload !== undefined) {
-        const handled = await dispatchFoCommand(commandType, payload, spokenText)
+        const handled = await dispatchFoCommand(commandType, payload)
         setIsValidCommand(handled)
         return
       }
 
       // Fallback: commandType present but no payload (fma_callout emits no payload)
       if (commandType) {
-        const handled = await dispatchFoCommand(commandType, {}, spokenText)
+        const handled = await dispatchFoCommand(commandType, {})
         setIsValidCommand(handled)
         return
       }

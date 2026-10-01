@@ -27,3 +27,10 @@ dist-ssr
 Scripts/.env
 
 ~/
+/.*/
+!/.github/
+!/.vscode/
+# Voice engine binaries and deployed data, fetched by Scripts/fetch-voice.ps1
+src-tauri/bin/*.exe
+src-tauri/bin/grammar.xml
+src-tauri/Trainer/

@@ -118,9 +118,11 @@ impl SpeechBridge {
                             match value["type"].as_str().unwrap_or("") {
                                 "speech" => {
                                     log::info!(
-                                        "[Speech] Recognized: \"{}\" (confidence: {:.2})",
+                                        "[Speech] Recognized: \"{}\" (confidence: {:.2}) {} {}",
                                         value["text"].as_str().unwrap_or("?"),
-                                        value["confidence"].as_f64().unwrap_or(0.0)
+                                        value["confidence"].as_f64().unwrap_or(0.0),
+                                        value["commandType"].as_str().unwrap_or("?"),
+                                        value["payload"]
                                     );
                                     let _ = app_cb.emit("speech_recognized", value);
                                 }
@@ -130,6 +132,16 @@ impl SpeechBridge {
                                 }
                                 "status" => {
                                     log::info!("[Speech] Engine status: {}", value);
+                                    // Engine builds before CrewMate-Voice 1.0.0 don't report a version
+                                    if let Some(version) =
+                                        value["details"]["engineVersion"].as_str()
+                                    {
+                                        log::info!(
+                                            "[Speech] Engine {}, protocol {}",
+                                            version,
+                                            value["details"]["protocol"]
+                                        );
+                                    }
                                     let _ = app_cb.emit("speech_engine_status", value);
                                 }
                                 "error" => {
@@ -142,6 +154,9 @@ impl SpeechBridge {
                                     }
                                     log::error!("[Speech] Engine error: {}", value);
                                     let _ = app_cb.emit("speech_engine_error", value);
+                                }
+                                "rejected" => {
+                                    log::warn!("[Speech] Rejected: {}", value);
                                 }
                                 "inputDevices" => {
                                     if let Some(arr) = value["devices"].as_array() {
@@ -307,9 +322,11 @@ impl SpeechBridge {
                                         match value["type"].as_str().unwrap_or("") {
                                             "speech" => {
                                                 log::info!(
-                                                    "[Speech] Recognized: \"{}\" (confidence: {:.2})",
+                                                    "[Speech] Recognized: \"{}\" (confidence: {:.2}) {} {}",
                                                     value["text"].as_str().unwrap_or("?"),
-                                                    value["confidence"].as_f64().unwrap_or(0.0)
+                                                    value["confidence"].as_f64().unwrap_or(0.0),
+                                                    value["commandType"].as_str().unwrap_or("?"),
+                                                    value["payload"]
                                                 );
                                                 let _ = app_cb.emit("speech_recognized", value);
                                             }
@@ -319,6 +336,16 @@ impl SpeechBridge {
                                             }
                                             "status" => {
                                                 log::info!("[Speech] Engine status: {}", value);
+                                                // Engine builds before CrewMate-Voice 1.0.0 don't report a version
+                                                if let Some(version) =
+                                                    value["details"]["engineVersion"].as_str()
+                                                {
+                                                    log::info!(
+                                                        "[Speech] Engine {}, protocol {}",
+                                                        version,
+                                                        value["details"]["protocol"]
+                                                    );
+                                                }
                                                 let _ = app_cb.emit("speech_engine_status", value);
                                             }
                                             "error" => {
@@ -331,6 +358,9 @@ impl SpeechBridge {
                                                 }
                                                 log::error!("[Speech] Engine error: {}", value);
                                                 let _ = app_cb.emit("speech_engine_error", value);
+                                            }
+                                            "rejected" => {
+                                                log::warn!("[Speech] Rejected: {}", value);
                                             }
                                             "inputDevices" => {
                                                 if let Some(arr) = value["devices"].as_array() {

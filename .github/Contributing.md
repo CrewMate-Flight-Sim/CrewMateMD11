@@ -17,7 +17,7 @@ Prerequisites
 
 - Node.js (LTS recommended) and npm
 - Tauri (see https://v2.tauri.app/start/)
-- .NET SDK to build `CopilotSpeech` if you need to modify it
+- No .NET SDK: the speech engine comes prebuilt from [CrewMate-Voice](https://github.com/CrewMate-Flight-Sim/CrewMate-Voice), pinned in `voice.version`
 
 Basic setup
 
@@ -33,23 +33,31 @@ Run the app in development
 npm run tauri dev
 ```
 
+The first run downloads the pinned speech engine (`npm run voice:fetch`, called automatically before dev and build). Run it once by hand before `cargo check` in a fresh clone, because the Tauri build needs the engine exe in `src-tauri/bin`.
+
 Build a packaged app
 
 ```bash
 npm run tauri build
 ```
 
-Build/Publish SideCar
+Voice commands and training phrases
 
-```powershell
-.\build-sidecar.ps1
-```
+- Grammar: `voice/grammar.xml`. After changing discrete command ids or `src/voice/commandDispatch.ts`, run `python Scripts/validate-voice.py`.
+- Training phrases: `voice/training_phrases.txt`.
+- Engine changes (sidecar or trainer code) go to [CrewMate-Voice](https://github.com/CrewMate-Flight-Sim/CrewMate-Voice); see its Contributing guide.
 
-Create voice .ogg files
+Updating the voice engine version
 
-```powershell
-.\FOvoices.ps1
-```
+The engine version this app uses is pinned in `voice.version`. To move to a newer [CrewMate-Voice release](https://github.com/CrewMate-Flight-Sim/CrewMate-Voice/releases):
+
+1. Read that release's changelog entry. A new major version can need grammar or code changes here.
+2. Put the new version in `voice.version` (for example `1.1.0`, without the `v`).
+3. Run `npm run voice:fetch`. It downloads the engine into `.voice-cache/`, checks it against the release's `SHA256SUMS` and deploys it to `src-tauri/bin` and `src-tauri/Trainer`.
+4. Run `npm run tauri dev`. The log shows `[Speech] Engine <version>, protocol <n>`. Speak a few commands and open the voice trainer from `src-tauri/Trainer` once.
+5. Commit `voice.version` (the engine files themselves are gitignored) and ship it in a normal release, after installing a build over the current public release and checking that voice commands and the trainer work.
+
+To try an engine build that isn't released yet, build it in CrewMate-Voice and set `CREWMATE_VOICE_DIST` to its `dist/` folder before `npm run tauri dev`. Remove the variable afterwards; never ship a build made that way.
 
 ## Commands reference
 
@@ -61,7 +69,6 @@ Create voice .ogg files
 - `lint:frontend` — Run ESLint over the frontend codebase to surface JS/TS lint issues.
 - `lint:frontend:fix` — Run ESLint with `--fix` to automatically fix fixable frontend issues.
 - `lint:backend` — Run `cargo clippy` for the Rust backend and treat warnings as errors (`-D warnings`).
-- `fix` — Run `format` and `lint` sequentially, applying the ESLint `--fix` flag to resolve frontend issues automatically.
 - `check` — Run `format:check` then `lint` to validate formatting and linting in one step.
 
 These scripts are defined in `package.json`; use them as shown above when preparing changes or opening a PR.
@@ -80,7 +87,7 @@ npm run check
 - Flows: `src/data/flows/`
 - Voice code: `src/voice/`
 - Native/Tauri: `src-tauri/`
-- Windows sidecar helper: `CopilotSpeech/`
+- Voice grammar and training phrases: `voice/`
 
 ## Pull Request process and checklist
 

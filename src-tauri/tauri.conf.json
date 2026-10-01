@@ -4,9 +4,9 @@
   "version": "0.3.0",
   "identifier": "crewmatemd11",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run voice:fetch && npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run voice:fetch && npm run build",
     "frontendDist": "../dist",
     "removeUnusedCommands": true
   },

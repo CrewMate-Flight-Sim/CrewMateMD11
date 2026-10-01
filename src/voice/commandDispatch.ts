@@ -273,10 +273,10 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
   checklist_after_start: () => executeChecklist("after_start"),
   checklist_taxi: () => executeChecklist("taxi"),
   checklist_before_takeoff: () => executeChecklist("before_takeoff"),
-  checklist_after_takeoffP1: () => executeChecklist("after_takeoff_to_the_line"),
-  checklist_after_takeoffP2: () => executeChecklist("after_takeoff_below_the_line"),
-  checklist_desapprP1: () => executeChecklist("des_P1"),
-  checklist_desapprP2: () => executeChecklist("des_P2"),
+  checklist_after_takeoff_p1: () => executeChecklist("after_takeoff_to_the_line"),
+  checklist_after_takeoff_p2: () => executeChecklist("after_takeoff_below_the_line"),
+  checklist_desappr_p1: () => executeChecklist("des_P1"),
+  checklist_desappr_p2: () => executeChecklist("des_P2"),
   checklist_before_landing: () => executeChecklist("before_landing"),
   checklist_after_landing: () => executeChecklist("after_landing"),
   checklist_parking: () => executeChecklist("parking"),
@@ -298,17 +298,11 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
 
 // ─── Optimized Dispatcher ───────────────────────────────────────────────────
 
-export async function dispatchFoCommand(
-  commandType: string,
-  payload: Record<string, unknown>,
-  rawText?: string
-): Promise<boolean> {
+export async function dispatchFoCommand(commandType: string, payload: Record<string, unknown>): Promise<boolean> {
   const value = getNumericPayload(payload, "value", "cval")
 
-  // 1. Check if the user actually voiced the execution command
-  // We check both the incoming payload text property and an optional rawText parameter
-  const rawUtterance = ((payload.text as string) || rawText || "").toLowerCase()
-  const shouldExecute = rawUtterance.endsWith("select")
+  // The engine reports a spoken "select" as the verb; only then is the knob pulled
+  const shouldExecute = payload.verb === "select"
 
   switch (commandType) {
     case "discrete": {
