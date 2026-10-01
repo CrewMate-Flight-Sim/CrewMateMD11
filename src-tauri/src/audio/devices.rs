@@ -122,6 +122,6 @@ pub fn set_output_device(app_handle: AppHandle, device: Option<String>) -> Resul
 pub fn set_input_device(app_handle: AppHandle, device: Option<String>) -> Result<(), String> {
     log::info!("[Audio] Input device set: {:?}", device);
     let state = app_handle.state::<crate::SpeechBridgeState>();
-    state.0.restart_with_device(device);
+    state.bridge.restart_with_device(device);
     Ok(())
 }

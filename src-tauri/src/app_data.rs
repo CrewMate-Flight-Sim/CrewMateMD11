@@ -1,6 +1,10 @@
 use tauri::AppHandle;
 use tauri::Manager;
 
+// Shared with the logging plugin in lib.rs, so "open log file" can't drift from where the logger writes
+pub const LOGS_DIR_NAME: &str = "logs";
+pub const LOG_FILE_STEM: &str = "crewmatetfdimd11";
+
 #[tauri::command]
 pub fn setup_app_data_directories(app_handle: &tauri::AppHandle) -> tauri::Result<()> {
     // Get the app data directory
@@ -20,9 +24,9 @@ pub async fn get_log_file_path(app_handle: AppHandle) -> Result<String, String> 
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
-        .join("logs");
+        .join(LOGS_DIR_NAME);
 
-    let log_file_path = logs_dir.join("crewmateinimd11.log");
+    let log_file_path = logs_dir.join(format!("{LOG_FILE_STEM}.log"));
     Ok(log_file_path.to_string_lossy().to_string())
 }
 
@@ -52,7 +56,7 @@ pub async fn open_logs_folder(app_handle: AppHandle) -> Result<(), String> {
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
-        .join("logs");
+        .join(LOGS_DIR_NAME);
 
     // Create the directory if it doesn't exist
     std::fs::create_dir_all(&logs_dir).map_err(|e| e.to_string())?;

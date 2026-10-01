@@ -24,6 +24,7 @@ use simconnect::simvars::{
 mod app_data;
 use app_data::{
     get_log_file_path, open_app_data_folder, open_logs_folder, setup_app_data_directories,
+    LOGS_DIR_NAME, LOG_FILE_STEM,
 };
 
 mod simconnect;
@@ -37,7 +38,7 @@ fn get_in_cockpit() -> bool {
 
 #[tauri::command]
 fn get_speech_engine_error(state: tauri::State<'_, SpeechBridgeState>) -> Option<String> {
-    state.0.last_error()
+    state.bridge.last_error()
 }
 
 #[tauri::command]
@@ -52,13 +53,13 @@ fn set_confidence_threshold(state: tauri::State<'_, SpeechBridgeState>, threshol
         0.85
     };
     let json = format!(r#"{{"confidenceThreshold":{:.3}}}"#, safe_threshold);
-    state.0.send_config(&json);
+    state.bridge.send_config(&json);
 }
 
 #[tauri::command]
 fn set_muted(state: tauri::State<'_, SpeechBridgeState>, muted: bool) {
     let json = format!(r#"{{"muted":{}}}"#, muted);
-    state.0.send_config(&json);
+    state.bridge.send_config(&json);
 }
 
 mod windows;
@@ -70,7 +71,9 @@ struct AppState {
     tx: Mutex<mpsc::Sender<WorkerRequest>>,
 }
 
-pub struct SpeechBridgeState(pub Arc<SpeechBridge>);
+pub struct SpeechBridgeState {
+    pub bridge: Arc<SpeechBridge>,
+}
 
 enum WorkerRequest {
     Set {
@@ -134,7 +137,9 @@ pub fn run() {
             // Initialize speech recognition sidecar
             let speech = Arc::new(SpeechBridge::new(app.handle().clone()));
             SPEECH_BRIDGE_STATE.set(speech.clone()).ok();
-            app.manage(SpeechBridgeState(speech.clone()));
+            app.manage(SpeechBridgeState {
+                bridge: speech.clone(),
+            });
 
             // Initialize audio player
             let audio_player = AudioPlayer::new().expect("Failed to initialize audio player");
@@ -152,7 +157,7 @@ pub fn run() {
             // Initialize logging
             let logs_dir = match app.path().app_data_dir() {
                 Ok(app_data_dir) => {
-                    let logs_path = app_data_dir.join("logs");
+                    let logs_path = app_data_dir.join(LOGS_DIR_NAME);
                     if let Err(e) = std::fs::create_dir_all(&logs_path) {
                         eprintln!("[App] Failed to create logs directory: {}", e);
                         app_data_dir
@@ -170,7 +175,7 @@ pub fn run() {
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::Folder {
                         path: logs_dir,
-                        file_name: Some("crewmatetfdimd11".to_string()),
+                        file_name: Some(LOG_FILE_STEM.to_string()),
                     },
                 ))
                 .level(log::LevelFilter::Info)
