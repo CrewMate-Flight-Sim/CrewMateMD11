@@ -3,6 +3,7 @@ import { delay } from "@/lib/utils"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, playSoundSequence } from "@/services/playSounds"
+import { buildMissedApproachAltSequence } from "@/services/soundSequences"
 import { useGroundEngineerStore } from "@/store/groundEngineerStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
@@ -399,8 +400,7 @@ export async function dispatchFoCommand(commandType: string, payload: Record<str
       const settled = await waitForSimVar("md11_afs_alt", targetAlt, 5000)
       if (!settled) return false
 
-      const leading = Math.floor(targetAlt / 1000).toString()
-      await playSoundSequence(["missed_approach.ogg", `${leading}.ogg`, "thousand.ogg", "feet_set.ogg"])
+      await playSoundSequence(buildMissedApproachAltSequence(targetAlt))
 
       return true
     }
