@@ -56,14 +56,14 @@ CrewMate does not take the key or button away from MSFS, so pick one that is not
 
 ### Voice Settings
 
-| Setting                                      | What it does                                                                                                                                       |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Input Device**                             | Which microphone the speech engine listens to.                                                                                                     |
-| **Sound Volume**                             | How loud the FO's audio is (0–200; above 100 amplifies).                                                                                           |
-| **Voice Sensitivity**                        | How confident the engine must be before accepting a command (50–100). Lower is more tolerant and may accept the wrong command; higher is stricter. |
-| **Voice Mode**                               | **Always listening** or **Push-to-talk**. See [Voice Modes](#voice-modes).                                                                         |
-| **PTT Button**                               | The key or button held to talk in Push-to-talk mode.                                                                                               |
-| **Mic On/Off**                               | A key or button that switches the mic on and off, like the toolbar mic.                                                                            |
+| Setting               | What it does                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Input Device**      | Which microphone the speech engine listens to.                                                                                                     |
+| **Sound Volume**      | How loud the FO's audio is (0–200; above 100 amplifies).                                                                                           |
+| **Voice Sensitivity** | How confident the engine must be before accepting a command (50–100). Lower is more tolerant and may accept the wrong command; higher is stricter. |
+| **Voice Mode**        | **Always listening** or **Push-to-talk**. See [Voice Modes](#voice-modes).                                                                         |
+| **PTT Button**        | The key or button held to talk in Push-to-talk mode.                                                                                               |
+| **Mic On/Off**        | A key or button that switches the mic on and off, like the toolbar mic.                                                                            |
 
 ---
 
