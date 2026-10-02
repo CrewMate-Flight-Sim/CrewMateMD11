@@ -11,6 +11,7 @@
 - Added Push-to-talk and a Mic On/Off button, bindable to a key, mouse button, joystick, yoke, throttle or controller button in Settings - @marxio09dio
 - Voice commands the FO cannot act on are no longer shown as accepted - @marxio09dio
 - The FO no longer answers while outside on the walkaround (T-45 to T-33) - ground engineer calls and the preflight timer still work, and an "FO outside" indicator shows meanwhile - @marxio09dio
+- Callouts made of several parts (speeds, altitudes, numbers) had long pauses between the words - they now play as one smooth phrase, and a missing sound file no longer silences the whole callout - @marxio09dio
 
 ## [0.3.0] - 2026-05-XX
 
