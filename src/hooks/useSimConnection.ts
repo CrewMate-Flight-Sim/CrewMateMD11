@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core"
-import { listen, UnlistenFn } from "@tauri-apps/api/event"
+import { listen } from "@tauri-apps/api/event"
 import { useEffect, useRef } from "react"
 
 import { getAircraftTitle } from "@/API/simvarApi"
@@ -69,12 +69,9 @@ const RETRY_INTERVAL_MS = 5000
 const STREAM_INTERVAL_MS = 16
 
 export function useSimConnection() {
-  const retryRef = useRef<number | null>(null)
+  const retryRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    const store = useTelemetryStore.getState()
-    const unlisteners: UnlistenFn[] = []
-
     const startStream = async () => {
       useTelemetryStore.getState().setStatus("connecting")
       try {
@@ -89,58 +86,89 @@ export function useSimConnection() {
       }
     }
 
-    const clearRetry = () => {
-      if (retryRef.current !== null) {
-        window.clearInterval(retryRef.current)
+    const stopStream = () => {
+      if (retryRef.current) {
+        clearInterval(retryRef.current)
         retryRef.current = null
       }
+      invoke("stop_telemetry_stream").catch(() => {})
+      useTelemetryStore.getState().setStatus("connecting")
     }
 
-    const setupListeners = async () => {
-      // 1. Flight State
-      unlisteners.push(
-        await listen<boolean>("sim-in-flight", (e) => {
-          if (e.payload) {
-            startStream()
-            if (retryRef.current === null) {
-              retryRef.current = window.setInterval(() => {
-                if (useTelemetryStore.getState().status !== "connected") startStream()
-              }, RETRY_INTERVAL_MS)
-            }
-          } else {
-            clearRetry()
-            invoke("stop_telemetry_stream").catch(() => {})
-            store.setStatus("connecting")
-          }
-        })
-      )
-
-      // 2. Data
-      unlisteners.push(
-        await listen<Record<string, number>>("telemetry_data", (e) => {
-          store.setTelemetry(e.payload as Telemetry)
-          if (store.status !== "connected") store.setStatus("connected")
-        })
-      )
-
-      // 3. Title
-      unlisteners.push(
-        await listen<string>("simconnect-aircraft-title", (e) => {
-          if (e.payload) store.setAircraftTitle(e.payload.trim())
-        })
-      )
+    // Retry logic: only active while a flight is loaded
+    const startRetry = () => {
+      if (retryRef.current) clearInterval(retryRef.current)
+      retryRef.current = setInterval(() => {
+        const current = useTelemetryStore.getState().status
+        if (current !== "connected") {
+          void startStream()
+        }
+      }, RETRY_INTERVAL_MS)
     }
 
-    // Initial logic
-    setupListeners()
-    invoke<boolean>("get_in_cockpit").then((inSim) => {
-      if (inSim) startStream()
-    })
-    getAircraftTitle().then((t) => t && store.setAircraftTitle(t))
+    let unlistenFlightState: (() => void) | null = null
+    const setupFlightStateListener = async () => {
+      unlistenFlightState = await listen<boolean>("sim-in-flight", (event) => {
+        if (event.payload) {
+          // Flight loaded — restart the stream so LVARs register with correct slots
+          void startStream()
+          startRetry()
+        } else {
+          stopStream()
+        }
+      })
+
+      // After the listener is registered, query whether we're already in the cockpit.
+      // This handles the app being opened while already in a loaded flight — the Rust
+      // side emits with a 300ms delay now, but this is a belt-and-suspenders fallback.
+      const alreadyInCockpit = await invoke<boolean>("get_in_cockpit").catch(() => false)
+      if (alreadyInCockpit) {
+        void startStream()
+        startRetry()
+      }
+    }
+    void setupFlightStateListener()
+
+    let unlistenTelemetry: (() => void) | null = null
+    const setupTelemetryListener = async () => {
+      unlistenTelemetry = await listen<Record<string, number>>("telemetry_data", (event) => {
+        const s = useTelemetryStore.getState()
+        s.setTelemetry(event.payload as Telemetry)
+        if (s.status !== "connected") {
+          s.setStatus("connected")
+        }
+      })
+    }
+    void setupTelemetryListener()
+
+    let unlistenTitle: (() => void) | null = null
+    const setupTitleListener = async () => {
+      unlistenTitle = await listen<string>("simconnect-aircraft-title", (event) => {
+        const title = typeof event.payload === "string" ? event.payload.trim() : ""
+        if (title) {
+          useTelemetryStore.getState().setAircraftTitle(title)
+        }
+      })
+    }
+    void setupTitleListener()
+
+    getAircraftTitle()
+      .then((cached) => {
+        if (cached) {
+          useTelemetryStore.getState().setAircraftTitle(cached)
+        }
+      })
+      .catch(() => {})
 
     return () => {
-      clearRetry()
-      unlisteners.forEach((fn) => fn())
+      if (retryRef.current) {
+        clearInterval(retryRef.current)
+        retryRef.current = null
+      }
+      if (unlistenFlightState) unlistenFlightState()
+      if (unlistenTelemetry) unlistenTelemetry()
+      if (unlistenTitle) unlistenTitle()
+
       invoke("stop_telemetry_stream").catch(() => {})
     }
   }, [])
