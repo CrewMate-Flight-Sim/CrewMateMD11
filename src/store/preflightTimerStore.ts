@@ -1,6 +1,7 @@
 import { create } from "zustand"
 
 import timelineData from "@/data/preflight_timeline.json"
+import { useFoPresenceStore } from "@/store/foPresenceStore"
 
 export interface TimelineEvent {
   minuteMark: number
@@ -30,7 +31,7 @@ interface PreflightTimerStore {
 
 const TOTAL_SECONDS = Math.max(...timelineData.map((e) => e.minuteMark)) * 60
 
-export const usePreflightTimerStore = create<PreflightTimerStore>((set, get) => ({
+export const usePreflightTimerStore = create<PreflightTimerStore>()((set, get) => ({
   isRunning: false,
   remainingSeconds: TOTAL_SECONDS,
   events: timelineData as TimelineEvent[],
@@ -39,6 +40,7 @@ export const usePreflightTimerStore = create<PreflightTimerStore>((set, get) => 
   queuedEvents: [],
 
   start: () => {
+    useFoPresenceStore.getState().deactivate()
     set({
       isRunning: true,
       remainingSeconds: TOTAL_SECONDS,
@@ -49,6 +51,7 @@ export const usePreflightTimerStore = create<PreflightTimerStore>((set, get) => 
   },
 
   reset: () => {
+    useFoPresenceStore.getState().deactivate()
     set({
       isRunning: false,
       remainingSeconds: TOTAL_SECONDS,

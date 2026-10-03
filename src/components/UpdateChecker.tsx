@@ -23,7 +23,7 @@ const parseErrorMessage = (error: unknown): string => {
   }
 }
 
-const statusColour: Record<StatusKind, string> = {
+const STATUS_COLOUR: Record<StatusKind, string> = {
   idle: "text-slate-400",
   info: "text-blue-400",
   success: "text-green-400",
@@ -50,7 +50,7 @@ export function UpdateChecker() {
       }
     } catch (e) {
       const details = parseErrorMessage(e)
-      console.error("Update check failed", e)
+      console.error("[UpdateChecker] Update check failed", e)
       setStatus({
         message: `Check failed (${details.slice(0, 80)}). Retry in a moment.`,
         kind: "error"
@@ -84,7 +84,7 @@ export function UpdateChecker() {
       setStatus({ message: "Relaunch to update", kind: "success" })
     } catch (e) {
       const details = parseErrorMessage(e)
-      console.error("Install failed", e)
+      console.error("[UpdateChecker] Install failed", e)
       setStatus({
         message: `Install failed (${details.slice(0, 80)}). Please retry.`,
         kind: "error"
@@ -126,7 +126,7 @@ export function UpdateChecker() {
       </TooltipProvider>
 
       {status.message && (
-        <span aria-live="polite" className={cn("truncate max-w-[140px] transition-colors", statusColour[status.kind])}>
+        <span aria-live="polite" className={cn("truncate max-w-[140px] transition-colors", STATUS_COLOUR[status.kind])}>
           {status.message}
         </span>
       )}

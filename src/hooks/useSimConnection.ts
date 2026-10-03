@@ -1,12 +1,12 @@
 import { invoke } from "@tauri-apps/api/core"
-import { listen, UnlistenFn } from "@tauri-apps/api/event"
+import { listen } from "@tauri-apps/api/event"
 import { useEffect, useRef } from "react"
 
 import { getAircraftTitle } from "@/API/simvarApi"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
 
-const simVars = [
+const SIM_VARS = [
   { key: "timeOfDay", expression: "(E:TIME OF DAY,Enum)" },
   { key: "ias", expression: "(A:AIRSPEED INDICATED,Knots)" },
   { key: "alt", expression: "(A:INDICATED ALTITUDE,Feet)" },
@@ -15,9 +15,9 @@ const simVars = [
   { key: "vs", expression: "(A:VERTICAL SPEED,Feet per minute)" },
   { key: "onGround", expression: "(A:SIM ON GROUND,Bool)" },
   { key: "isSlewActive", expression: "(A:IS SLEW ACTIVE,Bool)" },
-  { key: "engineN1_1", expression: "(L:md11_eng1_n1)" },
-  { key: "engineN1_2", expression: "(L:md11_eng2_n1)" },
-  { key: "engineN1_3", expression: "(L:md11_eng3_n1)" },
+  { key: "engine1N1", expression: "(L:md11_eng1_n1)" },
+  { key: "engine2N1", expression: "(L:md11_eng2_n1)" },
+  { key: "engine3N1", expression: "(L:md11_eng3_n1)" },
   { key: "throttleLever1", expression: "(A:GENERAL ENG THROTTLE LEVER POSITION:1,Number)" },
   { key: "throttleLever2", expression: "(A:GENERAL ENG THROTTLE LEVER POSITION:2,Number)" },
   { key: "throttleLever3", expression: "(A:GENERAL ENG THROTTLE LEVER POSITION:3,Number)" },
@@ -39,50 +39,46 @@ const simVars = [
   { key: "mixture1", expression: "(L:MD11_THR_L_FUEL_SW)" },
   { key: "mixture2", expression: "(L:MD11_THR_C_FUEL_SW)" },
   { key: "mixture3", expression: "(L:MD11_THR_R_FUEL_SW)" },
-  { key: "fcp_alt", expression: "(L:md11_afs_alt)" },
+  { key: "fcpAlt", expression: "(L:md11_afs_alt)" },
   { key: "cptBaro", expression: "(L:md11_cap_altimeter)" },
   { key: "foBaro", expression: "(L:md11_fo_altimeter)" },
   { key: "v1", expression: "(L:md11_v1)" },
   { key: "vr", expression: "(L:md11_vr)" },
-  { key: "eng1_reverse", expression: "(L:MD11_THR_L_REV_RNG)" },
-  { key: "eng2_reverse", expression: "(L:MD11_THR_C_REV_RNG)" },
-  { key: "eng3_reverse", expression: "(L:MD11_THR_R_REV_RNG)" },
+  { key: "engine1Reverse", expression: "(L:MD11_THR_L_REV_RNG)" },
+  { key: "engine2Reverse", expression: "(L:MD11_THR_C_REV_RNG)" },
+  { key: "engine3Reverse", expression: "(L:MD11_THR_R_REV_RNG)" },
   { key: "taxiLight", expression: "(L:MD11_OVHD_LTS_NOSE_SW)" },
-  { key: "aice_eng1_lt", expression: "(L:MD11_OVHD_AICE_ENG1_ON_LT)" },
-  { key: "aice_eng2_lt", expression: "(L:MD11_OVHD_AICE_ENG2_ON_LT)" },
-  { key: "aice_eng3_lt", expression: "(L:MD11_OVHD_AICE_ENG3_ON_LT)" },
-  { key: "aice_wing_lt", expression: "(L:MD11_OVHD_AICE_WING_ON_LT)" },
-  { key: "aice_tail_lt", expression: "(L:MD11_OVHD_AICE_TAIL_ON_LT)" },
-  { key: "aice_auto_opt", expression: "(L:MD11_OPT_AUTO_AICE)" },
-  { key: "aice_sys_sel", expression: "(L:MD11_OVHD_AICE_SYSTEM_SEL_BT)" },
-  { key: "apu_pwr_lt", expression: "(L:MD11_OVHD_ELEC_APU_PWR_ON_LT)" },
-  { key: "autobrake_sw", expression: "(L:MD11_CTR_AUTOBRAKE_SW)" },
-  { key: "auto_aice_opt", expression: "(L:MD11_OPT_AUTO_AICE)" },
-  { key: "strobe_lt", expression: "(L:MD11_OVHD_LTS_HI_INT_BT)" },
-  { key: "rwy_turnoff_l_bt", expression: "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)" },
-  { key: "rwy_turnoff_r_bt", expression: "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)" },
-  { key: "seat_belts_sw", expression: "(L:MD11_OVHD_LTS_SEAT_BELTS_SW)" },
-  { key: "wiper_l_kb", expression: "(L:MD11_OVHD_L_WIPER_KB)" },
-  { key: "wiper_r_kb", expression: "(L:MD11_OVHD_R_WIPER_KB)" }
+  { key: "antiIceEngine1Light", expression: "(L:MD11_OVHD_AICE_ENG1_ON_LT)" },
+  { key: "antiIceEngine2Light", expression: "(L:MD11_OVHD_AICE_ENG2_ON_LT)" },
+  { key: "antiIceEngine3Light", expression: "(L:MD11_OVHD_AICE_ENG3_ON_LT)" },
+  { key: "antiIceWingLight", expression: "(L:MD11_OVHD_AICE_WING_ON_LT)" },
+  { key: "antiIceTailLight", expression: "(L:MD11_OVHD_AICE_TAIL_ON_LT)" },
+  { key: "autoAntiIceOption", expression: "(L:MD11_OPT_AUTO_AICE)" },
+  { key: "antiIceSystemSelect", expression: "(L:MD11_OVHD_AICE_SYSTEM_SEL_BT)" },
+  { key: "apuPowerLight", expression: "(L:MD11_OVHD_ELEC_APU_PWR_ON_LT)" },
+  { key: "autobrakeSwitch", expression: "(L:MD11_CTR_AUTOBRAKE_SW)" },
+  { key: "strobeLightsButton", expression: "(L:MD11_OVHD_LTS_HI_INT_BT)" },
+  { key: "runwayTurnoffLeftButton", expression: "(L:MD11_OVHD_LTS_RWY_TURNOFF_L_BT)" },
+  { key: "runwayTurnoffRightButton", expression: "(L:MD11_OVHD_LTS_RWY_TURNOFF_R_BT)" },
+  { key: "seatBeltsSwitch", expression: "(L:MD11_OVHD_LTS_SEAT_BELTS_SW)" },
+  { key: "leftWiperKnob", expression: "(L:MD11_OVHD_L_WIPER_KB)" },
+  { key: "rightWiperKnob", expression: "(L:MD11_OVHD_R_WIPER_KB)" }
 ]
 
 const RETRY_INTERVAL_MS = 5000
 const STREAM_INTERVAL_MS = 16
 
 export function useSimConnection() {
-  const retryRef = useRef<number | null>(null)
+  const retryRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    const store = useTelemetryStore.getState()
-    const unlisteners: UnlistenFn[] = []
-
     const startStream = async () => {
       useTelemetryStore.getState().setStatus("connecting")
       try {
         // Always stop first to ensure a clean reconnect when the flight reloads.
         await invoke("stop_telemetry_stream").catch(() => {})
         await invoke("start_telemetry_stream", {
-          variables: simVars,
+          variables: SIM_VARS,
           intervalMs: STREAM_INTERVAL_MS
         })
       } catch {
@@ -90,58 +86,89 @@ export function useSimConnection() {
       }
     }
 
-    const clearRetry = () => {
-      if (retryRef.current !== null) {
-        window.clearInterval(retryRef.current)
+    const stopStream = () => {
+      if (retryRef.current) {
+        clearInterval(retryRef.current)
         retryRef.current = null
       }
+      invoke("stop_telemetry_stream").catch(() => {})
+      useTelemetryStore.getState().setStatus("connecting")
     }
 
-    const setupListeners = async () => {
-      // 1. Flight State
-      unlisteners.push(
-        await listen<boolean>("sim-in-flight", (e) => {
-          if (e.payload) {
-            startStream()
-            if (retryRef.current === null) {
-              retryRef.current = window.setInterval(() => {
-                if (useTelemetryStore.getState().status !== "connected") startStream()
-              }, RETRY_INTERVAL_MS)
-            }
-          } else {
-            clearRetry()
-            invoke("stop_telemetry_stream").catch(() => {})
-            store.setStatus("connecting")
-          }
-        })
-      )
-
-      // 2. Data
-      unlisteners.push(
-        await listen<Record<string, number>>("telemetry_data", (e) => {
-          store.setTelemetry(e.payload as Telemetry)
-          if (store.status !== "connected") store.setStatus("connected")
-        })
-      )
-
-      // 3. Title
-      unlisteners.push(
-        await listen<string>("simconnect-aircraft-title", (e) => {
-          if (e.payload) store.setAircraftTitle(e.payload.trim())
-        })
-      )
+    // Retry logic: only active while a flight is loaded
+    const startRetry = () => {
+      if (retryRef.current) clearInterval(retryRef.current)
+      retryRef.current = setInterval(() => {
+        const current = useTelemetryStore.getState().status
+        if (current !== "connected") {
+          void startStream()
+        }
+      }, RETRY_INTERVAL_MS)
     }
 
-    // Initial logic
-    setupListeners()
-    invoke<boolean>("get_in_cockpit").then((inSim) => {
-      if (inSim) startStream()
-    })
-    getAircraftTitle().then((t) => t && store.setAircraftTitle(t))
+    let unlistenFlightState: (() => void) | null = null
+    const setupFlightStateListener = async () => {
+      unlistenFlightState = await listen<boolean>("sim-in-flight", (event) => {
+        if (event.payload) {
+          // Flight loaded — restart the stream so LVARs register with correct slots
+          void startStream()
+          startRetry()
+        } else {
+          stopStream()
+        }
+      })
+
+      // After the listener is registered, query whether we're already in the cockpit.
+      // This handles the app being opened while already in a loaded flight — the Rust
+      // side emits with a 300ms delay now, but this is a belt-and-suspenders fallback.
+      const alreadyInCockpit = await invoke<boolean>("get_in_cockpit").catch(() => false)
+      if (alreadyInCockpit) {
+        void startStream()
+        startRetry()
+      }
+    }
+    void setupFlightStateListener()
+
+    let unlistenTelemetry: (() => void) | null = null
+    const setupTelemetryListener = async () => {
+      unlistenTelemetry = await listen<Record<string, number>>("telemetry_data", (event) => {
+        const s = useTelemetryStore.getState()
+        s.setTelemetry(event.payload as Telemetry)
+        if (s.status !== "connected") {
+          s.setStatus("connected")
+        }
+      })
+    }
+    void setupTelemetryListener()
+
+    let unlistenTitle: (() => void) | null = null
+    const setupTitleListener = async () => {
+      unlistenTitle = await listen<string>("simconnect-aircraft-title", (event) => {
+        const title = typeof event.payload === "string" ? event.payload.trim() : ""
+        if (title) {
+          useTelemetryStore.getState().setAircraftTitle(title)
+        }
+      })
+    }
+    void setupTitleListener()
+
+    getAircraftTitle()
+      .then((cached) => {
+        if (cached) {
+          useTelemetryStore.getState().setAircraftTitle(cached)
+        }
+      })
+      .catch(() => {})
 
     return () => {
-      clearRetry()
-      unlisteners.forEach((fn) => fn())
+      if (retryRef.current) {
+        clearInterval(retryRef.current)
+        retryRef.current = null
+      }
+      if (unlistenFlightState) unlistenFlightState()
+      if (unlistenTelemetry) unlistenTelemetry()
+      if (unlistenTitle) unlistenTitle()
+
       invoke("stop_telemetry_stream").catch(() => {})
     }
   }, [])

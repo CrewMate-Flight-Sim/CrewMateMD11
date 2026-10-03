@@ -18,7 +18,7 @@ import afterTakeoff from "@/data/flows/9_after_takeoff.json"
 import { usePerformanceStore } from "@/store/performanceStore"
 import type { Flow, FlowStep, FlowCondition } from "@/types/flow"
 
-export const allFlows: Flow[] = [
+export const ALL_FLOWS: Flow[] = [
   foCockpitPrep1,
   foCockpitPrep2,
   finalCockpitPrep,
@@ -38,7 +38,7 @@ export const allFlows: Flow[] = [
 ] as Flow[]
 
 export function getFlowById(id: string): Flow | undefined {
-  return allFlows.find((f) => f.id === id)
+  return ALL_FLOWS.find((f) => f.id === id)
 }
 
 export let vars: Record<string, string> = {}

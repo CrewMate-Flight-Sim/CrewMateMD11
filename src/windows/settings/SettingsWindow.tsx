@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import { listen } from "@tauri-apps/api/event"
 import { getCurrentWindow } from "@tauri-apps/api/window"
-import { FolderOpen, Volume2, Option } from "lucide-react"
+import { FolderOpen, Volume2, Option, Mic, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { useSettingsStore } from "@/store/settingsStore"
+import type { InputBinding, VoiceMode } from "@/types/input"
+
+type BindingTarget = "ptt" | "toggle"
 
 export function SettingsWindow() {
   const [availableSoundPacks, setAvailableSoundPacks] = useState<string[]>([])
@@ -41,6 +44,15 @@ export function SettingsWindow() {
   const holdOnIncorrect = useSettingsStore((s) => s.holdOnIncorrect)
   const setHoldOnIncorrect = useSettingsStore((s) => s.setHoldOnIncorrect)
 
+  const voiceMode = useSettingsStore((s) => s.voiceMode)
+  const setVoiceMode = useSettingsStore((s) => s.setVoiceMode)
+  const pttBinding = useSettingsStore((s) => s.pttBinding)
+  const setPttBinding = useSettingsStore((s) => s.setPttBinding)
+  const micToggleBinding = useSettingsStore((s) => s.micToggleBinding)
+  const setMicToggleBinding = useSettingsStore((s) => s.setMicToggleBinding)
+
+  const [capturing, setCapturing] = useState<BindingTarget | null>(null)
+
   useEffect(() => {
     const fetchSoundPacks = async () => {
       try {
@@ -56,7 +68,7 @@ export function SettingsWindow() {
           setGeSoundPack(ge[0])
         }
       } catch (error) {
-        console.error("Failed to fetch sound packs:", error)
+        console.error("[SettingsWindow] Failed to fetch sound packs:", error)
       }
     }
 
@@ -74,7 +86,7 @@ export function SettingsWindow() {
           invoke("set_output_device", { device: "default" }).catch(() => {})
         }
       } catch (e) {
-        console.error("Failed to fetch output devices", e)
+        console.error("[SettingsWindow] Failed to fetch output devices", e)
       }
     }
 
@@ -87,7 +99,7 @@ export function SettingsWindow() {
         const devices = await invoke<AudioDevice[]>("get_speech_input_devices")
         setAvailableInputDevices(devices ?? [])
       } catch (e) {
-        console.error("Failed to fetch input devices", e)
+        console.error("[SettingsWindow] Failed to fetch input devices", e)
       }
     }
 
@@ -109,15 +121,42 @@ export function SettingsWindow() {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    if (!capturing) return
+    let active = true
+    const unlisten = Promise.all([
+      listen<InputBinding>("input_captured", (event) => {
+        if (capturing === "ptt") setPttBinding(event.payload)
+        else setMicToggleBinding(event.payload)
+        setCapturing(null)
+      }),
+      listen("input_capture_cancelled", () => setCapturing(null))
+    ])
+    // Listeners must be live before Rust starts scanning, or a quick press is lost
+    unlisten.then(() => {
+      if (active) invoke("start_input_capture").catch(() => setCapturing(null))
+    })
+    return () => {
+      active = false
+      invoke("cancel_input_capture").catch(() => {})
+      unlisten.then((fns) => fns.forEach((f) => f()))
+    }
+  }, [capturing, setPttBinding, setMicToggleBinding])
+
   return (
     <div className="min-h-screen bg-black text-white p-4">
       <div className="space-y-4">
         <SectionHeader icon={<Volume2 className="h-3 w-3 text-cyan-400 shrink-0" />} label="Audio" />
 
         <div className="grid grid-cols-[110px_1fr] items-center gap-3">
-          <Label className="text-sm text-slate-300">Copilot</Label>
+          <Label htmlFor="soundPack" className="text-sm text-slate-300">
+            Copilot
+          </Label>
           <Select value={soundPack} onValueChange={setSoundPack}>
-            <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate">
+            <SelectTrigger
+              id="soundPack"
+              className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-600 text-white max-w-[20rem]">
@@ -133,9 +172,14 @@ export function SettingsWindow() {
         </div>
 
         <div className="grid grid-cols-[110px_1fr] items-center gap-3">
-          <Label className="text-sm text-slate-300">Ground Eng.</Label>
+          <Label htmlFor="geSoundPack" className="text-sm text-slate-300">
+            Ground Eng.
+          </Label>
           <Select value={geSoundPack} onValueChange={setGeSoundPack}>
-            <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate">
+            <SelectTrigger
+              id="geSoundPack"
+              className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-600 text-white max-w-[20rem]">
@@ -151,7 +195,9 @@ export function SettingsWindow() {
         </div>
 
         <div className="grid grid-cols-[110px_1fr] items-center gap-3">
-          <Label className="text-sm text-slate-300">Output Device</Label>
+          <Label htmlFor="outputDevice" className="text-sm text-slate-300">
+            Output Device
+          </Label>
           <Select
             value={outputDevice ?? "default"}
             onValueChange={(v) => {
@@ -159,7 +205,10 @@ export function SettingsWindow() {
               invoke("set_output_device", { device: v === "default" ? null : v }).catch(() => {})
             }}
           >
-            <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate">
+            <SelectTrigger
+              id="outputDevice"
+              className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-600 text-white max-w-[20rem]">
@@ -173,7 +222,9 @@ export function SettingsWindow() {
         </div>
 
         <div className="grid grid-cols-[110px_1fr] items-center gap-3">
-          <Label className="flex items-center gap-1 text-sm text-slate-300">Input Device</Label>
+          <Label htmlFor="inputDevice" className="flex items-center gap-1 text-sm text-slate-300">
+            Input Device
+          </Label>
           <Select
             value={inputDevice ?? "default"}
             onValueChange={(v) => {
@@ -182,7 +233,10 @@ export function SettingsWindow() {
               invoke("set_input_device", { device }).catch(() => {})
             }}
           >
-            <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate">
+            <SelectTrigger
+              id="inputDevice"
+              className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-600 text-white max-w-[20rem]">
@@ -207,6 +261,48 @@ export function SettingsWindow() {
           max={100}
           step={1}
         />
+
+        <SectionHeader icon={<Mic className="h-3 w-3 text-cyan-400 shrink-0" />} label="Microphone" />
+
+        <div className="grid grid-cols-[110px_1fr] items-center gap-3">
+          <Label htmlFor="voiceMode" className="text-sm text-slate-300">
+            Voice Mode
+          </Label>
+          <Select value={voiceMode} onValueChange={(v) => setVoiceMode(v as VoiceMode)}>
+            <SelectTrigger
+              id="voiceMode"
+              className="bg-slate-900/50 border-slate-600 text-white text-sm focus:ring-cyan-500 w-56 truncate"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-600 text-white max-w-[20rem]">
+              <SelectItem value="continuous">Always listening</SelectItem>
+              <SelectItem value="ptt">Push-to-talk</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <BindingRow
+          label="PTT Button"
+          binding={pttBinding}
+          capturing={capturing === "ptt"}
+          disabled={capturing === "toggle"}
+          onSet={() => setCapturing("ptt")}
+          onCancel={() => setCapturing(null)}
+          onClear={() => setPttBinding(null)}
+        />
+        <BindingRow
+          label="Mic On/Off"
+          binding={micToggleBinding}
+          capturing={capturing === "toggle"}
+          disabled={capturing === "ptt"}
+          onSet={() => setCapturing("toggle")}
+          onCancel={() => setCapturing(null)}
+          onClear={() => setMicToggleBinding(null)}
+        />
+        {voiceMode === "ptt" && !pttBinding && (
+          <p className="text-xs text-slate-400">Push-to-talk needs a PTT button, or the FO hears nothing.</p>
+        )}
 
         <SectionHeader icon={<Option className="h-3 w-3 text-cyan-400 shrink-0" />} label="Options" />
 
@@ -242,7 +338,7 @@ export function SettingsWindow() {
 
         <Button
           onClick={() => getCurrentWindow().close()}
-          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2"
+          className="w-full bg-cyan-700 hover:bg-cyan-800 text-white font-semibold py-2"
         >
           Close
         </Button>
@@ -257,6 +353,55 @@ function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }
       {icon}
       <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">{label}</span>
       <div className="flex-1 h-px bg-slate-700/60" />
+    </div>
+  )
+}
+
+function BindingRow({
+  label,
+  binding,
+  capturing,
+  disabled,
+  onSet,
+  onCancel,
+  onClear
+}: {
+  label: string
+  binding: InputBinding | null
+  capturing: boolean
+  disabled: boolean
+  onSet: () => void
+  onCancel: () => void
+  onClear: () => void
+}) {
+  return (
+    <div className="grid grid-cols-[110px_1fr] items-center gap-3">
+      <Label className="text-sm text-slate-300">{label}</Label>
+      <div className="flex items-center gap-2 w-56">
+        <span
+          className={`flex-1 truncate text-xs font-mono ${capturing ? "text-amber-300 animate-pulse" : binding ? "text-cyan-400" : "text-slate-500"}`}
+          title={binding?.label}
+        >
+          {capturing ? "Press a key or button…" : (binding?.label ?? "Not set")}
+        </span>
+        <Button
+          onClick={capturing ? onCancel : onSet}
+          disabled={disabled}
+          className="h-7 px-2 text-xs bg-slate-800 border border-slate-500 text-white hover:bg-slate-700"
+        >
+          {capturing ? "Cancel" : "Set"}
+        </Button>
+        {binding && !capturing && (
+          <Button
+            onClick={onClear}
+            disabled={disabled}
+            title="Clear"
+            className="h-7 w-7 p-0 bg-transparent border border-slate-600 text-slate-300 hover:bg-slate-700"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
@@ -281,6 +426,7 @@ function SliderRow({
       <Label className="text-sm text-slate-300">{label}</Label>
       <div className="flex items-center gap-3">
         <Slider
+          aria-label={label}
           className="flex-1"
           value={[value]}
           onValueChange={(v) => onChange(v[0])}

@@ -1,6 +1,5 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
-
-import { delay } from "../commandDispatch"
+import { delay } from "@/lib/utils"
 
 export async function StartAPU() {
   try {
@@ -33,6 +32,6 @@ export async function StartAPU() {
       await simvarSet("90313 (>L:CEVENT)")
     }
   } catch (error) {
-    console.error("Error setting APU (LVAR):", error)
+    console.error("[Apu] Error setting APU (LVAR):", error)
   }
 }

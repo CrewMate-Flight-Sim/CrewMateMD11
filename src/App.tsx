@@ -1,14 +1,15 @@
 import { invoke } from "@tauri-apps/api/core"
+import { listen } from "@tauri-apps/api/event"
 import { getCurrentWindow } from "@tauri-apps/api/window"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { ChecklistPanel } from "@/components/ChecklistPanel"
-import { ConnectionError } from "@/components/connectionError"
+import { ConnectionError } from "@/components/ConnectionError"
 import { FlowPanel } from "@/components/FlowPanel"
 import { Footer } from "@/components/Footer"
 import { IconToolbar } from "@/components/IconToolbar"
 import { SpeechEngineError } from "@/components/SpeechEngineError"
-import { TextBar } from "@/components/textBar"
+import { TextBar } from "@/components/TextBar"
 import { VoiceGuide } from "@/components/VoiceGuide"
 import { useAutoFlows } from "@/hooks/useAutoFlows"
 import { useBaroSync } from "@/hooks/useBaroSync"
@@ -18,6 +19,8 @@ import { usePreflightTimer } from "@/hooks/usePreflightTimer"
 import { useSimConnection } from "@/hooks/useSimConnection"
 import { useSpeechCommands } from "@/hooks/useSpeechCommands"
 import { useVoiceHints } from "@/hooks/useVoiceHints"
+import { useFlowStore } from "@/store/flowStore"
+import { useFoPresenceStore } from "@/store/foPresenceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
@@ -33,8 +36,19 @@ function App() {
 
   const voiceEnabled = useSettingsStore((state) => state.voiceEnabled)
   const setVoiceEnabled = useSettingsStore((state) => state.setVoiceEnabled)
+  const voiceMode = useSettingsStore((state) => state.voiceMode)
+  const [pttHeld, setPttHeld] = useState(false)
 
-  // Use a mutable ref to store previous state memory without triggering extra render cycles
+  const { currentFlow, executionState } = useFlowStore()
+  const isRunning = executionState === "running"
+
+  // Latest values for the hardware mic listeners, without re-subscribing on every change
+  const voiceEnabledRef = useRef(voiceEnabled)
+  voiceEnabledRef.current = voiceEnabled
+  const connectedRef = useRef(connected)
+  connectedRef.current = connected
+
+  // Mutable memory to persist preference state across connection dropouts
   const wasVoiceEnabledBeforeDisconnect = useRef<boolean | null>(null)
 
   useCallouts()
@@ -54,35 +68,38 @@ function App() {
   }, [])
 
   const currentEvent = usePreflightTimerStore((s) => s.currentEvent)
+  const foAway = useFoPresenceStore((s) => s.isActive)
 
-  // Context-Aware Mute Engine
+  // Context-Aware Mute Engine: re-runs on voice toggles too, so voice turned on while disconnected stays muted
   useEffect(() => {
     if (!connected) {
-      // 1. Sim just disconnected. Cache the user's true preference if we haven't already.
       if (wasVoiceEnabledBeforeDisconnect.current === null) {
         wasVoiceEnabledBeforeDisconnect.current = voiceEnabled
       }
-      // 2. Force an immediate system-wide mute to prevent background ghost inputs
       invoke("set_muted", { muted: true }).catch(() => {})
     } else {
-      // 3. Sim reconnected. Check if we have a cached state to restore.
       if (wasVoiceEnabledBeforeDisconnect.current !== null) {
         const previousState = wasVoiceEnabledBeforeDisconnect.current
-
-        // Restore the store toggle state to match what it was before drop-out
         setVoiceEnabled(previousState)
-
-        // Signal the sidecar engine using the matching inverse mapping
         invoke("set_muted", { muted: !previousState }).catch(() => {})
-
-        // Reset our tracker memory lane for the next link disruption event
         wasVoiceEnabledBeforeDisconnect.current = null
       } else {
-        // 4. Fallback/Standard operation (e.g., initial startup sync)
         invoke("set_muted", { muted: !voiceEnabled }).catch(() => {})
       }
     }
   }, [connected, voiceEnabled, setVoiceEnabled])
+
+  // Only the main window acts on hardware mic buttons, so an open Settings window can't toggle twice
+  useEffect(() => {
+    const unlistenToggle = listen("mic_toggle_pressed", () => {
+      if (connectedRef.current) setVoiceEnabled(!voiceEnabledRef.current)
+    })
+    const unlistenPtt = listen<{ held: boolean }>("ptt_state", (event) => setPttHeld(event.payload.held))
+    return () => {
+      unlistenToggle.then((f) => f())
+      unlistenPtt.then((f) => f())
+    }
+  }, [setVoiceEnabled])
 
   return (
     <div className="flex bg-black flex-col min-h-screen">
@@ -100,6 +117,8 @@ function App() {
             <>
               <IconToolbar
                 voiceEnabled={voiceEnabled}
+                voiceMode={voiceMode}
+                pttHeld={pttHeld}
                 onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
                 voiceDisabled={false}
               />
@@ -114,6 +133,18 @@ function App() {
                   {currentEvent}
                 </span>
               )}
+              {foAway && <span className="text-xs text-amber-400/80 font-mono">FO outside</span>}
+
+              {/* Running Flow Indicator */}
+              {currentFlow && isRunning && (
+                <div className="flex items-center gap-2 py-1">
+                  <div className="w-1.5 h-1.5 bg-orange-400/60 rounded-full animate-pulse" />
+                  <span className="font-normal text-xs tracking-wide opacity-90 text-slate-400">
+                    Flow {currentFlow.name} running
+                  </span>
+                </div>
+              )}
+
               <FlowPanel />
               <ChecklistPanel />
               <VoiceGuide phase={voiceHintPhase} />

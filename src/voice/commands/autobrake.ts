@@ -1,6 +1,5 @@
 import { simvarGet, simvarSet } from "@/API/simvarApi"
-
-import { delay } from "../commandDispatch"
+import { delay } from "@/lib/utils"
 
 export type AutobrakePosition = 1 | 2 | 3 | 4 // 0 = takeoff, excluded
 
@@ -25,6 +24,6 @@ export async function setAutobrakeDial(targetPosition: AutobrakePosition) {
       safetyBreak++
     }
   } catch (error) {
-    console.error("Error adjusting autobrake:", error)
+    console.error("[Autobrake] Error adjusting autobrake:", error)
   }
 }

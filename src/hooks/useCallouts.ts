@@ -1,7 +1,9 @@
 import { useEffect, useRef, useCallback } from "react"
 
+import { useTelemetryTick } from "@/hooks/useTelemetryTick"
 import { playSound, isSoundPlaying } from "@/services/playSounds"
 import { useGoAroundStore } from "@/store/goAroundStore"
+import { usePassingAltitudeStore } from "@/store/passingAltitudeStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { useTelemetryStore } from "@/store/telemetryStore"
 import type { Telemetry } from "@/store/telemetryStore"
@@ -32,7 +34,6 @@ interface CalloutState {
 interface PreviousValues {
   speed: number
   alt: number
-  radioAlt: number
   onGround: number
   fcpAlt: number
 }
@@ -56,7 +57,7 @@ const resetLanding = (ls: CalloutState) => {
   ls.done = false
 }
 
-const phaseHandlers: Record<
+const PHASE_HANDLERS: Record<
   Exclude<LandingPhase, "idle">,
   (ls: CalloutState, t: Record<string, number>, elapsed: number, now: number) => void
 > = {
@@ -70,7 +71,7 @@ const phaseHandlers: Record<
     }
   },
   reverser: (ls, t, elapsed, now) => {
-    if ((t.eng1_reverse ?? 0) > 0.1 || (t.eng2_reverse ?? 0) > 0.1 || (t.eng3_reverse ?? 0) > 0.1) {
+    if ((t.engine1Reverse ?? 0) > 0.1 || (t.engine2Reverse ?? 0) > 0.1 || (t.engine3Reverse ?? 0) > 0.1) {
       playSound("reverse_thr.ogg")
       advancePhase(ls, "decel", now)
     } else if (elapsed >= TIMEOUTS.REVERSER) {
@@ -90,7 +91,7 @@ const phaseHandlers: Record<
 
 export function useCallouts() {
   const soundQueue = useRef<string[]>([])
-  const prev = useRef<PreviousValues>({ speed: 0, alt: 0, radioAlt: 0, onGround: 1, fcpAlt: 0 })
+  const prev = useRef<PreviousValues>({ speed: 0, alt: 0, onGround: 1, fcpAlt: 0 })
   const goAroundCount = useRef(useGoAroundStore.getState().count)
 
   const state = useRef<CalloutState>({
@@ -140,7 +141,7 @@ export function useCallouts() {
     const v1 = t.v1 ?? 0
     const vr = t.vr ?? 0
     const onGround = !!t.onGround
-    const fcpAlt = t.fcp_alt ?? 0
+    const fcpAlt = t.fcpAlt ?? 0
     const now = Date.now()
 
     if (fcpAlt !== p.fcpAlt) st.oneToGo = false
@@ -175,7 +176,7 @@ export function useCallouts() {
       if (
         !st.calledThrustSet &&
         !st.called80to &&
-        [t.engineN1_1 ?? 0, t.engineN1_2 ?? 0, t.engineN1_3 ?? 0].every((n) => n >= 90)
+        [t.engine1N1 ?? 0, t.engine2N1 ?? 0, t.engine3N1 ?? 0].every((n) => n >= 90)
       ) {
         st.calledThrustSet = true
         st.v1Inhibit = false // ← clear inhibits set by previous landing
@@ -215,6 +216,7 @@ export function useCallouts() {
             v1Inhibit: false
           })
         resetLanding(st)
+        usePassingAltitudeStore.getState().reset()
       }
     } else {
       if (vs > 120 && (t.radioAlt ?? 0) > 30 && !st.positiveClimb) {
@@ -250,8 +252,19 @@ export function useCallouts() {
       }
     }
 
+    // "Now" once the level announced at "set standard" is reached, on either altitude
+    const passingAlt = usePassingAltitudeStore.getState()
+    if (passingAlt.targetAltitude !== null && !passingAlt.hasCalled) {
+      if (alt >= passingAlt.targetAltitude || (t.pAlt ?? 0) >= passingAlt.targetAltitude) {
+        playSound("now_at.ogg")
+        passingAlt.markCalled()
+        setTimeout(() => passingAlt.reset(), 500)
+      }
+    }
+
     // Landing sequence state logic tree overrides
-    if (!onGround && vs > 200) st.wasAirborne = true
+    // Height rather than a climb, so a flight started on approach still arms; a bounce stays below 100 ft
+    if (!onGround && (t.radioAlt ?? 0) > 100) st.wasAirborne = true
     if (onGround && !st.done && st.phase === "idle") {
       if (st.wasAirborne) {
         advancePhase(st, "spoilers", now)
@@ -274,36 +287,32 @@ export function useCallouts() {
       prev.current = {
         speed: t.ias,
         alt: t.alt,
-        radioAlt: t.radioAlt,
         onGround: t.onGround,
-        fcpAlt: t.fcp_alt ?? 0
+        fcpAlt: t.fcpAlt ?? 0
       }
       runCrossings(t, snapshot)
     })
   }, [runCrossings])
 
-  useEffect(() => {
-    const id = setInterval(async () => {
-      if (await isSoundPlaying()) return
-      const next = soundQueue.current.shift()
-      if (next) {
-        playSound(next)
-        return
-      }
-      const ls = state.current
-      if (ls.phase === "idle") return
-      const telemetryState = useTelemetryStore.getState().telemetry
-      if (!telemetryState) return
-      const now = Date.now()
-      const elapsed = ls.phaseStartTime ? now - ls.phaseStartTime : 0
-      const handler = phaseHandlers[ls.phase as Exclude<LandingPhase, "idle">]
-      if (typeof handler === "function") {
-        handler(ls, telemetryState as unknown as Record<string, number>, elapsed, now)
-      } else {
-        console.warn(`[useCallouts] Unknown landing phase: ${ls.phase}`)
-        resetLanding(ls)
-      }
-    }, 100)
-    return () => clearInterval(id)
-  }, [])
+  useTelemetryTick(async () => {
+    if (await isSoundPlaying()) return
+    const next = soundQueue.current.shift()
+    if (next) {
+      playSound(next)
+      return
+    }
+    const ls = state.current
+    if (ls.phase === "idle") return
+    const telemetryState = useTelemetryStore.getState().telemetry
+    if (!telemetryState) return
+    const now = Date.now()
+    const elapsed = ls.phaseStartTime ? now - ls.phaseStartTime : 0
+    const handler = PHASE_HANDLERS[ls.phase as Exclude<LandingPhase, "idle">]
+    if (typeof handler === "function") {
+      handler(ls, telemetryState as unknown as Record<string, number>, elapsed, now)
+    } else {
+      console.warn(`[useCallouts] Unknown landing phase: ${ls.phase}`)
+      resetLanding(ls)
+    }
+  })
 }

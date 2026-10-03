@@ -2,7 +2,7 @@ import { Play, Square } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { allFlows } from "@/services/flowLoader"
+import { ALL_FLOWS } from "@/services/flowLoader"
 import { executeFlow, abortFlow } from "@/services/flowRunner"
 import { useFlowStore } from "@/store/flowStore"
 
@@ -10,7 +10,7 @@ export function FlowPanel() {
   const { currentFlow, executionState } = useFlowStore()
   const isRunning = executionState === "running"
 
-  const [selectedFlowId, setSelectedFlowId] = useState<string | null>(allFlows[0]?.id ?? null)
+  const [selectedFlowId, setSelectedFlowId] = useState<string | null>(ALL_FLOWS[0]?.id ?? null)
 
   useEffect(() => {
     if (currentFlow) setSelectedFlowId(currentFlow.id)
@@ -29,7 +29,7 @@ export function FlowPanel() {
           disabled={isRunning && currentFlow?.id !== selectedFlowId}
           className="flex-1 min-w-0 h-6 px-1.5 text-xs bg-transparent border border-slate-700/50 text-slate-200 rounded"
         >
-          {allFlows.map((flow) => (
+          {ALL_FLOWS.map((flow) => (
             <option key={flow.id} value={flow.id} className="bg-slate-900 text-slate-200">
               {flow.name}
             </option>
@@ -45,6 +45,7 @@ export function FlowPanel() {
             }
           }}
           disabled={isRunning && currentFlow?.id !== selectedFlowId}
+          aria-label={isRunning && currentFlow?.id === selectedFlowId ? "Stop flow" : "Run flow"}
           className={`h-6 px-2 text-xs bg-transparent border border-slate-700/50 hover:bg-amber-400/10 transition shrink-0 ${
             isRunning && currentFlow?.id === selectedFlowId ? "border-amber-400 bg-amber-400/10" : ""
           } ${isRunning && currentFlow?.id !== selectedFlowId ? "opacity-40" : ""}`}
@@ -56,16 +57,6 @@ export function FlowPanel() {
           )}
         </Button>
       </div>
-
-      {/* Running indicator */}
-      {currentFlow && isRunning && (
-        <div className="flex items-center gap-2 py-1">
-          <div className="w-1.5 h-1.5 bg-orange-400/60 rounded-full animate-pulse" />
-          <span className="font-normal text-xs tracking-wide opacity-90 text-slate-400">
-            Flow {currentFlow.name} running
-          </span>
-        </div>
-      )}
     </div>
   )
 }
