@@ -28,7 +28,7 @@ const STYLES = {
   checkbox: "w-4 h-4 rounded border-slate-600 bg-slate-900/50 accent-cyan-500 cursor-pointer",
 
   // Action buttons
-  submitButton: "w-full h-8 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-sm mt-auto"
+  submitButton: "w-full h-8 bg-cyan-700 hover:bg-cyan-800 text-white font-semibold text-sm mt-auto"
 }
 
 export function TakeoffWindow() {

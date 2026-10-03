@@ -263,7 +263,8 @@ export function useCallouts() {
     }
 
     // Landing sequence state logic tree overrides
-    if (!onGround && vs > 200) st.wasAirborne = true
+    // Height rather than a climb, so a flight started on approach still arms; a bounce stays below 100 ft
+    if (!onGround && (t.radioAlt ?? 0) > 100) st.wasAirborne = true
     if (onGround && !st.done && st.phase === "idle") {
       if (st.wasAirborne) {
         advancePhase(st, "spoilers", now)
