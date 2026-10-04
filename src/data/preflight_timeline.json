@@ -18,7 +18,7 @@
   },
   {
     "minuteMark": 33,
-    "label": "PM Walkaround completed, starts part 2 of his cockpit preparation",
+    "label": "PM Walkaround completed, starts part 2 of the cockpit preparation",
     "type": "flow",
     "flowId": "fo_cockpit_prep2",
     "sound": "walkaround_completed.ogg"

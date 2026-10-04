@@ -1,13 +1,17 @@
 import { simvarGet } from "@/API/simvarApi"
+import { delay } from "@/lib/utils"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, playSoundSequence } from "@/services/playSounds"
+import { buildMissedApproachAltSequence, buildPassingAltitudeSequence } from "@/services/soundSequences"
 import { useGroundEngineerStore } from "@/store/groundEngineerStore"
+import { usePassingAltitudeStore } from "@/store/passingAltitudeStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
 import { useSettingsStore } from "@/store/settingsStore"
+import { useTelemetryStore } from "@/store/telemetryStore"
 
-import { setEngAntiIce, setAirfoilAntiIce, setAntiIceSystemMode } from "./commands/anti_ice"
+import { setEngAntiIce, setAirfoilAntiIce, setAntiIceSystemMode } from "./commands/antiIce"
 import { StartAPU } from "./commands/apu"
 import { setAutobrakeDial } from "./commands/autobrake"
 import {
@@ -29,17 +33,16 @@ import {
 import { setStdBaro } from "./commands/baro"
 import { shutdownE2 } from "./commands/engine"
 import { setFlaps } from "./commands/flaps"
-import { flightControlsCheck } from "./commands/flight_controls_check"
+import { flightControlsCheck } from "./commands/flightControlsCheck"
 import { setGearHandle } from "./commands/gear"
 import { executeGoAround } from "./commands/goAround"
-import { disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
+import { callPushback, disconnectAllGround, setASU, setGPU } from "./commands/groundServices"
 import { setStrobeLights, setNoseLights, setRwyTOFF } from "./commands/lights"
-import { setSeatBelts } from "./commands/seat_belts"
+import { setSeatBelts } from "./commands/seatBelts"
 import { setWipers } from "./commands/wipers"
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
-export const checklistAbortCommands = new Set(["checklist_cancel"])
-export const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+export const CHECKLIST_ABORT_COMMANDS = new Set(["checklist_cancel"])
 const randomDelay = (min: number, max: number) => delay(min + Math.random() * (max - min))
 
 const isInvalidMD11Alt = (alt: number): boolean => {
@@ -98,9 +101,21 @@ async function runGroundAction(
   await playSound(sound, { pack: gePack() })
 }
 
+// Still work while the FO is on the walkaround: the ground engineer is someone else, and the timer drives the absence
+export const FO_AWAY_ALLOWED_COMMANDS = new Set([
+  "ground_call",
+  "pushback_request",
+  "connect_gpu",
+  "disconnect_gpu",
+  "connect_asu",
+  "disconnect_asu",
+  "disconnect_all_ground",
+  "prepare_aircraft"
+])
+
 // ─── Discrete command map ─────────────────────────────────────────────────────
 
-const discreteCommandMap: Record<string, () => void | Promise<void>> = {
+const DISCRETE_COMMAND_MAP: Record<string, () => void | Promise<void>> = {
   // Gear & Flaps
   gear_up: () => setGearHandle(0),
   gear_down: () => setGearHandle(1),
@@ -134,7 +149,20 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
     playSound("check.ogg")
     StartAPU()
   },
-  set_standard: () => setStdBaro(1),
+  set_standard: () => {
+    const t = useTelemetryStore.getState().telemetry
+    const passingAlt = usePassingAltitudeStore.getState()
+
+    setStdBaro(1)
+
+    // Only while climbing and not already tracking a level
+    if (t && !t.onGround && t.vs > 100 && !passingAlt.isTracking()) {
+      // Where the aircraft will be by the time the callout finishes (~9 s)
+      const targetAlt = t.pAlt + t.vs * (9 / 60)
+      playSoundSequence(buildPassingAltitudeSequence(targetAlt))
+      passingAlt.setTarget(targetAlt)
+    }
+  },
 
   // Lights
   taxi_lights_on: () => {
@@ -273,17 +301,30 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
   checklist_after_start: () => executeChecklist("after_start"),
   checklist_taxi: () => executeChecklist("taxi"),
   checklist_before_takeoff: () => executeChecklist("before_takeoff"),
-  checklist_after_takeoffP1: () => executeChecklist("after_takeoff_to_the_line"),
-  checklist_after_takeoffP2: () => executeChecklist("after_takeoff_below_the_line"),
-  checklist_desapprP1: () => executeChecklist("des_P1"),
-  checklist_desapprP2: () => executeChecklist("des_P2"),
+  checklist_after_takeoff_p1: () => executeChecklist("after_takeoff_to_the_line"),
+  checklist_after_takeoff_p2: () => executeChecklist("after_takeoff_below_the_line"),
+  checklist_desappr_p1: () => executeChecklist("des_P1"),
+  checklist_desappr_p2: () => executeChecklist("des_P2"),
   checklist_before_landing: () => executeChecklist("before_landing"),
   checklist_after_landing: () => executeChecklist("after_landing"),
   checklist_parking: () => executeChecklist("parking"),
   checklist_cancel: () => abortChecklist(),
   continue: () => playSound("check.ogg"),
 
+  // Control handover
+  you_have_ctrl: () => {
+    playSound("i_have_ctrl.ogg")
+  },
+  i_have_ctrl: () => {
+    playSound("you_have_ctrl.ogg")
+  },
+
   // Ground Services using the new helper
+  pushback_request: async () => {
+    if (!useGroundEngineerStore.getState().isActive) return
+    useGroundEngineerStore.getState().deactivate()
+    await callPushback()
+  },
   ground_call: async () => {
     await randomDelay(2000, 6000)
     await playSound("go_ahead.ogg", { pack: gePack() })
@@ -298,24 +339,19 @@ const discreteCommandMap: Record<string, () => void | Promise<void>> = {
 
 // ─── Optimized Dispatcher ───────────────────────────────────────────────────
 
-export async function dispatchFoCommand(
-  commandType: string,
-  payload: Record<string, unknown>,
-  rawText?: string
-): Promise<boolean> {
+export async function dispatchFoCommand(commandType: string, payload: Record<string, unknown>): Promise<boolean> {
   const value = getNumericPayload(payload, "value", "cval")
 
-  // 1. Check if the user actually voiced the execution command
-  // We check both the incoming payload text property and an optional rawText parameter
-  const rawUtterance = ((payload.text as string) || rawText || "").toLowerCase()
-  const shouldExecute = rawUtterance.endsWith("select")
+  // The engine reports a spoken "select" as the verb; only then is the knob pulled
+  const shouldExecute = payload.verb === "select"
 
   switch (commandType) {
     case "discrete": {
       const cmd = payload.command as string | undefined
       if (!cmd) return false
-      const handler = discreteCommandMap[cmd]
-      if (handler) await handler()
+      const handler = DISCRETE_COMMAND_MAP[cmd]
+      if (!handler) return false
+      await handler()
       return true
     }
 
@@ -393,8 +429,7 @@ export async function dispatchFoCommand(
       const settled = await waitForSimVar("md11_afs_alt", targetAlt, 5000)
       if (!settled) return false
 
-      const leading = Math.floor(targetAlt / 1000).toString()
-      await playSoundSequence(["missed_approach.ogg", `${leading}.ogg`, "thousand.ogg", "feet_set.ogg"])
+      await playSoundSequence(buildMissedApproachAltSequence(targetAlt))
 
       return true
     }

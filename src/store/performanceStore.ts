@@ -25,14 +25,14 @@ interface PerformanceStore {
   resetLandingData: () => void
 }
 
-const defaultTakeoffData: TakeoffData = {
+const DEFAULT_TAKEOFF_DATA: TakeoffData = {
   transitionAltitude: 5000,
   trim: 3.0,
   antiIce: "off",
   armNav: true
 }
 
-const defaultLandingData: LandingData = {
+const DEFAULT_LANDING_DATA: LandingData = {
   transitionLevel: 7000,
   missedAltitude: 3000,
   flaps: "35",
@@ -42,8 +42,8 @@ const defaultLandingData: LandingData = {
 export const usePerformanceStore = create<PerformanceStore>()(
   persist(
     (set) => ({
-      takeoff: defaultTakeoffData,
-      landing: defaultLandingData,
+      takeoff: DEFAULT_TAKEOFF_DATA,
+      landing: DEFAULT_LANDING_DATA,
       setTakeoffData: (data) =>
         set((state) => ({
           takeoff: { ...state.takeoff, ...data }
@@ -52,8 +52,8 @@ export const usePerformanceStore = create<PerformanceStore>()(
         set((state) => ({
           landing: { ...state.landing, ...data }
         })),
-      resetTakeoffData: () => set({ takeoff: defaultTakeoffData }),
-      resetLandingData: () => set({ landing: defaultLandingData })
+      resetTakeoffData: () => set({ takeoff: DEFAULT_TAKEOFF_DATA }),
+      resetLandingData: () => set({ landing: DEFAULT_LANDING_DATA })
     }),
     {
       name: "performance-data"

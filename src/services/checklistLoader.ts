@@ -13,7 +13,7 @@ import des1 from "@/data/checklists/8_des_p1.json"
 import des2 from "@/data/checklists/9_des_p2.json"
 import type { Checklist } from "@/types/checklist"
 
-export const allChecklists = [
+export const ALL_CHECKLISTS = [
   cockpitPrep,
   beforeStart,
   afterStart,
@@ -30,5 +30,5 @@ export const allChecklists = [
 ] as Checklist[]
 
 export function getChecklistById(id: string): Checklist | undefined {
-  return allChecklists.find((c) => c.id === id)
+  return ALL_CHECKLISTS.find((c) => c.id === id)
 }

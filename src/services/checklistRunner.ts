@@ -2,7 +2,7 @@ import { listen } from "@tauri-apps/api/event"
 
 import { simvarGet } from "@/API/simvarApi"
 import { getChecklistById } from "@/services/checklistLoader"
-import { isSoundPlaying, playSound, playSoundSequence } from "@/services/playSounds"
+import { playSound, playSoundSequence, waitForSoundFinished } from "@/services/playSounds"
 import { useCabinReadyTimerStore } from "@/store/cabinReadyTimerStore"
 import { useChecklistStore } from "@/store/checklistStore"
 import { usePerformanceStore } from "@/store/performanceStore"
@@ -11,15 +11,13 @@ import { useVoiceHintProgressStore } from "@/store/voiceHintProgressStore"
 import type { Check, ChecklistItem, ValidationRule } from "@/types/checklist"
 
 import { vars, getTemplateVars, resolveFlapsDialPercent } from "./flowLoader"
-import { getMd11Variant } from "./MD11variant"
+import { getMd11Variant } from "./md11Variant"
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const wsf = async (signal?: AbortSignal) => {
+// A sound that was just started may not report as playing yet
+const wsf = async () => {
   await sleep(50)
-  while (await isSoundPlaying()) {
-    if (signal?.aborted) return
-    await sleep(100)
-  }
+  await waitForSoundFinished()
 }
 const checkAbort = (s: AbortSignal) => {
   if (s.aborted) throw new Error("Checklist aborted")
@@ -42,7 +40,9 @@ async function waitForSpeechInput(signal: AbortSignal): Promise<SpeechInput | nu
     signal.addEventListener("abort", () => done(null), { once: true })
     listen<SpeechRecognizedPayload>("speech_recognized", (e) => {
       if (e.payload?.type === "speech_unrecognized") return
-      const text = e.payload?.text?.trim().toLowerCase()
+      // The engine sends altimeter answers as words; responses like "1013 set" are matched on the digits
+      const raw = e.payload?.commandType === "altimeter" ? e.payload?.payload?.raw : undefined
+      const text = raw != null ? `${raw} set` : e.payload?.text?.trim().toLowerCase()
       if (text) done({ text, commandType: e.payload?.commandType, payload: e.payload?.payload })
     }).then((fn) => {
       unlistenFn = fn
@@ -233,10 +233,18 @@ async function executeNormalItem(item: ChecklistItem, index: number, signal: Abo
   // 1. Auto-check Phase
   if (!item.challenge) {
     if (item.validations?.length) {
+      let called = false
       while (true) {
         checkAbort(signal)
         if (await findPassingRule(item.validations, "", signal)) break
-        if (item.incorrect) await playWithSync(item.incorrect)
+
+        // Said once, then waits for the switch
+        if (!called) {
+          called = true
+          if (item.incorrect) await playWithSync(item.incorrect)
+        }
+
+        if (!useSettingsStore.getState().holdOnIncorrect) break
         await sleep(2000)
       }
     }

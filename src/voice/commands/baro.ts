@@ -1,14 +1,7 @@
-import { simvarSet } from "@/API/simvarApi"
+import { setLvar } from "@/API/simvarApi"
 
 export async function setStdBaro(position: number) {
-  try {
-    const expression1 = `${position} (>L:XMLVAR_Baro1_Mode)`
-    const expression2 = `${position} (>L:XMLVAR_Baro2_Mode)`
-    const expression3 = `${position} (>L:XMLVAR_Baro3_Mode)`
-    await simvarSet(expression1)
-    await simvarSet(expression2)
-    await simvarSet(expression3)
-  } catch (error) {
-    console.error("Error setting standard barometer:", error)
-  }
+  await setLvar(position, "XMLVAR_Baro1_Mode", "captain baro mode")
+  await setLvar(position, "XMLVAR_Baro2_Mode", "FO baro mode")
+  await setLvar(position, "XMLVAR_Baro3_Mode", "standby baro mode")
 }

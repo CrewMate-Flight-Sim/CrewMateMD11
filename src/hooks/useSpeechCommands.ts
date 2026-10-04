@@ -3,7 +3,8 @@ import { listen } from "@tauri-apps/api/event"
 import { useEffect, useState } from "react"
 
 import { useChecklistStore } from "@/store/checklistStore"
-import { checklistAbortCommands, dispatchFoCommand } from "@/voice/commandDispatch"
+import { useFoPresenceStore } from "@/store/foPresenceStore"
+import { CHECKLIST_ABORT_COMMANDS, dispatchFoCommand, FO_AWAY_ALLOWED_COMMANDS } from "@/voice/commandDispatch"
 
 type SpeechRecognizedPayload = {
   type?: string
@@ -62,11 +63,20 @@ export function useSpeechCommands({ voiceEnabled }: UseSpeechCommandsOptions) {
 
       const { commandType, payload } = event.payload
 
+      const foAway = useFoPresenceStore.getState().isActive
+      const isAllowedWhileAway = commandType === "discrete" && FO_AWAY_ALLOWED_COMMANDS.has(payload?.command as string)
+
+      if (foAway && !isAllowedWhileAway) {
+        setRecognizedText(spokenText)
+        setIsValidCommand(false)
+        return
+      }
+
       // While a checklist is running, only allow explicit abort commands through.
       // All other voice commands are suppressed — the checklist runner handles
       // speech directly. We still display the text so the user sees their response.
       const checklistRunning = useChecklistStore.getState().executionState === "running"
-      const isAbortCommand = commandType === "discrete" && checklistAbortCommands.has(payload?.command as string)
+      const isAbortCommand = commandType === "discrete" && CHECKLIST_ABORT_COMMANDS.has(payload?.command as string)
 
       if (checklistRunning && !isAbortCommand) {
         setRecognizedText(spokenText)
@@ -77,14 +87,14 @@ export function useSpeechCommands({ voiceEnabled }: UseSpeechCommandsOptions) {
       setRecognizedText(spokenText)
 
       if (commandType && payload !== undefined) {
-        const handled = await dispatchFoCommand(commandType, payload, spokenText)
+        const handled = await dispatchFoCommand(commandType, payload)
         setIsValidCommand(handled)
         return
       }
 
       // Fallback: commandType present but no payload (fma_callout emits no payload)
       if (commandType) {
-        const handled = await dispatchFoCommand(commandType, {}, spokenText)
+        const handled = await dispatchFoCommand(commandType, {})
         setIsValidCommand(handled)
         return
       }

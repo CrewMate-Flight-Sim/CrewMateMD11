@@ -27,7 +27,7 @@ const STYLES = {
     "w-full h-8 bg-slate-900/50 border border-slate-600 text-white text-xs rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-cyan-500",
 
   // Action Buttons
-  submitButton: "w-full h-8 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-sm mt-auto"
+  submitButton: "w-full h-8 bg-cyan-700 hover:bg-cyan-800 text-white font-semibold text-sm mt-auto"
 }
 
 const formatToFL = (value: number | undefined | null) => {

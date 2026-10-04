@@ -21,22 +21,49 @@
 
 ### Requirements
 
-- The EN‑US voice package must be installed to use the voice engine.
+- Install **an English** Windows speech recognition language pack (Settings → Time & language → Speech). Regional variants (e.g. US, UK, Australia, India) are supported — whichever English recognizer Windows exposes. If several English packs are installed, the active engine follows Windows' installed-recognizer order.
+- **Set up Windows Speech Recognition once** before using the Voice Trainer. The trainer teaches Windows your voice, and Windows needs an existing speech profile to train. If the setup has never been run, there is no profile and training cannot start.
 - To use the trainer app, set your Display Language to EN‑US while training (you can change it back afterward).
 
 ### Voice Modes
 
-CrewmateMD11 supports two voice recognition modes:
+CrewmateMD11 supports two voice recognition modes, chosen with **Voice Mode** in Settings:
 
-| Mode                   | How it works                                         |
-| ---------------------- | ---------------------------------------------------- |
-| **Continuous**         | The microphone is always listening. Speak naturally. |
-| **Push-to-Talk (PTT)** | Not implemented yet.                                 |
+| Mode                 | How it works                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Always listening** | The microphone is always listening. Speak naturally.                                                            |
+| **Push-to-talk**     | The FO only listens while you hold the **PTT button**. Keep holding until you finish the command, then release. |
 
-### Volume & Voice Sensitivity
+The mic button on the toolbar is the master switch in both modes. When it is off the FO hears nothing, even with PTT held. The icon shows what the FO can hear:
 
-- **Sound Volume** — Controls how loud the FO's audio callouts are (0–100).
-- **Voice Sensitivity** — Lower settings are more tolerant of variations (may increase false positives); higher settings are stricter.
+| Toolbar mic | Meaning                                            |
+| ----------- | -------------------------------------------------- |
+| Crossed out | Off. The FO hears nothing.                         |
+| Red         | Always listening. The FO hears everything.         |
+| Faded red   | Push-to-talk, ready. Hold the PTT button to speak. |
+| Green       | Push-to-talk, PTT held. The FO is listening.       |
+
+### PTT and Mic On/Off Buttons
+
+Both buttons can be a keyboard key, mouse button 4 or 5, or a button or hat on a joystick, yoke, throttle or game controller. They work while MSFS has focus, including in fullscreen.
+
+- **PTT Button**: hold to talk in Push-to-talk mode.
+- **Mic On/Off**: works like clicking the toolbar mic, in either mode. It only works while the sim is connected.
+
+To set one, open **Settings → Microphone**, click **Set** and press the key or button. Press **Esc** or click **Cancel** to stop without changing it, and click **×** to clear it.
+
+CrewMate does not take the key or button away from MSFS, so pick one that is not bound to anything in the sim. Analog triggers and axes cannot be bound.
+
+### Voice Settings
+
+| Setting               | What it does                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Input Device**      | Which microphone the speech engine listens to.                                                                                                     |
+| **Sound Volume**      | How loud the FO's audio is (0–200; above 100 amplifies).                                                                                           |
+| **Voice Sensitivity** | How confident the engine must be before accepting a command (50–100). Lower is more tolerant and may accept the wrong command; higher is stricter. |
+| **Voice Mode**        | **Always listening** or **Push-to-talk**. See [Voice Modes](#voice-modes).                                                                         |
+| **PTT Button**        | The key or button held to talk in Push-to-talk mode.                                                                                               |
+| **Mic On/Off**        | A key or button that switches the mic on and off, like the toolbar mic.                                                                            |
 
 ---
 
@@ -262,11 +289,25 @@ The FO will confirm speed limits before moving flaps while airborne.
 
 - Check that your microphone is selected and working.
 - Adjust the **Voice Sensitivity** setting.
+- In Push-to-talk mode, check that a **PTT Button** is set and that the toolbar mic turns green while you hold it.
+
+**My PTT or Mic On/Off key does nothing while MSFS has focus**
+
+- MSFS is probably running as administrator. Run CrewMate as administrator too.
+
+**The FO ignores everything I say before departure**
+
+- Between T-45 and T-33 on the preflight timer the FO is outside on the walkaround and does not answer. The **FO outside** indicator is shown while this is the case. Ground engineer calls still work.
 
 **The FO keeps repeating the challenge**
 
 - Your response didn't match the expected phrase. Listen to the challenge and use one of the phrases listed in this manual (voice matching can be tuned in settings).
 - If a physical switch must be set first (e.g., parking brake), set it in the cockpit before responding.
+
+**The Voice Trainer says training failed**
+
+- "Value does not fall within the expected range" means Windows has no speech profile for your account. Run Windows Speech Recognition setup once, then start the trainer again.
+- The trainer also needs the Windows Display Language set to EN‑US while it runs.
 
 **How do I stop a checklist mid‑way?**
 
