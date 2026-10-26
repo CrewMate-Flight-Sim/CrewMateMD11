@@ -37,6 +37,7 @@ export interface ChecklistItem {
   fo_only_response?: boolean
   abrk_confirmation?: boolean
   cargo_skip?: true
+  transit_skip?: true
   delay_ms?: number
   validations?: ValidationRule[]
 }

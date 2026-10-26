@@ -23,6 +23,54 @@
       "expect": 0
     },
     {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_1_kb)",
+      "on": "90112 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_2_kb)",
+      "on": "90114 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_3_kb)",
+      "on": "90116 (>L:CEVENT)",
+      "expect": 0
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_1_kb)",
+      "on": "90112 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["transit"]
+      }
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_2_kb)",
+      "on": "90114 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["transit"]
+      }
+    },
+    {
+      "label": "IRS on",
+      "read": "(L:md11_ovhd_irs_3_kb)",
+      "on": "90116 (>L:CEVENT)",
+      "expect": 1,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["transit"]
+      }
+    },
+    {
       "label": "Open STATUS synoptic",
       "read": "(L:md11_ped_sd_status_bt)",
       "on": "69834 (>L:CEVENT)",

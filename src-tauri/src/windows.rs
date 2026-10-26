@@ -22,7 +22,7 @@ pub async fn open_landing_window(app_handle: AppHandle) -> Result<(), String> {
         "src/windows/landing/landing.html",
         "Landing Plan",
         350.0,
-        200.0,
+        250.0,
         false,
     )
 }

@@ -14,14 +14,22 @@
       "read": "(L:md11_aovhd_gpws_sw)",
       "on": "73769 (>L:CEVENT)",
       "expect": 0,
-      "wait_ms": 5000
+      "wait_ms": 5000,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "GPWS",
       "read": "(L:md11_aovhd_gpws_sw)",
       "on": "73770 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 30000
+      "wait_ms": 30000,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "Fuel used reset",
@@ -139,40 +147,64 @@
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:1, Percent)",
       "on": "16383 (>K:THROTTLE1_SET)",
       "expect": 100,
-      "wait_ms": 4000
+      "wait_ms": 4000,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:1, Percent)",
       "on": "1 (>K:THROTTLE1_CUT)",
-      "expect": 100
+      "expect": 100,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:2, Percent)",
       "on": "16383 (>K:THROTTLE2_SET)",
       "expect": 100,
-      "skip_delay": true
+      "skip_delay": true,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:3, Percent)",
       "on": "16383 (>K:THROTTLE3_SET)",
       "expect": 100,
-      "wait_ms": 4000
+      "wait_ms": 4000,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:2, Percent)",
       "on": "1 (>K:THROTTLE2_CUT)",
       "expect": 100,
-      "skip_delay": true
+      "skip_delay": true,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "TO CFG test",
       "read": "(A:GENERAL ENG THROTTLE LEVER POSITION:3, Percent)",
       "on": "1 (>K:THROTTLE3_CUT)",
-      "expect": 100
+      "expect": 100,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "Open STATUS synoptic",

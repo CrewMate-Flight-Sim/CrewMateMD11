@@ -153,6 +153,33 @@ export function LandingWindow() {
             placeholder="—"
           />
         </div>
+
+        {/* Full or Transit Procedures */}
+        <div className={STYLES.fieldWrapper}>
+          <div className={STYLES.headerRow}>
+            <Label className={STYLES.label}>Full or Transit Procedures</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className={STYLES.infoIcon} />
+                </TooltipTrigger>
+                <TooltipContent className={STYLES.tooltipContent}>
+                  This will do full or transit procedures, transit procedures are shorter than full
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <select
+            id="preflight"
+            name="preflight"
+            className={STYLES.select}
+            value={landing.preflight}
+            onChange={handleSelectChange}
+          >
+            <option value="full">FULL</option>
+            <option value="transit">TRANSIT</option>
+          </select>
+        </div>
       </div>
 
       <Button onClick={() => getCurrentWindow().close()} className={STYLES.submitButton}>

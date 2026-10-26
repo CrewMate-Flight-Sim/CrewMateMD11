@@ -307,6 +307,7 @@ class ChecklistRunner {
 
   private async executeItem(item: ChecklistItem, index: number, signal: AbortSignal): Promise<void> {
     const cargo = getMd11Variant() === "cargo"
+    const transit = usePerformanceStore.getState().landing?.preflight === "transit"
     const { setStepStatus } = useChecklistStore.getState()
     setStepStatus(index, "active")
 
@@ -332,6 +333,12 @@ class ChecklistRunner {
 
     // 2. Cargo skip
     if (cargo && item.cargo_skip) {
+      setStepStatus(index, "complete")
+      return
+    }
+
+    // 2b. Transit skip
+    if (transit && item.transit_skip) {
       setStepStatus(index, "complete")
       return
     }
