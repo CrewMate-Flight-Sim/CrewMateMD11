@@ -268,21 +268,22 @@ The FO will confirm speed limits before moving flaps while airborne.
 
 ### Launching Checklists by Voice
 
-| Say                                                         | Checklist launched            |
-| ----------------------------------------------------------- | ----------------------------- |
-| "Before start checklist to the line"                        | Before start to the line      |
-| "Before start checklist below the line"                     | Before start below the line   |
-| "After start checklist"                                     | After Start                   |
-| "Before takeoff checklist to the line"                      | Before takeoff to the line    |
-| "Before takeoff checklist below the line"                   | Before takeoff below the line |
-| "After takeoff climb checklist to the line"                 | Climb to the line             |
-| "After takeoff climb checklist below the line"              | Climb below the line          |
-| "Approach checklist"                                        | Approach                      |
-| "Landing checklist"                                         | Landing                       |
-| "After landing checklist"                                   | After Landing                 |
-| "Parking checklist"                                         | Parking                       |
-| "Secure aircraft checklist"                                 | Secure Aircraft               |
-| "Stop checklist" or "Abort checklist" or "Cancel checklist" | Aborts the active checklist   |
+| Say                                                         | Checklist launched                              |
+| ----------------------------------------------------------- | ----------------------------------------------- |
+| "Cockpit preparation checklist"                             | Cockpit preparation                             |
+| "Before start checklist"                                    | Before start                                    |
+| "After start checklist"                                     | After Start                                     |
+| "Taxi checklist"                                            | Taxi                                            |
+| "Before takeoff checklist"                                  | Before takeoff                                  |
+| "After takeoff checklist to the line"                       | After takeoff to the line                       |
+| "After takeoff checklist below the line"                    | After takeoff below the line                    |
+| "Descent approach checklist through seatbelts"              | Descent approach checklist up to seatbelts item |
+| "Complete descent approach checklist"                       | Completes descent approach checklist            |
+| "Before Landing checklist"                                  | Landing                                         |
+| "After landing checklist"                                   | After Landing                                   |
+| "Parking checklist"                                         | Parking                                         |
+| "Leaving aircraft checklist"                                | Leaving Aircraft                                |
+| "Stop checklist" or "Abort checklist" or "Cancel checklist" | Aborts the active checklist                     |
 
 ---
 
