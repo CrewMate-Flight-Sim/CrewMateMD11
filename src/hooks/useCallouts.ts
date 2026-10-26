@@ -415,11 +415,13 @@ export function useCallouts() {
         !st.transitionAltitude &&
         vs > 100 &&
         transitionAltitude > 0 &&
-        !isStandardBaro(t.cptBaro) &&
         crossedUp(p.alt, alt, transitionAltitude)
       ) {
         st.transitionAltitude = true
-        playSound("transiton_altitude.ogg")
+
+        if (!isStandardBaro(t.cptBaro)) {
+          playSound("transiton_altitude.ogg")
+        }
       }
       if (!st.transitionLevel && transitionLevel > 0 && vs < -100 && crossedDown(p.alt, alt, transitionLevel)) {
         st.transitionLevel = true
