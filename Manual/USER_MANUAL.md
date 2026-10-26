@@ -234,19 +234,22 @@ The FO will confirm speed limits before moving flaps while airborne.
 
 ### Autopilot
 
-| Say                                                                                                | What happens                                         |
-| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| "Autoflight"                                                                                       | Engages Autopilot. Also activates A/THR for takeoff. |
-| "Set speed **_ or speed select _**"                                                                | Sets commanded speed.                                |
-| "Set heading **\_ or heading select \_\_**"                                                        | Sets commanded heading.                              |
-| "Set altitude **\_** or altitude select **\_** or set flight level **_ or flight level select _**" | Sets commanded altitude.                             |
-| "Engage selected speed"                                                                            | Pulls speed knob to select selected speed.           |
-| "Engage heading select"                                                                            | Pulls heading knob to select selected heading.       |
-| "Engage heading hold"                                                                              | Pushes heading knob to activate heading holde mode.  |
-| "Engage nav"                                                                                       | Selects NAV mode.                                    |
-| "Engage land"                                                                                      | Selects LAND mode.                                   |
-| "Engage level change"                                                                              | Pulls altitude knob.                                 |
-| "Engage profile"                                                                                   | Selects PROF mode.                                   |
+| Say                                                      | What happens                                         |
+| -------------------------------------------------------- | ---------------------------------------------------- |
+| "Autoflight"                                             | Engages Autopilot. Also activates A/THR for takeoff. |
+| "Set speed **\_**"                                       | Sets commanded speed (doesn't pull knob).            |
+| "Select speed **\_**"                                    | Sets commanded speed and pulls knob.                 |
+| "Set heading **\_**"                                     | Sets commanded heading (doesn't pull knob).          |
+| "Select heading **\_**"                                  | Sets commanded heading and pulls knob.               |
+| "Set altitude **\_**"                                    | Sets commanded altitude (doesn't pull knob).         |
+| "Select altitude **\_**" or "Select flight level **\_**" | Sets commanded altitude/flight level and pulls knob. |
+| "Engage selected speed"                                  | Pulls speed knob to select selected speed.           |
+| "Engage heading select"                                  | Pulls heading knob to select selected heading.       |
+| "Engage heading hold"                                    | Pushes heading knob to activate heading holde mode.  |
+| "Engage nav"                                             | Selects NAV mode.                                    |
+| "Engage land"                                            | Selects LAND mode.                                   |
+| "Engage level change"                                    | Pulls altitude knob.                                 |
+| "Engage profile"                                         | Selects PROF mode.                                   |
 
 ### Flight Controls Check
 

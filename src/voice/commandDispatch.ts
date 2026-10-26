@@ -380,6 +380,9 @@ export async function dispatchFoCommand(commandType: string, payload: Record<str
       const settled = await waitForSimVar("md11_afs_alt", targetAlt, 8000)
 
       if (settled) {
+        if (shouldExecute) {
+          setSelAlt()
+        }
         playSound("check.ogg")
       }
 

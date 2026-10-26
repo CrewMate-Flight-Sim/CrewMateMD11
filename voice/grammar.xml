@@ -6,15 +6,15 @@
   tag-format="semantics/1.0"
   root="TOPLEVEL"
 >
-  <!-- ═══════════════════════════════════════════════════════════════════════════
-       TOPLEVEL
-  ════════════════════════════════════════════════════════════════════════════ -->
+   <!-- ═══════════════════════════════════════════════════════════════════════════
+        TOPLEVEL
+   ════════════════════════════════════════════════════════════════════════════ -->
   <rule id="TOPLEVEL" scope="public">
     <item repeat="0-1">please</item>
     <one-of>
       <item>
         <ruleref uri="#FO_COMMANDS" />
-        <tag>out.ActionRuleId="FO_COMMANDS"; out.CmdId=rules.FO_COMMANDS.pid; out.CmdValue=rules.FO_COMMANDS.cval;</tag>
+        <tag>out.ActionRuleId="FO_COMMANDS"; out.CmdId=rules.FO_COMMANDS.pid; out.CmdValue=rules.FO_COMMANDS.cval; out.verb=rules.FO_COMMANDS.verb;</tag>
       </item>
       <item>
         <ruleref uri="#FMA_CALLOUTS" />
@@ -33,53 +33,58 @@
   </rule>
 
   <!-- ═══════════════════════════════════════════════════════════════════════════
+       VERB PRIMITIVE
+   ════════════════════════════════════════════════════════════════════════════ -->
+  <rule id="SET_OR_SELECT">
+    <one-of>
+      <item>set<tag>out="set";</tag></item>
+      <item>select<tag>out="select";</tag></item>
+    </one-of>
+  </rule>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
        FO_COMMANDS  (parameterized — cval carries the numeric value)
   ════════════════════════════════════════════════════════════════════════════ -->
 <rule id="FO_COMMANDS">
     <one-of>
       <!-- Heading -->
       <item>
-        <item>set</item>
+        <ruleref uri="#SET_OR_SELECT" />
         <item>heading</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
-        <item repeat="0-1">select</item>
-        <tag>out.pid="1"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
+        <tag>out.pid="1"; out.cval=rules.HDG_SPD_FL_VALUE; out.verb=rules.SET_OR_SELECT;</tag>
       </item>
 
 <!-- Flight level — digit-by-digit: "flight level two seven zero" → "270" -->
       <item>
-        <item>set</item>
+        <ruleref uri="#SET_OR_SELECT" />
         <item>flight level</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
-        <item repeat="0-1">select</item>
-        <tag>out.pid="2"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
+        <tag>out.pid="2"; out.cval=rules.HDG_SPD_FL_VALUE; out.verb=rules.SET_OR_SELECT;</tag>
       </item>
 
       <!-- Flight level — round hundreds: "flight level one hundred" → "100" -->
       <item>
-        <item>set</item>
+        <ruleref uri="#SET_OR_SELECT" />
         <item>flight level</item>
         <ruleref uri="#FL_HUNDREDS_VALUE" />
-        <item repeat="0-1">select</item>
-        <tag>out.pid="2"; out.cval=rules.FL_HUNDREDS_VALUE;</tag>
+        <tag>out.pid="2"; out.cval=rules.FL_HUNDREDS_VALUE; out.verb=rules.SET_OR_SELECT;</tag>
       </item>
 
       <!-- Altitude feet -->
       <item>
-        <item>set</item>
+        <ruleref uri="#SET_OR_SELECT" />
         <item>altitude</item>
         <ruleref uri="#ALTITUDE_VALUE" />
-        <item repeat="0-1">select</item>
-        <tag>out.pid="3"; out.cval=rules.ALTITUDE_VALUE;</tag>
+        <tag>out.pid="3"; out.cval=rules.ALTITUDE_VALUE; out.verb=rules.SET_OR_SELECT;</tag>
       </item>
 
       <!-- Speed -->
       <item>
-        <item>set</item>
+        <ruleref uri="#SET_OR_SELECT" />
         <item>speed</item>
         <ruleref uri="#HDG_SPD_FL_VALUE" />
-        <item repeat="0-1">select</item>
-        <tag>out.pid="4"; out.cval=rules.HDG_SPD_FL_VALUE;</tag>
+        <tag>out.pid="4"; out.cval=rules.HDG_SPD_FL_VALUE; out.verb=rules.SET_OR_SELECT;</tag>
       </item>
 
       <!-- Altimeter — bare "XXX[X] set" -->
