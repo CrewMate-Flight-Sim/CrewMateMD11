@@ -87,27 +87,36 @@ export async function getTemplateVars(): Promise<Record<string, string>> {
   localVars["flaps"] = String(resolveFlapsDialPercent(Number(efbFlapDegree)) ?? 33)
   localVars["flapsefb"] = String(efbFlapDegree)
 
-  // 2. Clear or assign Anti-Ice properties based on hardware option
-  const antiIce = takeoff.antiIce ?? "off"
-  const engAntiIce = antiIce === "oneng" || antiIce === "onengfoil"
-  const airfoilAntiIce = antiIce === "onengfoil"
+  // 2. Anti-ice settings, split by phase
+  const toAntiIce = takeoff.antiIce ?? "off"
+  const toEngAntiIce = toAntiIce === "oneng" || toAntiIce === "onengfoil"
+  const toAirfoilAntiIce = toAntiIce === "onengfoil"
+
+  const ldgAntiIce = landing.antiIce ?? "off"
+  const ldgEngAntiIce = ldgAntiIce === "oneng" || ldgAntiIce === "onengfoil"
+  const ldgAirfoilAntiIce = ldgAntiIce === "onengfoil"
 
   const antiIceSwitches = [
-    { name: "eng1", code: 90414, active: engAntiIce },
-    { name: "eng2", code: 90416, active: engAntiIce },
-    { name: "eng3", code: 90418, active: engAntiIce },
-    { name: "wing", code: 90420, active: airfoilAntiIce },
-    { name: "tail", code: 90422, active: airfoilAntiIce }
-  ]
+    { name: "eng1", code: 90414, type: "eng" },
+    { name: "eng2", code: 90416, type: "eng" },
+    { name: "eng3", code: 90418, type: "eng" },
+    { name: "wing", code: 90420, type: "airfoil" },
+    { name: "tail", code: 90422, type: "airfoil" }
+  ] as const
 
   for (const sw of antiIceSwitches) {
-    localVars[`anti_ice_${sw.name}_cmd`] = `${sw.code} (>L:CEVENT)`
-    localVars[`anti_ice_${sw.name}_expect`] = `${sw.active ? 1 : 0} (L:MD11_OVHD_AICE_${sw.name.toUpperCase()}_BT)`
+    const toActive = sw.type === "eng" ? toEngAntiIce : toAirfoilAntiIce
+    const ldgActive = sw.type === "eng" ? ldgEngAntiIce : ldgAirfoilAntiIce
+    const lvar = `(L:MD11_OVHD_AICE_${sw.name.toUpperCase()}_BT)`
+
+    localVars[`to_anti_ice_${sw.name}_cmd`] = `${sw.code} (>L:CEVENT)`
+    localVars[`to_anti_ice_${sw.name}_expect`] = `${toActive ? 1 : 0} ${lvar}`
+
+    localVars[`ldg_anti_ice_${sw.name}_cmd`] = `${sw.code} (>L:CEVENT)`
+    localVars[`ldg_anti_ice_${sw.name}_expect`] = `${ldgActive ? 1 : 0} ${lvar}`
   }
 
-  const landingAntiIce = landing.antiIce ?? "off"
-  const landingAntiIceActive = landingAntiIce === "oneng" || landingAntiIce === "onengfoil"
-  localVars["flaps_cleanup"] = landingAntiIceActive ? "70" : "0"
+  localVars["flaps_cleanup"] = ldgEngAntiIce || ldgAirfoilAntiIce ? "70" : "0"
 
   vars = localVars
 

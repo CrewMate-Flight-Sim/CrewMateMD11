@@ -413,6 +413,7 @@ export function useCallouts() {
       }
       if (
         !st.transitionAltitude &&
+        vs > 100 &&
         transitionAltitude > 0 &&
         !isStandardBaro(t.cptBaro) &&
         crossedUp(p.alt, alt, transitionAltitude)
@@ -420,7 +421,7 @@ export function useCallouts() {
         st.transitionAltitude = true
         playSound("transiton_altitude.ogg")
       }
-      if (!st.transitionLevel && transitionLevel > 0 && crossedDown(p.alt, alt, transitionLevel)) {
+      if (!st.transitionLevel && transitionLevel > 0 && vs < -100 && crossedDown(p.alt, alt, transitionLevel)) {
         st.transitionLevel = true
         playSound("transiton_level.ogg")
       }

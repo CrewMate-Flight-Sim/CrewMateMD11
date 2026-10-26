@@ -93,7 +93,7 @@ $phrases = @{
 "cockpit_preparation_checklist_complete" = "Cockpit preparation checklist complete"
 
 "confirmed"                            = "Confirmed"
-"dh_mda"                               = "DH MDA"
+"dh_mda"                               = "BARO DH"
 "disarmed"                             = "Disarmed"
 "desappr_checklist_completed"         = "Descent Approach checklist completed"
 

@@ -16,8 +16,8 @@
     },
     {
       "challenge": "dh_mda.ogg",
-      "response": ["feet set", "set and checked"],
-      "label": "DH/MDA"
+      "response": ["#3 feet set", "#4 feet set", "set and checked"],
+      "label": "BARO/DH"
     },
     {
       "challenge": "seat_belts.ogg",
