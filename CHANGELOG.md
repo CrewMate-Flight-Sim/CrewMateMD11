@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Voice commands did nothing and the microphone list only showed "Default" when Windows had the English (UK) or another non-US English speech pack, with "The language for the grammar does not match the language of the speech recognizer." in the log - any English speech pack now works - @marxio09dio
 - Added approach deviation callouts between 1,000 ft and 50 ft on the approach: "sink rate" and "bank" at the FCOM limits, re-armed at most every 5 s. They can be switched off in Settings
 - Added rejected takeoff callouts, triggered by "stop" (or "abort takeoff") on the ground above 40 kt: "spoilers" then "reverse thrust", with "no spoilers" / "no reverse" after 3 s each; no decel call on a reject
 - Added an "autobrake disarm" callout on the landing and on a reject: it is said once when the brakes are stamped while the ABS indication is on
