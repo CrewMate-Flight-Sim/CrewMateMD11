@@ -5,6 +5,8 @@ import { useCabinReadyTimerStore } from "@/store/cabinReadyTimerStore"
 import { useFlowStore } from "@/store/flowStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { useSettingsStore } from "@/store/settingsStore"
+import { useTelemetryStore } from "@/store/telemetryStore"
+import type { Telemetry } from "@/store/telemetryStore"
 import { useVoiceHintProgressStore } from "@/store/voiceHintProgressStore"
 import type { Flow, FlowStep, FlowConditionValue, FlowConditionOperator, FlowCondition } from "@/types/flow"
 
@@ -15,7 +17,6 @@ const STEP_VERIFY = { RETRIES: 5, DELAY: 300, SOUND_AFTER_DELAY: 1000 }
 const POST_LANDING_TIMER_MINUTES = 3
 const FUZZY_EPS = 0.5
 const BLOCKED_FLOWS = new Set(["before_takeoff", "shutdownP1", "shutdownP2"])
-
 // Utilities
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 const getRandomStepDelay = () => Math.random() * (STEP_DELAY.MAX - STEP_DELAY.MIN) + STEP_DELAY.MIN
@@ -124,6 +125,7 @@ function stepVerificationPassed(value: number | null, step: FlowStep): boolean {
 class PostLandingTimer {
   private expiresAt: number | null = null
   private timeoutId: ReturnType<typeof setTimeout> | null = null
+  public onExpiry?: () => void
 
   get isActive() {
     return this.expiresAt !== null && Date.now() < this.expiresAt
@@ -144,6 +146,7 @@ class PostLandingTimer {
     this.timeoutId = setTimeout(async () => {
       this.expiresAt = null
       this.timeoutId = null
+      this.onExpiry?.()
       try {
         await playSound("3_minutes.ogg")
       } catch (err) {
@@ -156,7 +159,22 @@ class PostLandingTimer {
 // Flow runner
 class FlowRunner {
   private abortController: AbortController | null = null
+  private lastCompletedFlow: string | null = null
+  private brakeTaxiWarningPlayed = false
   readonly postLandingTimer = new PostLandingTimer()
+
+  constructor() {
+    // The timer expiring re-arms the brake/taxi-light warning for the next landing
+    this.postLandingTimer.onExpiry = () => {
+      this.lastCompletedFlow = null
+      this.brakeTaxiWarningPlayed = false
+    }
+
+    // Real-time telemetry check, independent of running flows
+    useTelemetryStore.subscribe((state) => {
+      void this.checkParkingBrakeAndTaxiLight(state.telemetry)
+    })
+  }
 
   abort(): void {
     this.abortController?.abort()
@@ -299,9 +317,12 @@ class FlowRunner {
     }
   }
 
+  private static readonly GE_PACK_SOUNDS = new Set(["parkbrk_off.ogg"])
+
   private async playSyncSound(soundFile: string, signal?: AbortSignal): Promise<void> {
     await waitForSoundFinished()
-    await playSound(soundFile)
+    const resolvedPack = this.resolveSoundPack(soundFile)
+    await playSound(soundFile, resolvedPack ? { pack: resolvedPack } : undefined)
     await waitForSoundFinished()
     if (signal) this.checkAbort(signal)
   }
@@ -344,7 +365,13 @@ class FlowRunner {
   }
 
   private async playFlowEndSound(flow: Flow): Promise<void> {
-    if (flow.sound_end) await this.playSyncSound(flow.sound_end)
+    if (flow.sound_end) await this.playSyncSound(flow.sound_end, undefined)
+  }
+
+  /** Maps a GE-pack sound filename to the ge pack; otherwise undefined (defaults to user's pack). */
+  private resolveSoundPack(soundFile?: string): string | undefined {
+    const { geSoundPack } = useSettingsStore.getState()
+    return soundFile && FlowRunner.GE_PACK_SOUNDS.has(soundFile) ? geSoundPack : undefined
   }
 
   private async playHydTest(): Promise<void> {
@@ -363,7 +390,36 @@ class FlowRunner {
   private onFlowCompleted(flow: Flow): void {
     const voiceHints = useVoiceHintProgressStore.getState()
     voiceHints.recordFlowCompleted(flow.id)
-    if (flow.id === "shutdown") voiceHints.resetForColdGround()
+    if (flow.id === "shutdownP2") voiceHints.resetForColdGround()
+    this.lastCompletedFlow = flow.id
+    // A new landing cycle re-arms the brake/taxi-light warning
+    if (flow.id === "after_landing") {
+      this.brakeTaxiWarningPlayed = false
+    }
+  }
+
+  // Warns in real time if the parking brake is set and the taxi light is
+  // off before the post-landing timer expires
+  private async checkParkingBrakeAndTaxiLight(telemetry: Telemetry | null): Promise<void> {
+    if (!telemetry) return
+    if (this.brakeTaxiWarningPlayed) return
+
+    // With the cool down switched off there is nothing to warn about
+    if (!useSettingsStore.getState().postLandingShutdownEnabled) return
+
+    // A running flow owns the audio, so the warning waits for the flow to finish
+    if (useFlowStore.getState().executionState === "running") return
+
+    if (
+      this.lastCompletedFlow === "after_landing" &&
+      this.postLandingTimer.isActive &&
+      !this.brakeTaxiWarningPlayed &&
+      (telemetry.parkingBrake ?? 0) > 0.5 &&
+      (telemetry.taxiLight ?? 1) === 0
+    ) {
+      this.brakeTaxiWarningPlayed = true
+      await playSound("3_minutes_negative.ogg")
+    }
   }
 
   private checkAbort(signal: AbortSignal): void {

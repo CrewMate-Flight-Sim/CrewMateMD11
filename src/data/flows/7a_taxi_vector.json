@@ -5,7 +5,7 @@
     {
       "label": "Set stab trim",
       "read": "(L:MD11_EXT_STAB_TRIM)",
-      "trim_on": true,
+      "on": "{trim} (>L:MD11_EXT_STAB_TRIM)",
       "expect": "{trim}"
     },
     {

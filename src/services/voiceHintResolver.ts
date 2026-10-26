@@ -72,7 +72,7 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
         return { id: "after_takeoff_to_line", title: "After takeoff", phrases: ["after takeoff checklist to the line"] }
       }
 
-      if (lastCl === "after_takeoff_below_the_line" && lastFl === "climb_ten_thousand_flow") {
+      if (lastFl === "climb_ten_thousand_flow") {
         return { id: "climb_cruise", title: "Climb / cruise", phrases: ["seatbelts auto"] }
       }
     } else {

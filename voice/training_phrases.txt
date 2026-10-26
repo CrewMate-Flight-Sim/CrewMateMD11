@@ -194,6 +194,7 @@ running
 advised
 signaled
 stop
+abort takeoff
 medium
 go around flaps
 continue

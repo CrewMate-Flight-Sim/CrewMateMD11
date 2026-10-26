@@ -3,13 +3,12 @@ import { delay } from "@/lib/utils"
 import { abortChecklist, executeChecklist } from "@/services/checklistRunner"
 import { executeFlow } from "@/services/flowRunner"
 import { playSound, playSoundSequence } from "@/services/playSounds"
-import { buildMissedApproachAltSequence, buildPassingAltitudeSequence } from "@/services/soundSequences"
+import { buildMissedApproachAltSequence } from "@/services/soundSequences"
 import { useGroundEngineerStore } from "@/store/groundEngineerStore"
-import { usePassingAltitudeStore } from "@/store/passingAltitudeStore"
 import { usePerformanceStore } from "@/store/performanceStore"
 import { usePreflightTimerStore } from "@/store/preflightTimerStore"
+import { useRtoStore } from "@/store/rtoStore"
 import { useSettingsStore } from "@/store/settingsStore"
-import { useTelemetryStore } from "@/store/telemetryStore"
 
 import { setEngAntiIce, setAirfoilAntiIce, setAntiIceSystemMode } from "./commands/antiIce"
 import { StartAPU } from "./commands/apu"
@@ -30,7 +29,6 @@ import {
   setProf,
   setSpdHold
 } from "./commands/autoPilot"
-import { setStdBaro } from "./commands/baro"
 import { shutdownE2 } from "./commands/engine"
 import { setFlaps } from "./commands/flaps"
 import { flightControlsCheck } from "./commands/flightControlsCheck"
@@ -150,18 +148,7 @@ const DISCRETE_COMMAND_MAP: Record<string, () => void | Promise<void>> = {
     StartAPU()
   },
   set_standard: () => {
-    const t = useTelemetryStore.getState().telemetry
-    const passingAlt = usePassingAltitudeStore.getState()
-
-    setStdBaro(1)
-
-    // Only while climbing and not already tracking a level
-    if (t && !t.onGround && t.vs > 100 && !passingAlt.isTracking()) {
-      // Where the aircraft will be by the time the callout finishes (~9 s)
-      const targetAlt = t.pAlt + t.vs * (9 / 60)
-      playSoundSequence(buildPassingAltitudeSequence(targetAlt))
-      passingAlt.setTarget(targetAlt)
-    }
+    playSound("xchk.ogg")
   },
 
   // Lights
@@ -294,6 +281,9 @@ const DISCRETE_COMMAND_MAP: Record<string, () => void | Promise<void>> = {
   runway_entry_procedure: () => executeFlow("before_takeoff"),
   before_start_procedure: () => executeFlow("before_start"),
   clean_up: () => executeFlow("after_landing"),
+
+  // Rejected takeoff — "stop" arms the callouts in useCallouts
+  abort_takeoff: () => useRtoStore.getState().trigger(),
 
   // Checklists
   checklist_cockpit_prep: () => executeChecklist("cockpit_prep"),

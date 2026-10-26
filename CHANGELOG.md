@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Added a passing level callout when setting standard in the climb: "standard crosschecked, passing flight level ___", then "now" as the level is reached - @marxio09dio
+- Added approach deviation callouts between 1,000 ft and 50 ft on the approach: "sink rate" and "bank" at the FCOM limits, re-armed at most every 5 s. They can be switched off in Settings
+- Added rejected takeoff callouts, triggered by "stop" (or "abort takeoff") on the ground above 40 kt: "spoilers" then "reverse thrust", with "no spoilers" / "no reverse" after 3 s each; no decel call on a reject
+- Added an "autobrake disarm" callout on the landing and on a reject: it is said once when the brakes are stamped while the ABS indication is on
+- On the landing roll each call (spoilers, reverse) now comes a moment after the FO sees the indication, instead of on the same frame; a late indication is never called missing
+- The FO now warns "three minutes not passed yet" in real time if the parking brake is set and the taxi light is off before the post-landing cooldown expires
 - Added GSX pushback: after calling the ground engineer, "we are ready for pushback" starts the GSX departure service - @marxio09dio
 - Added "you have control" / "i have control" handover callouts - @marxio09dio
 - The FO repeated "are you sure" every two seconds on a wrong After Takeoff item (gear, spoilers, autobrake, flaps), even with "Hold checklist on incorrect item" off - it is now said once, and the checklist only waits for the switch when Hold is on - @marxio09dio

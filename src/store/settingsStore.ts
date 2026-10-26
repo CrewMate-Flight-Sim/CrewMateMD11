@@ -16,6 +16,7 @@ interface SettingsStore {
   outputDevice?: string | null
   inputDevice?: string | null
   holdOnIncorrect: boolean
+  deviationCallsEnabled: boolean
   confidenceThreshold: number
   postLandingShutdownEnabled: boolean
   setVoiceEnabled: (enabled: boolean) => void
@@ -28,6 +29,7 @@ interface SettingsStore {
   setOutputDevice: (device: string | null) => void
   setInputDevice: (device: string | null) => void
   setHoldOnIncorrect: (hold: boolean) => void
+  setDeviationCallsEnabled: (enabled: boolean) => void
   setConfidenceThreshold: (threshold: number) => void
   setPostLandingShutdownEnabled: (enabled: boolean) => void
 }
@@ -62,6 +64,7 @@ export const useSettingsStore = create<SettingsStore>()(
       outputDevice: null,
       inputDevice: null,
       holdOnIncorrect: false,
+      deviationCallsEnabled: true,
       confidenceThreshold: 85,
       postLandingShutdownEnabled: true,
 
@@ -133,6 +136,12 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ holdOnIncorrect: hold })
         if (!isUpdatingFromEvent) {
           emit("settings-changed", { holdOnIncorrect: hold })
+        }
+      },
+      setDeviationCallsEnabled: (enabled) => {
+        set({ deviationCallsEnabled: enabled })
+        if (!isUpdatingFromEvent) {
+          emit("settings-changed", { deviationCallsEnabled: enabled })
         }
       },
       setConfidenceThreshold: (threshold) => {
@@ -209,6 +218,9 @@ listen<Partial<SettingsValues>>("settings-changed", (event) => {
   }
   if (event.payload.holdOnIncorrect !== undefined) {
     useSettingsStore.setState({ holdOnIncorrect: event.payload.holdOnIncorrect })
+  }
+  if (event.payload.deviationCallsEnabled !== undefined) {
+    useSettingsStore.setState({ deviationCallsEnabled: event.payload.deviationCallsEnabled })
   }
   if (event.payload.confidenceThreshold !== undefined) {
     useSettingsStore.setState({ confidenceThreshold: event.payload.confidenceThreshold })

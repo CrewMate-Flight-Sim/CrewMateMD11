@@ -12,7 +12,6 @@ import { SpeechEngineError } from "@/components/SpeechEngineError"
 import { TextBar } from "@/components/TextBar"
 import { VoiceGuide } from "@/components/VoiceGuide"
 import { useAutoFlows } from "@/hooks/useAutoFlows"
-import { useBaroSync } from "@/hooks/useBaroSync"
 import { useCallouts } from "@/hooks/useCallouts"
 import { useCloseConfirm } from "@/hooks/useCloseConfirm"
 import { usePreflightTimer } from "@/hooks/usePreflightTimer"
@@ -29,7 +28,6 @@ import "./App.css"
 
 function App() {
   useSimConnection()
-  useBaroSync()
 
   const status = useTelemetryStore((state) => state.status)
   const connected = status === "connected"

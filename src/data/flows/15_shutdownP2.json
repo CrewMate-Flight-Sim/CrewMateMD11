@@ -1,6 +1,7 @@
 {
   "id": "shutdownP2",
   "name": "Shutdown part 2",
+  "sound_end": "parkbrk_off.ogg",
   "steps": [
     {
       "label": "Set signs",

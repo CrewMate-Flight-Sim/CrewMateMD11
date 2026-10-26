@@ -68,7 +68,9 @@ $phrases = @{
 "armed"                                = "Armed"
 "auto"                                 = "Auto"
 "auto_brake"                           = "Auto brake"
+"autobrake_disarm"                     = "Autobrake disarm"
 
+"bank"                                  = "Bank"
 
 "beacon"                               = "beacon"
 "before_landing_checklist_completed"          = "Before landing checklist completed"
@@ -168,7 +170,6 @@ $phrases = @{
 "neutral"                              = "Neutral"
 "no_reverse"            = "No reverse"
 "no_spoilers"                          = "No spoilers"
-"now_at"                               = "Now"
 
 "off"                                  = "off"
 "on"                                   = "on"
@@ -180,7 +181,6 @@ $phrases = @{
 
 "parking_brake"                        = "Parking brake"
 "parking_checklist_completed"          = "Parking checklist completed"
-"passing_flight_level"                 = "Passing flight level"
 "prof_armed"                           = "Profile armed"
 "pitch_trim"                           = "Pitch Trim"
 "positive_climb"                       = "Positive climb"
@@ -197,6 +197,7 @@ $phrases = @{
 "sd_status"                            = "SD Status"
 "set"                                  = "Set"
 "set_100"                               = "Set one hundred percent"
+"sink_rate"                             = "Sink rate"
 "seat_belts"                               =  "Seat belts"
 "slats_ext"                           = "Slats extended"
 "slats_retr"                          = "Slats retracted"
@@ -205,7 +206,6 @@ $phrases = @{
 "spoilers_dep"                            = "Spoilers deployed"
 "stab_trim"                           = "Stabilizer trim"
 "standard_set"                        = "Standard Set and cross checked"
-"standard_cross_checked"               = "Standard cross checked"
 
 "taxi_completed"                       = "Taxi checklist completed"
 "tcas"                                 = "T cas"

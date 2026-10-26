@@ -425,6 +425,8 @@
       <item>clear to line up<tag>out.pid="runway_entry_procedure";</tag></item>
       <item>before start procedure<tag>out.pid="before_start_procedure";</tag></item>
       <item>continue<tag>out.pid="continue";</tag></item>
+      <item>stop<tag>out.pid="abort_takeoff";</tag></item>
+      <item>abort takeoff<tag>out.pid="abort_takeoff";</tag></item>
       <item>flight controls check<tag>out.pid="flight_controls_check";</tag></item>
       <item>engage profile<tag>out.pid="engage_prof";</tag></item>
       <item>wipers interval<tag>out.pid="wipers_int";</tag></item>
@@ -451,6 +453,7 @@
       <item>engage level change<tag>out.pid="pull_altitude";</tag></item>
       <item>engage heading hold<tag>out.pid="push_heading";</tag></item>
       <item>engage speed select<tag>out.pid="pull_speed";</tag></item>
+      <item>engage speed hold<tag>out.pid="push_speed";</tag></item>
       <item>engage heading select<tag>out.pid="pull_heading";</tag></item>
       <item>engage nav<tag>out.pid="manage_nav";</tag></item>
       <item>engage altitude hold<tag>out.pid="push_to_level_off";</tag></item>
