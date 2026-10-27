@@ -1,6 +1,6 @@
 [package]
 name = "crewmatemd11"
-version = "0.4.0"
+version = "0.4.1"
 description = "crewmatemd11 app"
 authors = ["Márcio Araújo, Alex"]
 edition = "2021"

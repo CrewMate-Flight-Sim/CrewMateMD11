@@ -112,7 +112,7 @@ export function useAutoFlows() {
         executeFlow("des")
       } else if (!fl.descTenK && !t.onGround && t.vs < -100 && p.alt > 10000 && (t.alt ?? 0) <= 10000) {
         fl.descTenK = true
-        executeFlow("desc_ten_thousand_flow")
+        executeFlow("des_ten_thousand_flow")
       } else if (
         !fl.shutdownP1 &&
         t.onGround &&

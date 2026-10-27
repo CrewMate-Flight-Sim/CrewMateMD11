@@ -14,7 +14,23 @@ export function getDisplayResponses(item: ChecklistItem): string[] {
   const seen = new Set<string>()
   const out: string[] = []
 
+  // For items expecting feet (minimums), push only ### and ####
+  const hasFeet = (item.response ?? []).some((r) => r.toLowerCase().includes("feet"))
+  if (hasFeet) {
+    const extras = ["#3 feet set", "#4 feet set"]
+    for (const token of extras) {
+      const formatted = formatResponseToken(token)
+      if (!seen.has(formatted)) {
+        seen.add(formatted)
+        out.push(renderResponseToken(formatted))
+      }
+    }
+  }
+
   for (const token of item.response ?? []) {
+    if (hasFeet && token.toLowerCase().includes("feet set")) {
+      continue
+    }
     const formatted = formatResponseToken(token)
     if (!seen.has(formatted)) {
       seen.add(formatted)

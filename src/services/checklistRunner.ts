@@ -444,7 +444,12 @@ class ChecklistRunner {
   }
 
   private onChecklistCompleted(checklistId: string, cargo: boolean): void {
-    useVoiceHintProgressStore.getState().recordChecklistCompleted(checklistId)
+    const voiceHints = useVoiceHintProgressStore.getState()
+    voiceHints.recordChecklistCompleted(checklistId)
+
+    if (checklistId === "parking") {
+      voiceHints.resetForColdGround()
+    }
 
     if (checklistId === "after_start" && !cargo) {
       const cabinTimer = useCabinReadyTimerStore.getState()

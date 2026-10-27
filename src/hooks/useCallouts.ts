@@ -411,12 +411,7 @@ export function useCallouts() {
           playSound("one_to_go.ogg")
         }
       }
-      if (
-        !st.transitionAltitude &&
-        vs > 100 &&
-        transitionAltitude > 0 &&
-        crossedUp(p.alt, alt, transitionAltitude)
-      ) {
+      if (!st.transitionAltitude && vs > 100 && transitionAltitude > 0 && crossedUp(p.alt, alt, transitionAltitude)) {
         st.transitionAltitude = true
 
         if (!isStandardBaro(t.cptBaro)) {

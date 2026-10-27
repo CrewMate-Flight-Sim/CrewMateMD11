@@ -390,7 +390,6 @@ class FlowRunner {
   private onFlowCompleted(flow: Flow): void {
     const voiceHints = useVoiceHintProgressStore.getState()
     voiceHints.recordFlowCompleted(flow.id)
-    if (flow.id === "shutdownP2") voiceHints.resetForColdGround()
     this.lastCompletedFlow = flow.id
     // A new landing cycle re-arms the brake/taxi-light warning
     if (flow.id === "after_landing") {

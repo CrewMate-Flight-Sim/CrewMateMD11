@@ -76,10 +76,10 @@ This tutorial assumes you are parked at the gate with engines off. You are the C
 ### Typical preflight timeline (example)
 
 - 50 min: Crew arrives at aircraft and FO takes his/her seat.
-- 47 min: FO starts his/her cockpit preparation before IRS aligned.
-- 45 min: FO goes out for walkaround. CA starts setting up FMS and doing his/her cockpit preparation.
+- 49 min: FO starts his/her cockpit preparation before IRS aligned.
+- 47 min: FO goes out for walkaround. CA starts setting up FMS and doing his/her cockpit preparation.
   ![CA cockpit preparation](Images/1%20COCKPIT%20PREPARATION.png)
-- 33 min: FO returns from walkaround and starts the 2nd part of the cockpit preparation.
+- 35 min: FO returns from walkaround and starts the 2nd part of the cockpit preparation.
 - 25 min: PF briefs the departure.
 - 15 min: PF and PM do the Final cockpit preparation procedure.
   ![CA final cockpit preparation](Images/2%20FINAL%20COCKPIT%20PREPARATION.png)

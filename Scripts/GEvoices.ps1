@@ -20,7 +20,7 @@ $phrases = @{
     "asu_on"   = "ASU is connected"
     "asu_off"  = "ASU is disconnected"
     "roger"    = "Roger"
-    "parkbrk_off" = "Cockpit to ground, headset connected, chocks in place, release parking brake"
+    "parkbrk_off" = "Ground to cockpit, headset connected, chocks in place, release parking brake"
 }
 
 # Derive folder name from voice: "en-US-JennyNeural" -> "Jenny"
