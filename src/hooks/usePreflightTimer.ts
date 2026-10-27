@@ -7,8 +7,8 @@ import { useFoPresenceStore } from "@/store/foPresenceStore"
 import { usePreflightTimerStore, type TimelineEvent } from "@/store/preflightTimerStore"
 
 // Marks between which the FO is outside doing the walkaround and does not answer.
-const WALKAROUND_START_MARK = 45
-const WALKAROUND_END_MARK = 33
+const WALKAROUND_START_MARK = 47
+const WALKAROUND_END_MARK = 35
 
 export function usePreflightTimer() {
   const clearLabelTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1] - 2026-10-27
+
+- Fixed the After Landing checklist validating takeoff anti-ice instead of landing anti-ice - the anti-ice checks now reference the correct landing store path
+- Checklist responses for feet minimums (e.g. BARO/DH) now expand to "#3 feet set" / "#4 feet set" automatically instead of requiring them to be listed explicitly
+- Oxygen test flow steps during preflight now only run when the preflight option is set to "full"
+- Adjusted the FO walkaround timing window so the FO stays silent slightly longer while outside
+
 ## [0.4.0] - 2026-10-27
 
 - Voice commands did nothing and the microphone list only showed "Default" when Windows had the English (UK) or another non-US English speech pack, with "The language for the grammar does not match the language of the speech recognizer." in the log - any English speech pack now works - @marxio09dio

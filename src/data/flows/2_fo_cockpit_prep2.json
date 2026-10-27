@@ -107,13 +107,21 @@
       "read": "(L:md11_rside_oxy_test_bt)",
       "on": "95515 (>L:CEVENT)",
       "expect": 1,
-      "wait_ms": 2000
+      "wait_ms": 2000,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "Oxy test",
       "read": "(L:md11_rside_oxy_test_bt)",
       "on": "95516 (>L:CEVENT)",
-      "expect": 0
+      "expect": 0,
+      "only_if": {
+        "option": "landing.preflight",
+        "one_of": ["full"]
+      }
     },
     {
       "label": "Open CONFIG synoptic",

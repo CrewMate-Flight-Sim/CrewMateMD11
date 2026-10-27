@@ -73,7 +73,11 @@ export function resolveVoiceHints(args: ResolveVoiceHintsArgs): VoiceHintPhase |
       }
 
       if (lastFl === "climb_ten_thousand_flow") {
-        return { id: "climb_cruise", title: "Climb / cruise", phrases: ["seatbelts auto" ,"you have control", "i have control"] }
+        return {
+          id: "climb_cruise",
+          title: "Climb / cruise",
+          phrases: ["seatbelts auto", "you have control", "i have control"]
+        }
       }
     } else {
       if (alt > perfTL)
